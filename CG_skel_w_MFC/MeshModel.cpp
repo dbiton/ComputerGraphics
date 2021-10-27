@@ -5,46 +5,37 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <limits>
 
 using namespace std;
 
-struct FaceIdcs
+
+Face faceFromStream(std::istream& aStream)
 {
-	int v[4];
-	int vn[4];
-	int vt[4];
+	Face face;
+	for (int i = 0; i < 4; i++)
+		face.v[i] = face.vn[i] = face.vt[i] = 0;
 
-	FaceIdcs()
+	char c;
+	for (int i = 0; i < 3; i++)
 	{
-		for (int i=0; i<4; i++)
-			v[i] = vn[i] = vt[i] = 0;
-	}
-
-	FaceIdcs(std::istream & aStream)
-	{
-		for (int i=0; i<4; i++)
-			v[i] = vn[i] = vt[i] = 0;
-
-		char c;
-		for(int i = 0; i < 3; i++)
+		aStream >> std::ws >> face.v[i] >> std::ws;
+		if (aStream.peek() != '/')
+			continue;
+		aStream >> c >> std::ws;
+		if (aStream.peek() == '/')
 		{
-			aStream >> std::ws >> v[i] >> std::ws;
-			if (aStream.peek() != '/')
-				continue;
-			aStream >> c >> std::ws;
-			if (aStream.peek() == '/')
-			{
-				aStream >> c >> std::ws >> vn[i];
-				continue;
-			}
-			else
-				aStream >> vt[i];
-			if (aStream.peek() != '/')
-				continue;
-			aStream >> c >> vn[i];
+			aStream >> c >> std::ws >> face.vn[i];
+			continue;
 		}
+		else
+			aStream >> face.vt[i];
+		if (aStream.peek() != '/')
+			continue;
+		aStream >> c >> face.vn[i];
 	}
-};
+	return face;
+}
 
 vec3 vec3fFromStream(std::istream & aStream)
 {
@@ -60,6 +51,13 @@ vec2 vec2fFromStream(std::istream & aStream)
 	return vec2(x, y);
 }
 
+MeshModel::MeshModel() : 
+	is_draw_normals_per_vert(false),
+	is_draw_normals_per_face(false),
+	is_draw_bounding_box(false)
+{
+}
+
 MeshModel::MeshModel(string fileName)
 {
 	loadFile(fileName);
@@ -72,8 +70,6 @@ MeshModel::~MeshModel(void)
 void MeshModel::loadFile(string fileName)
 {
 	ifstream ifile(fileName.c_str());
-	vector<FaceIdcs> faces;
-	vector<vec3> vertices;
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -88,41 +84,76 @@ void MeshModel::loadFile(string fileName)
 		issLine >> std::ws >> lineType;
 
 		// based on the type parse data
-		if (lineType == "?") /*BUG*/
-			vertices.push_back(vec3fFromStream(issLine));
-		else if (lineType == "?") /*BUG*/
-			faces.push_back(issLine);
+		if (lineType == "v" || lineType == "vn" || lineType == "vt")
+			verts.push_back(vec3fFromStream(issLine));
+		else if (lineType == "f")
+			faces.push_back(faceFromStream(issLine));
 		else if (lineType == "#" || lineType == "")
 		{
 			// comment / empty line
 		}
 		else
 		{
-			cout<< "Found unknown line Type \"" << lineType << "\"";
+			cout << "Found unknown line Type \"" << lineType << "\"" << endl;
 		}
 	}
-	//Vertex_positions is an array of vec3. Every three elements define a triangle in 3D.
-	//If the face part of the obj is
-	//f 1 2 3
-	//f 1 3 4
-	//Then vertex_positions should contain:
-	//vertex_positions={v1,v2,v3,v1,v3,v4}
 
-	vertex_positions = new vec3[7]; /*BUG*/
-	// iterate through all stored faces and create triangles
-	int k=0;
-	for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
-	{
-		for (int i = 0; i < 3; i++)
-		{
-			vertex_positions[k++] = vec3(); /*BUG*/
-		}
-	}
+	fitBoundingBox();
+	calculateFaceNormals();
 }
 
+void MeshModel::setDrawNormalsPerVert(bool b)
+{
+	is_draw_normals_per_vert = b;
+}
+
+void MeshModel::setDrawNormalsPerFace(bool b)
+{
+	is_draw_normals_per_face = b;
+}
+
+void MeshModel::setDrawBoundingBox(bool b)
+{
+	is_draw_bounding_box = b;
+}
 
 
 void MeshModel::draw()
 {
 	
+}
+
+void MeshModel::fitBoundingBox()
+{
+	if (verts.size() > 0) {
+		vec3 vert_min(FLT_MAX, FLT_MAX, FLT_MAX);
+		vec3 vert_max(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+		for (const auto& vert : verts) {
+			for (int i = 0; i < 3; i++) {
+				if (vert_min[i] > vert[i]) vert_min[i] = vert[i];
+				if (vert_max[i] < vert[i]) vert_max[i] = vert[i];
+			}
+		}
+		bounding_box.box_max = vert_max;
+		bounding_box.box_min = vert_min;
+	}
+	else {
+		bounding_box.box_max = vec3(0, 0, 0);
+		bounding_box.box_min = vec3(0, 0, 0);
+	}
+}
+
+void MeshModel::calculateFaceNormals()
+{
+	for (auto& face : faces) {
+		// assume we only use triangles
+		vec3 p[3];
+		// dont check for faulty obj file yet - if face.v[i] is 
+		// out of verts range - undefined behavior
+		for (int i = 0; i < 3; i++) {
+			p[i] = verts[face.v[i]];
+		}
+		face.face_mid = (p[0] + p[1] + p[2]) / 3.f;
+		face.face_normal = normalize(cross((p[1] - p[0]), p[2] - p[0]));
+	}
 }
