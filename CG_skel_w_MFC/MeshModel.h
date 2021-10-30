@@ -6,16 +6,18 @@
 
 using namespace std;
 
-// although we appear to allow for a quad (a face with 4 verts), we later assume we only use tris.
 struct Face {
-	int v[4];
-	int vn[4];
-	int vt[4];
-
+	int v[3];
+	int vn[3];
+	int vt[3];
+	
 	// additional data - prevents the need to recalculate these values
 	// once per frame when we we draw face normals
 	vec3 face_mid;
 	vec3 face_normal;
+
+	Face();
+	Face(int v0, int v1, int v2);
 };
 
 struct BoundingBox {
@@ -25,9 +27,7 @@ struct BoundingBox {
 
 class MeshModel : public Model
 {
-protected :
-	MeshModel();
-
+protected:
 	std::vector<vec3> verts;
 	std::vector<Face> faces;
 
@@ -37,8 +37,12 @@ protected :
 	bool is_draw_normals_per_face;
 	bool is_draw_bounding_box;
 
-	mat4 _world_transform;
-	mat3 _normal_transform;
+	mat4 world_transform;
+protected:
+	MeshModel();
+
+	void fitBoundingBox();
+	void calculateFaceNormals();
 
 public:
 
@@ -51,8 +55,5 @@ public:
 	void setDrawNormalsPerFace(bool b);
 	void setDrawBoundingBox(bool b);
 
-	void draw();
-private:
-	void fitBoundingBox();
-	void calculateFaceNormals();
+	virtual void draw() override;
 };

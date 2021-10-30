@@ -13,8 +13,6 @@ using namespace std;
 Face faceFromStream(std::istream& aStream)
 {
 	Face face;
-	for (int i = 0; i < 4; i++)
-		face.v[i] = face.vn[i] = face.vt[i] = 0;
 
 	char c;
 	for (int i = 0; i < 3; i++)
@@ -61,6 +59,8 @@ MeshModel::MeshModel() :
 MeshModel::MeshModel(string fileName)
 {
 	loadFile(fileName);
+	fitBoundingBox();
+	calculateFaceNormals();
 }
 
 MeshModel::~MeshModel(void)
@@ -94,12 +94,9 @@ void MeshModel::loadFile(string fileName)
 		}
 		else
 		{
-			cout << "Found unknown line Type \"" << lineType << "\"" << endl;
+			cout << "Found unknown line type \"" << lineType << "\"" << endl;
 		}
 	}
-
-	fitBoundingBox();
-	calculateFaceNormals();
 }
 
 void MeshModel::setDrawNormalsPerVert(bool b)
@@ -146,14 +143,26 @@ void MeshModel::fitBoundingBox()
 void MeshModel::calculateFaceNormals()
 {
 	for (auto& face : faces) {
-		// assume we only use triangles
+		// load face verts
 		vec3 p[3];
-		// dont check for faulty obj file yet - if face.v[i] is 
-		// out of verts range - undefined behavior
 		for (int i = 0; i < 3; i++) {
-			p[i] = verts[face.v[i]];
+			p[i] = verts[face.v[i]-1];
 		}
 		face.face_mid = (p[0] + p[1] + p[2]) / 3.f;
 		face.face_normal = normalize(cross((p[1] - p[0]), p[2] - p[0]));
 	}
+}
+
+Face::Face() : 
+	v {0},
+	vn{0},
+	vt{0}
+{
+}
+
+Face::Face(int v0, int v1, int v2) : 
+	v { v0, v1, v2 },
+	vn{ v0, v1, v2 },
+	vt{ v0, v1, v2 }
+{
 }

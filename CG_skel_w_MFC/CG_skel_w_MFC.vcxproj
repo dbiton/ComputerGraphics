@@ -98,8 +98,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CG_skel_w_MFC.cpp" />
+    <ClCompile Include="Entity.cpp" />
     <ClCompile Include="InitShader.cpp" />
     <ClCompile Include="MeshModel.cpp" />
+    <ClCompile Include="PrimMeshModel.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -109,9 +111,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CG_skel_w_MFC.h" />
+    <ClInclude Include="Entity.h" />
     <ClInclude Include="InitShader.h" />
     <ClInclude Include="mat.h" />
     <ClInclude Include="MeshModel.h" />
+    <ClInclude Include="PrimMeshModel.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Scene.h" />
