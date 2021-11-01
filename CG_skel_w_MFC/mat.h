@@ -531,6 +531,22 @@ vec4 mvmult( const mat4& a, const vec4& b )
     return c;
 }
 
+inline
+vec3 applyTransformToPoint(const mat4& transform, const vec3& point)
+{
+    vec4 b(point.x, point.y, point.z, 1.0);
+    vec4 res = mvmult(transform, b);
+    return vec3(res.x, res.y, res.z);
+}
+
+inline
+vec3 applyTransformToNormal(const mat4& transform, const vec3& normal)
+{
+    vec4 b(normal.x, normal.y, normal.z, 0.0);
+    vec4 res = mvmult(transform, b);
+    return vec3(res.x, res.y, res.z);
+}
+
 //----------------------------------------------------------------------------
 //
 //  Rotation matrix generators

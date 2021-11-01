@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "MeshModel.h"
 #include "vec.h"
+#include "mat.h"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -52,7 +53,11 @@ vec2 vec2fFromStream(std::istream & aStream)
 MeshModel::MeshModel() : 
 	is_draw_normals_per_vert(false),
 	is_draw_normals_per_face(false),
-	is_draw_bounding_box(false)
+	is_draw_bounding_box(false),
+	color_mesh(1.0, 1.0, 1.0),
+	color_vert_normal(1.0, 0.0, 0.0),
+	color_face_normal(0.0, 1.0, 0.0),
+	color_bounding_box(0.0, 0.0, 1.0)
 {
 }
 
@@ -61,6 +66,7 @@ MeshModel::MeshModel(string fileName)
 	loadFile(fileName);
 	fitBoundingBox();
 	calculateFaceNormals();
+	calculateTriangles();
 }
 
 MeshModel::~MeshModel(void)
@@ -102,22 +108,39 @@ void MeshModel::loadFile(string fileName)
 void MeshModel::setDrawNormalsPerVert(bool b)
 {
 	is_draw_normals_per_vert = b;
+	calculateTriangles();
 }
 
 void MeshModel::setDrawNormalsPerFace(bool b)
 {
 	is_draw_normals_per_face = b;
+	calculateTriangles();
 }
 
 void MeshModel::setDrawBoundingBox(bool b)
 {
 	is_draw_bounding_box = b;
+	calculateTriangles();
 }
 
-
-void MeshModel::draw()
+void MeshModel::draw(Renderer* renderer)
 {
-	
+	// normals, colors etc need to be taken care of
+	renderer->DrawTriangles(&renderVertices.triangles);
+}
+
+void MeshModel::getFaceVerts(const Face& face, vec3& v0, vec3& v1, vec3& v2)
+{
+	v0 = verts[face.v[0] - 1];
+	v1 = verts[face.v[1] - 1];
+	v2 = verts[face.v[2] - 1];
+}
+
+inline void MeshModel::getFaceVertNormals(const Face& face, vec3& v0, vec3& v1, vec3& v2)
+{
+	v0 = verts[face.vn[0] - 1];
+	v1 = verts[face.vn[1] - 1];
+	v2 = verts[face.vn[2] - 1];
 }
 
 void MeshModel::fitBoundingBox()
@@ -144,12 +167,64 @@ void MeshModel::calculateFaceNormals()
 {
 	for (auto& face : faces) {
 		// load face verts
-		vec3 p[3];
+		vec3 p0, p1, p2;
+		getFaceVerts(face, p0, p1, p2);
+		face.face_mid = (p0 + p1 + p2) / 3.f;
+		face.face_normal = normalize(cross((p1 - p0), p2 - p0));
+	}
+}
+
+void MeshModel::calculateTriangles()
+{
+	renderVertices.clear();
+
+	for (auto const& face : faces) {
+		vec3 v3s[3];
+		getFaceVerts(face, v3s[0], v3s[1], v3s[2]);
 		for (int i = 0; i < 3; i++) {
-			p[i] = verts[face.v[i]-1];
+			v3s[i] = applyTransformToPoint(world_transform, v3s[i]);
+			renderVertices.triangles.push_back(v3s[i]);
+			renderVertices.triangles_colors.push_back(color_mesh);
 		}
-		face.face_mid = (p[0] + p[1] + p[2]) / 3.f;
-		face.face_normal = normalize(cross((p[1] - p[0]), p[2] - p[0]));
+	}
+	/*
+	if (is_draw_normals_per_vert) {
+		for (auto const& face : faces) {
+			vec3 v3s[3];
+			getFaceVertNormals(face, v3s[0], v3s[1], v3s[2]);
+			for (int i = 0; i < 3; i++) {
+				vec4 v4(v3s[i].x, v3s[i].y, v3s[i].z, 1);
+				v4 = mvmult(world_transform, v4);
+				renderVertices.triangles.push_back(v4);
+				triangles.colors.push_back(color_vert_normal);
+			}
+		}
+	}
+
+	if (is_draw_normals_per_face) {
+		for (auto const& face : faces) {
+			vec4 v4s[3];
+			triangleFromNormal(face.face_mid, face.face_normal, 1, 4, v4s[0], v4s[1], v4s[2]);
+			for (int i = 0; i < 3; i++) {
+				v4s[i] = mvmult(world_transform, v4s[i]);
+				triangles.vertices.push_back(v4s[i]);
+				triangles.colors.push_back(color_face_normal);
+			}
+		}
+	}
+	*/
+	if (is_draw_bounding_box) {
+		const vec3 min = bounding_box.box_min;
+		const vec3 max = bounding_box.box_max;
+		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(min.x, min.y, min.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(max.x, min.y, min.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(min.x, max.y, min.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(max.x, max.y, min.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(min.x, min.y, max.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(max.x, min.y, max.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(min.x, max.y, max.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(max.x, max.y, max.z)));
+		for (int i = 0; i < 8; i++) renderVertices.triangles_colors.push_back(color_bounding_box);
 	}
 }
 

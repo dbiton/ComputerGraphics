@@ -55,6 +55,7 @@ PrimMeshModel PrimMeshModel::Box(vec3 p, vec3 dim)
 
     box.fitBoundingBox();
     box.calculateFaceNormals();
+    box.calculateTriangles();
 
     return box;
 }

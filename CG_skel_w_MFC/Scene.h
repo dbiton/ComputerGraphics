@@ -10,7 +10,8 @@ using namespace std;
 class Model : public Entity {
 protected:
 	virtual ~Model() {}
-	void virtual draw()=0;
+public:
+	virtual void draw(Renderer* renderer) = 0;
 };
 
 
@@ -31,7 +32,7 @@ public:
 		const float zNear, const float zFar );
 	mat4 Perspective( const float fovy, const float aspect,
 		const float zNear, const float zFar);
-
+	const mat4& getProjection() const;
 };
 
 class Scene {
@@ -39,11 +40,11 @@ class Scene {
 	vector<Model*> models;
 	vector<Light*> lights;
 	vector<Camera*> cameras;
-	Renderer *m_renderer;
+	Renderer *renderer;
 
 public:
 	Scene() {};
-	Scene(Renderer *renderer) : m_renderer(renderer) {};
+	Scene(Renderer *_renderer) : renderer(_renderer) {};
 	void loadOBJModel(string fileName);
 	void draw();
 	void drawDemo();
