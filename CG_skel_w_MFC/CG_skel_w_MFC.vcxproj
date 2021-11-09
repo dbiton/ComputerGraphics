@@ -75,7 +75,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>Xcopy /E /I /Y $(ProjectDir)models $(OutputPath)models</Command>
+      <Command>Xcopy /E /I /Y $(ProjectDir)models $(OutputPath)models
+copy $(ProjectDir)*.glsl $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -99,7 +100,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>Xcopy /E /I /Y $(ProjectDir)models $(OutputPath)models</Command>
+      <Command>Xcopy /E /I /Y $(ProjectDir)models $(OutputPath)models
+copy $(ProjectDir)*.glsl $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
