@@ -206,5 +206,3 @@ int main( int argc, char **argv )
 	
 	return nRetCode;
 }
-
-// TODO search all /*BUG*/ and fix!

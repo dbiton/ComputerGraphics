@@ -6,7 +6,7 @@
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
-Renderer::Renderer() :m_width(512), m_height(512)
+Renderer::Renderer() : m_width(512), m_height(512)
 {
 	InitOpenGLRendering();
 	CreateBuffers(512,512);
@@ -21,7 +21,25 @@ Renderer::~Renderer(void)
 {
 }
 
+void Renderer::Init()
+{
+}
 
+void Renderer::DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals)
+{
+}
+
+void Renderer::SetCameraTransform(const mat4& cTransform)
+{
+}
+
+void Renderer::SetProjection(const mat4& projection)
+{
+}
+
+void Renderer::SetObjectMatrices(const mat4& oTransform, const mat3& nTransform)
+{
+}
 
 void Renderer::CreateBuffers(int width, int height)
 {
@@ -29,6 +47,10 @@ void Renderer::CreateBuffers(int width, int height)
 	m_height=height;	
 	CreateOpenGLBuffer(); //Do not remove this line.
 	m_outBuffer = new float[3*m_width*m_height];
+}
+
+void Renderer::CreateLocalBuffer()
+{
 }
 
 void Renderer::SetDemoBuffer()
@@ -46,10 +68,6 @@ void Renderer::SetDemoBuffer()
 
 	}
 }
-
-
-
-
 
 /////////////////////////////////////////////////////
 //OpenGL stuff. Don't touch.
@@ -126,4 +144,12 @@ void Renderer::SwapBuffers()
 	a = glGetError();
 	glutSwapBuffers();
 	a = glGetError();
+}
+
+void Renderer::ClearColorBuffer()
+{
+}
+
+void Renderer::ClearDepthBuffer()
+{
 }

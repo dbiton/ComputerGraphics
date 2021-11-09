@@ -27,3 +27,25 @@ void Scene::drawDemo()
 	renderer->SetDemoBuffer();
 	renderer->SwapBuffers();
 }
+
+void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up)
+{
+}
+
+void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
+{
+}
+
+void Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
+{
+}
+
+mat4 Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar)
+{
+	return mat4();
+}
+
+const mat4& Camera::getProjection() const
+{
+	return mat4();
+}

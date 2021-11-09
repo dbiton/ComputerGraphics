@@ -241,3 +241,15 @@ Face::Face(int v0, int v1, int v2) :
 	vt{ v0, v1, v2 }
 {
 }
+
+void RenderVertices::pushTriangle(vec3 v0, vec3 v1, vec3 v2, vec3 c0, vec3 c1, vec3 c2)
+{
+}
+
+void RenderVertices::pushNormal(vec3 src, vec3 dst, vec3 c_src, vec3 c_dst)
+{
+}
+
+void RenderVertices::clear()
+{
+}
