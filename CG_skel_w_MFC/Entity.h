@@ -12,20 +12,20 @@ public:
 	Entity();
 	virtual ~Entity();
 
-	void setTransform(mat4 _transform);
+	void setTransform(mat4 _transform) noexcept;
 	mat4 getTransform() const;
 
-	void setPosition(vec3 v);
+	void setPosition(vec3 v) noexcept;
 	vec3 getPosition() const;
 
-	void setRotation(vec3 r);	// euler angles, radians
-	vec3 getRotation() const;	// euler angles, radians
+	void setRotation(vec3 r) noexcept;	// euler angles, radians
+	vec3 getRotation() const;			// euler angles, radians
 
-	void setScale(vec3 s);
+	void setScale(vec3 s) noexcept;
 	vec3 getScale() const;
 
-	void moveBy(vec3 v);
-	void rotateBy(vec3 r);		// euler angles, radians
-	void scaleBy(vec3 v);
+	void moveBy(vec3 v) noexcept;
+	void rotateBy(vec3 r) noexcept;		// euler angles, radians
+	void scaleBy(vec3 v) noexcept;
 };
 
