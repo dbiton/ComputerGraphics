@@ -4,25 +4,25 @@
 #include <vector>
 #include <string>
 #include "Renderer.h"
+#include "Entity.h"
 using namespace std;
 
-class Model {
+class Model : public Entity {
 protected:
 	virtual ~Model() {}
-	void virtual draw()=0;
+public:
+	virtual void draw(Renderer* renderer) = 0;
 };
 
 
-class Light {
+class Light : public Entity{
 
 };
 
-class Camera {
-	mat4 cTransform;
+class Camera : public Entity{
 	mat4 projection;
 
 public:
-	void setTransformation(const mat4& transform);
 	void LookAt(const vec4& eye, const vec4& at, const vec4& up );
 	void Ortho( const float left, const float right,
 		const float bottom, const float top,
@@ -32,7 +32,7 @@ public:
 		const float zNear, const float zFar );
 	mat4 Perspective( const float fovy, const float aspect,
 		const float zNear, const float zFar);
-
+	const mat4& getProjection() const;
 };
 
 class Scene {
@@ -40,11 +40,11 @@ class Scene {
 	vector<Model*> models;
 	vector<Light*> lights;
 	vector<Camera*> cameras;
-	Renderer *m_renderer;
+	Renderer *renderer;
 
 public:
 	Scene() {};
-	Scene(Renderer *renderer) : m_renderer(renderer) {};
+	Scene(Renderer *_renderer) : renderer(_renderer) {};
 	void loadOBJModel(string fileName);
 	void draw();
 	void drawDemo();

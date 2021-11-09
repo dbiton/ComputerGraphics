@@ -6,34 +6,75 @@
 
 using namespace std;
 
+struct Face {
+	int v[3];
+	int vn[3];
+	int vt[3];
+	
+	// additional data - prevents the need to recalculate these values
+	vec3 face_mid;
+	vec3 face_normal;
+
+	Face();
+	Face(int v0, int v1, int v2);
+};
+
+struct BoundingBox {
+	vec3 box_min;
+	vec3 box_max;
+};
+
+struct RenderVertices {
+	std::vector<vec3> triangles;		// {vert0, vert1, vert2, vert3, ...} - each 3 pairs of verts are a triangle
+	std::vector<vec3> triangles_colors;	// color for each vert
+	std::vector<vec3> normals;			// {src0, dst0, src1, dst1, ...}
+	std::vector<vec3> normals_colors;	// color for src and dst of normal
+
+	void pushTriangle(vec3 v0, vec3 v1, vec3 v2, vec3 c0, vec3 c1, vec3 c2);
+	void pushNormal(vec3 src, vec3 dst, vec3 c_src, vec3 c_dst);
+	void clear();
+};
+
 class MeshModel : public Model
 {
-protected :
-	MeshModel() {}
-	vec3 *vertex_positions;
-	//add more attributes
-	mat4 _world_transform;
-	mat3 _normal_transform;
+protected:
+	// data as imported from obj - unchanged by transform
+	std::vector<vec3> verts;
+	std::vector<Face> faces;
+	// bounding box is unchanged by transform
+	BoundingBox bounding_box;
 
-	// Geometry musings, because I don't yet know how to work with the 4x4 transformation matrices or whatever...
+	bool is_draw_normals_per_vert;
+	bool is_draw_normals_per_face;
+	bool is_draw_bounding_box;
 
-	// 1.3: given an ordered triplet of 3D points A,B,C, the normal to the surface they identify is (B-A)x(C-B).
-	// then you might want to normalize this vector so its length is 1... use functions from vec.h for this! also...:
-	// TODO search all /*BUG*/ and fix! or at least get rid of the troublemakers... writing this like this so this shows up in visual studio's task list
+	vec3 color_mesh;
+	vec3 color_vert_normal;
+	vec3 color_face_normal; 
+	vec3 color_bounding_box;
 
-	// 1.4: the edges of the bounding box are the minimum of every vertex in the model, and the maximum of every vertex,
-	// respectively. then drawing a box from that will use every possible permutation on the coordinates...
+	mat4 world_transform;
 
-	// 1.5: cubes and pyramids (and tetrahedrons, icosahedrons, etc if we want) should be simple enough to define, but spheres
-	// (and maybe cylinders, paraboloids etc if we want) require us to settle on what LOD (Level Of Detail) to use when approximating
-	// their perfect curvature... maybe implement the same shape but with multiple different LOD's? could be interesting
-	// of course we only need at least one, and we should probably start with the cube
+	RenderVertices renderVertices;
+protected:
+	MeshModel();
 
+	void fitBoundingBox();
+	void calculateFaceNormals();
+	void calculateTriangles();
 public:
 
 	MeshModel(string fileName);
 	~MeshModel(void);
+
 	void loadFile(string fileName);
-	void draw();
 	
+	void setDrawNormalsPerVert(bool b);
+	void setDrawNormalsPerFace(bool b);
+	void setDrawBoundingBox(bool b);
+
+	virtual void draw(Renderer* renderer) override;
+private:
+	inline void getFaceVerts(const Face& face, vec3 &v0, vec3 &v1, vec3 &v2);
+	inline void getFaceVertNormals(const Face& face, vec3& v0, vec3& v1, vec3& v2);
 };

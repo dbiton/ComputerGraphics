@@ -1,0 +1,9 @@
+.vs/
+CG_skel_w_MFC/Debug/
+CG_skel_w_MFC/Release/
+Debug/
+freeglut/lib/
+freeglut/Release/
+glew/lib/
+glew/Release/
+Release/
