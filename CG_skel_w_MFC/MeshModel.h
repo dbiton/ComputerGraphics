@@ -57,7 +57,7 @@ protected:
 
 	RenderVertices renderVertices;
 protected:
-	MeshModel();
+	MeshModel() noexcept;
 
 	void fitBoundingBox();
 	void calculateFaceNormals();

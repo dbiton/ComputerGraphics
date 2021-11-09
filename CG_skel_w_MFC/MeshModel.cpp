@@ -50,7 +50,7 @@ vec2 vec2fFromStream(std::istream & aStream)
 	return vec2(x, y);
 }
 
-MeshModel::MeshModel() : 
+MeshModel::MeshModel() noexcept :
 	is_draw_normals_per_vert(false),
 	is_draw_normals_per_face(false),
 	is_draw_bounding_box(false),
@@ -243,13 +243,27 @@ Face::Face(int v0, int v1, int v2) :
 }
 
 void RenderVertices::pushTriangle(vec3 v0, vec3 v1, vec3 v2, vec3 c0, vec3 c1, vec3 c2)
-{
+{ // unsure this is what this is supposed to do, but i guess we'll leave this as it is
+	triangles.push_back(v0);
+	triangles.push_back(v1);
+	triangles.push_back(v2);
+	triangles_colors.push_back(c0);
+	triangles_colors.push_back(c1);
+	triangles_colors.push_back(c2);
 }
 
 void RenderVertices::pushNormal(vec3 src, vec3 dst, vec3 c_src, vec3 c_dst)
 {
+	normals.push_back(src);
+	normals.push_back(dst);
+	normals_colors.push_back(c_src);
+	normals_colors.push_back(c_dst);
 }
 
 void RenderVertices::clear()
 {
+	triangles.clear();
+	triangles_colors.clear();
+	normals.clear();
+	normals_colors.clear();
 }

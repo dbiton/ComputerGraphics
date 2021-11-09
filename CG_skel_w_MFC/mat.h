@@ -410,7 +410,7 @@ public:
     }
 
     mat4 operator *(const mat4& m) const {
-        mat4  a(0.0);
+        mat4 a(0.0);
 
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
@@ -443,7 +443,7 @@ public:
     }
 
     mat4& operator *=(const mat4& m) noexcept {
-        mat4  a(0.0);
+        mat4 a(0.0);
 
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
