@@ -51,7 +51,7 @@ void Camera::Frustum(const float left, const float right, const float bottom, co
     H[2][0] = (left + right) / (2.0 * zNear);
     H[2][1] = (top + bottom) / (2.0 * zNear);
 
-    mat4 S = Scale(2.0 * zNear / (right - left), 2.0 * near / (top - bottom), 1);
+    mat4 S = Scale(2.0 * zNear / (right - left), 2.0 * zNear / (top - bottom), 1);
 
     mat4 N = mat4();
     N[2][2] = (zNear + zFar) / (zNear - zFar);
