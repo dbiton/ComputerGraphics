@@ -46,12 +46,16 @@ bool lb_down, rb_down, mb_down;
 void display(void)
 {
     //Call the scene and ask it to draw itself
-    scene->drawDemo(); // should probably be scene->draw(); eventually
+    scene->draw();
 }
 
 void reshape(int width, int height)
 {
     //update the renderer's buffers
+    if (height < 1) height = 1; // if height is too small, OpenGL freaks out
+    renderer->CreateBuffers(width, height);
+    // need to rebind OpenGL with the new width+height anyway, so might as well
+    // at least it seems like we don't need to re-init the whole OpenGL rendering...
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -114,7 +118,7 @@ void mainMenu(int id)
     switch (id)
     {
     case MAIN_DEMO:
-        scene->drawDemo();
+        scene->drawDemo(); // oh we're drawing the demo here, didn't notice
         break;
     case MAIN_ABOUT:
         AfxMessageBox(_T("Computer Graphics"));

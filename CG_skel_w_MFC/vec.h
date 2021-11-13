@@ -388,10 +388,11 @@ inline vec4 normalize(const vec4& v) noexcept {
     return v / length(v);
 }
 
-inline vec3 cross(const vec4& a, const vec4& b) noexcept {
-    return vec3(a.y * b.z - a.z * b.y,
+inline vec4 cross(const vec4& a, const vec4& b) noexcept {
+    return vec4(a.y * b.z - a.z * b.y,
                 a.z * b.x - a.x * b.z,
-                a.x * b.y - a.y * b.x);
+                a.x * b.y - a.y * b.x,
+                0); // cross products are intended for vectors anyway, not points
 }
 
 //----------------------------------------------------------------------------
