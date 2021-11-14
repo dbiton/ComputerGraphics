@@ -114,53 +114,50 @@ void Renderer::SetDemoBuffer()
     DrawLine(vec2(halfWidth, 0), vec2(halfWidth, m_height), Color(1, 0, 0));
     DrawLine(vec2(0, halfHeight), vec2(m_width, halfHeight), Color(1, 0, 1));
     constexpr bool TEST_RAYS = true;
-    if (!TEST_RAYS) return;
-    constexpr int rays = 20;
-    constexpr float fraction = (2.0 / rays) * M_PI;
-    for (int i = 0; i < rays; i++)
-    {
-        DrawLine(vec2(halfWidth, halfHeight), vec2(halfWidth + 100 * cos(fraction * i), halfHeight + 100 * sin(fraction * i)), Color(1, 1, 1));
+    if (TEST_RAYS) {
+        constexpr int rays = 2000;
+        constexpr float fraction = (2.0 / rays) * M_PI;
+        for (int i = 0; i <= rays; i++)
+        {
+            DrawLine(vec2(halfWidth, halfHeight), vec2(halfWidth + 200 * cos(fraction * i), halfHeight + 200 * sin(fraction * i)), Color(1, 1, 1));
+        }
     }
 }
 
-inline static int abs(int n) { return (n > 0) ? n : -n; }
-inline static int sign(int n) { return (n > 0) ? 1 : -1; }
+inline static constexpr int sign(int n) noexcept { return (n > 0) ? 1 : (n < 0) ? -1 : 0; }
 
 void Renderer::DrawLine(const vec2& p0, const vec2& p1, const Color& c)
 {
-    const int x0 = std::floor(p0.x),
-              y0 = std::floor(p0.y),
-              x1 = std::floor(p1.x),
-              y1 = std::floor(p1.y),
+    const int x0 = std::round(p0.x),
+              y0 = std::round(p0.y),
+              x1 = std::round(p1.x),
+              y1 = std::round(p1.y), // that's it! no more floats! only ints from here on out!
               dx = x1 - x0,
               dy = y1 - y0,
               dy2 = 2 * abs(dy),
               dx2 = 2 * abs(dx),
               x_step = sign(dx),
               y_step = sign(dy);
-    int d = 2 * dy - dx,
+    int d = 0,
         x = x0,
         y = y0;
 
-    // draw first pixel
-    DrawPixel(x, y, c);
-
-    // draw mid pixels
+    // draw first+mid pixels
     if (dy2 < dx2) while (x != x1) {
-        x += x_step;
-        d += dy2;
-        if (d >= 0) { y += y_step; d -= dx2; }
         DrawPixel(x, y, c);
+        x += x_step;
+        if (d >= 0) { y += y_step; d -= dx2; }
+        d += dy2;
     }
     else while (y != y1) {
-        y += y_step;
-        d += dx2;
-        if (d >= 0) { x += x_step; d -= dy2; }
         DrawPixel(x, y, c);
+        y += y_step;
+        if (d >= 0) { x += x_step; d -= dy2; }
+        d += dx2;
     }
 
     // draw last pixel
-    DrawPixel(std::floor(p1.x), std::floor(p1.y), c);
+    DrawPixel(x1, y1, c);
 }
 
 void Renderer::DrawPixel(int x, int y, const Color& c)
