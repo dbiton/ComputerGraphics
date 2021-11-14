@@ -39,6 +39,8 @@ public:
 	Scene(Renderer *_renderer) : renderer(_renderer) 
 	{
 		cameras.push_back(new Camera());
+		cameras[0]->LookAt(vec4(5, 1, 2, 1), vec4(0, 0, 0, 0), vec4(0, 0, 1, 1));
+		cameras[0]->Ortho(-5, 5, -5, 5, -5, 5);
 		activeCamera = 0;
 	};
 

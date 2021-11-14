@@ -72,3 +72,5 @@ void Entity::scaleBy(const vec3& s)
 {
 	transform = Scale(s) * transform;
 }
+
+// TODO probably better to separately save the position and rotations, and only construct the transformation on demand. rotateBy and scaleBy seem like they could cause weird behaviour as they are now, and getRotation seems too complex to bother as it is. we could also add a sort of "updated" flag which lets us do some lazy stuff with the transformation
