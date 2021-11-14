@@ -59,3 +59,8 @@ PrimMeshModel PrimMeshModel::Box(vec3 p, vec3 dim)
 
     return box;
 }
+
+// cubes and pyramids (and tetrahedrons, icosahedrons, etc if we want) should be simple enough to define, but spheres
+// (and maybe cylinders, paraboloids etc if we want) require us to settle on what LOD (Level Of Detail) to use when approximating
+// their perfect curvature... maybe implement the same shape but with multiple different LOD's? could be interesting
+// of course we only need at least one, and we should probably start with the cube

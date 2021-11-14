@@ -12,7 +12,6 @@ class Renderer
 	float *m_zbuffer; // width*height
 	int m_width, m_height;
 
-	void CreateBuffers(int width, int height);
 	void CreateLocalBuffer();
 
 	//////////////////////////////
@@ -27,6 +26,7 @@ public:
 	Renderer();
 	Renderer(int width, int height);
 	~Renderer(void);
+	void CreateBuffers(int width, int height);
 	void Init();
 	void DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals=NULL);
 	void SetCameraTransform(const mat4& cTransform);

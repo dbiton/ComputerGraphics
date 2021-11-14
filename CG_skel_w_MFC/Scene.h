@@ -44,7 +44,10 @@ class Scene {
 
 public:
 	Scene() {};
-	Scene(Renderer *_renderer) : renderer(_renderer) {};
+	Scene(Renderer *_renderer) : renderer(_renderer) {
+		cameras.push_back(new Camera());
+		activeCamera = 0;
+	};
 	void loadOBJModel(string fileName);
 	void draw();
 	void drawDemo();

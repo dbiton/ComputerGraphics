@@ -6,12 +6,12 @@
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
-Renderer::Renderer() :m_width(512), m_height(512)
+Renderer::Renderer() : m_width(512), m_height(512), m_outBuffer(nullptr)
 {
 	InitOpenGLRendering();
 	CreateBuffers(512,512);
 }
-Renderer::Renderer(int width, int height) :m_width(width), m_height(height)
+Renderer::Renderer(int width, int height) :m_width(width), m_height(height), m_outBuffer(nullptr)
 {
 	InitOpenGLRendering();
 	CreateBuffers(width,height);
@@ -21,35 +21,52 @@ Renderer::~Renderer(void)
 {
 }
 
+void Renderer::Init()
+{
+}
 
+void Renderer::DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals)
+{
+}
+
+void Renderer::SetCameraTransform(const mat4& cTransform)
+{
+}
+
+void Renderer::SetProjection(const mat4& projection)
+{
+}
+
+void Renderer::SetObjectMatrices(const mat4& oTransform, const mat3& nTransform)
+{
+}
 
 void Renderer::CreateBuffers(int width, int height)
 {
 	m_width=width;
 	m_height=height;	
 	CreateOpenGLBuffer(); //Do not remove this line.
+	if (m_outBuffer) delete m_outBuffer;
 	m_outBuffer = new float[3*m_width*m_height];
+}
+
+void Renderer::CreateLocalBuffer()
+{
 }
 
 void Renderer::SetDemoBuffer()
 {
 	//vertical line
-	for(int i=0; i<m_width; i++)
-	{
-		m_outBuffer[INDEX(m_width,256,i,0)]=1;	m_outBuffer[INDEX(m_width,256,i,1)]=0;	m_outBuffer[INDEX(m_width,256,i,2)]=0;
-
+	int halfWidth = m_width / 2,
+		halfHeight = m_height / 2;
+	for (int i=0; i<m_height; i++) {
+		m_outBuffer[INDEX(m_width, halfWidth,i,0)]=1; m_outBuffer[INDEX(m_width, halfWidth,i,1)]=0; m_outBuffer[INDEX(m_width, halfWidth,i,2)]=0;
 	}
 	//horizontal line
-	for(int i=0; i<m_width; i++)
-	{
-		m_outBuffer[INDEX(m_width,i,256,0)]=1;	m_outBuffer[INDEX(m_width,i,256,1)]=0;	m_outBuffer[INDEX(m_width,i,256,2)]=1;
-
+	for (int i=0; i<m_width; i++) {
+		m_outBuffer[INDEX(m_width,i, halfHeight,0)]=1; m_outBuffer[INDEX(m_width,i, halfHeight,1)]=0; m_outBuffer[INDEX(m_width,i, halfHeight,2)]=1;
 	}
 }
-
-
-
-
 
 /////////////////////////////////////////////////////
 //OpenGL stuff. Don't touch.
@@ -126,4 +143,12 @@ void Renderer::SwapBuffers()
 	a = glGetError();
 	glutSwapBuffers();
 	a = glGetError();
+}
+
+void Renderer::ClearColorBuffer()
+{
+}
+
+void Renderer::ClearDepthBuffer()
+{
 }
