@@ -73,26 +73,17 @@ void errorNoActiveModel() { message("No active model!"); } // TODO add a message
 
 void toggleFaceNormals() {
     if (scene->activeModel == -1) errorNoActiveModel();
-    else {
-        scene->getActiveModel()->ToggleDrawNormalsPerFace();
-        scene->draw();
-    }
+    else scene->getActiveModel()->ToggleDrawNormalsPerFace();
 }
 
 void toggleVertexNormals() {
     if (scene->activeModel == -1) errorNoActiveModel();
-    else {
-        scene->getActiveModel()->ToggleDrawNormalsPerVert();
-        scene->draw();
-    }
+    else scene->getActiveModel()->ToggleDrawNormalsPerVert();
 }
 
 void toggleBoundingBox() {
     if (scene->activeModel == -1) errorNoActiveModel();
-    else {
-        scene->getActiveModel()->ToggleDrawBoundingBox();
-        scene->draw();
-    }
+    else scene->getActiveModel()->ToggleDrawBoundingBox();
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -196,6 +187,7 @@ void togglesMenu(int id) {
     case TOGGLE_BOUNDING_BOX: toggleBoundingBox(); break;
     default: message("NOT IMPLEMENTED GTFO"); break;
     }
+    display();
 }
 
 void mainMenu(int id)
