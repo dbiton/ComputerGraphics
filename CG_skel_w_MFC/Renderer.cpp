@@ -21,21 +21,58 @@ Renderer::~Renderer(void)
 {
 }
 
-void Renderer::DrawTriangles(const vector<Vertex>* vertices, const vector<vec3>* face_normals)
+void Renderer::DrawTriangles(const vector<Vertex>& vertices)
 {
-	mat4 object2camera = transform_camera_inverse * transform_model;
-	for (int i = 0; i < vertices->size(); i += 3) {
-		vec3 vs[3];
+	Color color_bounding_box(1, 0, 0);
+	Color color_mesh(1, 1, 1);
+	Color color_face_normal(0, 1, 0);
+	Color color_vert_normal(0, 0, 1);
+	GLfloat fn_len = 1;
+	GLfloat vn_len = 2;
+
+	mat4 object2clip = projection * transform_camera_inverse * transform_object;
+	for (int i = 0; i < vertices.size(); i += 3) {
+		vec3 v[3];
+		vec3 vn[3];
+		vec3 fn; // face normal
+		vec3 fm; // face mid
+		vec3 bb_max;
+		vec3 bb_min;
+
+		// load vertices and draw mesh
 		for (int j = 0; j < 3; j++) {
-			vs[j] = (*vertices)[i + j].coord;
-			vs[j] = applyTransformToPoint(object2camera, vs[j]);
-			vs[j] = applyTransformToPoint(projection, vs[j]);
+			v[j] = vertices[i + j].position;
+			vn[j] = vertices[i + j].normal;
+			DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[j % 3])), color_mesh);
 		}
+
+		// draw face normal
+		fm = (v[0] + v[1] + v[2]) / 3;
+		fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * fn_len;
+		DrawLine(clipToScreen(applyTransformToPoint(object2clip, fm)), clipToScreen(applyTransformToPoint(object2clip, fm + fn)), color_face_normal);
+
+		// draw vertex normals
+		for (int j = 0; j < 3; j++) {
+			DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[j] + vn[j] * vn_len)), color_vert_normal);
+		}
+
+		// draw bounding box
 	}
 }
 
 void Renderer::SetCameraTransform(const mat4& cTransform)
 {
+	transform_camera_inverse = transpose(cTransform);
+}
+
+void Renderer::SetProjection(const mat4& _projection)
+{
+	projection = _projection;
+}
+
+void Renderer::SetObjectTransform(const mat4& oTransform)
+{
+	transform_object = oTransform;
 }
 
 
@@ -45,6 +82,11 @@ void Renderer::CreateBuffers(int width, int height)
 	m_height = height;
 	CreateOpenGLBuffer(); //Do not remove this line.
 	m_outBuffer = new float[3 * m_width * m_height];
+}
+
+vec2 Renderer::clipToScreen(const vec3& clip_pos)
+{
+	return vec2((clip_pos.x + 1) / 2 * m_width, (clip_pos.y + 1) / 2 * m_height);
 }
 
 void Renderer::CreateLocalBuffer()
@@ -67,7 +109,7 @@ void Renderer::SetDemoBuffer()
 	}
 }
 
-void Renderer::DrawLine(const vec2& p0, const Color& c0, const vec2& p1, const Color& c1)
+void Renderer::DrawLine(const vec2& p0, const vec2& p1, const Color& c)
 {
 	// setup and draw first pixel
 	int x = std::floor(p0.x);
@@ -79,11 +121,12 @@ void Renderer::DrawLine(const vec2& p0, const Color& c0, const vec2& p1, const C
 	const float dne = 2 * (dy - dx);
 
 	const int x_step = dx > 0 ? 1 : -1;
+	const int x_final = std::floor(p1.x);
 
-	DrawPixel(x, y, c0);
+	DrawPixel(x, y, c);
 
 	// draw mid pixels
-	while (x != p1.x) {
+	while (x != x_final) {
 		x += x_step;
 		if (d < 0) {
 			d += de;
@@ -91,17 +134,17 @@ void Renderer::DrawLine(const vec2& p0, const Color& c0, const vec2& p1, const C
 		else {
 			y++;
 			d += dne;
-			// for now, no fancy colors
-			DrawPixel(x, y, c0);
+			DrawPixel(x, y, c);
 		}
 	}
 
 	// draw last pixel
-	DrawPixel(std::floor(p1.x), std::floor(p1.y), c1);
+	DrawPixel(std::floor(p1.x), std::floor(p1.y), c);
 }
 
 void Renderer::DrawPixel(int x, int y, const Color& c)
 {
+	if (x < 0 || y < 0 || x >= m_width || y >= m_height) return;
 	m_outBuffer[INDEX(m_width, x, y, 0)] = c[0];
 	m_outBuffer[INDEX(m_width, x, y, 1)] = c[1];
 	m_outBuffer[INDEX(m_width, x, y, 2)] = c[2];

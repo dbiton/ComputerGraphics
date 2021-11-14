@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "MeshModel.h"
+#include "PrimMeshModel.h"
 #include "vec.h"
 #include "mat.h"
 #include <string>
@@ -65,8 +66,6 @@ MeshModel::MeshModel(string fileName)
 {
 	loadFile(fileName);
 	fitBoundingBox();
-	calculateFaceNormals();
-	calculateTriangles();
 }
 
 MeshModel::~MeshModel(void)
@@ -75,6 +74,9 @@ MeshModel::~MeshModel(void)
 
 void MeshModel::loadFile(string fileName)
 {
+	std::vector<vec3> verts;
+	std::vector<Face> faces;
+
 	ifstream ifile(fileName.c_str());
 	// while not end of file
 	while (!ifile.eof())
@@ -103,130 +105,73 @@ void MeshModel::loadFile(string fileName)
 			cout << "Found unknown line type \"" << lineType << "\"" << endl;
 		}
 	}
+
+	processRawVerts(verts, faces);
 }
 
-void MeshModel::setDrawNormalsPerVert(bool b)
+void MeshModel::SetDrawNormalsPerVert(bool b)
 {
 	is_draw_normals_per_vert = b;
-	calculateTriangles();
 }
 
-void MeshModel::setDrawNormalsPerFace(bool b)
+void MeshModel::SetDrawNormalsPerFace(bool b)
 {
 	is_draw_normals_per_face = b;
-	calculateTriangles();
 }
 
-void MeshModel::setDrawBoundingBox(bool b)
+void MeshModel::SetDrawBoundingBox(bool b)
 {
 	is_draw_bounding_box = b;
-	calculateTriangles();
 }
 
 void MeshModel::draw(Renderer* renderer)
 {
-	// normals, colors etc need to be taken care of
-	renderer->DrawTriangles(&renderVertices.triangles);
-}
-
-void MeshModel::getFaceVerts(const Face& face, vec3& v0, vec3& v1, vec3& v2)
-{
-	v0 = verts[face.v[0] - 1];
-	v1 = verts[face.v[1] - 1];
-	v2 = verts[face.v[2] - 1];
-}
-
-inline void MeshModel::getFaceVertNormals(const Face& face, vec3& v0, vec3& v1, vec3& v2)
-{
-	v0 = verts[face.vn[0] - 1];
-	v1 = verts[face.vn[1] - 1];
-	v2 = verts[face.vn[2] - 1];
+	renderer->DrawTriangles(vertices);
 }
 
 void MeshModel::fitBoundingBox()
-{
-	if (verts.size() > 0) {
-		vec3 vert_min(FLT_MAX, FLT_MAX, FLT_MAX);
-		vec3 vert_max(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-		for (const auto& vert : verts) {
+{	
+	bounding_box.clear();
+	vec3 vert_min(FLT_MAX, FLT_MAX, FLT_MAX);
+	vec3 vert_max(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	if (vertices.size() > 0) {
+		for (const auto& vert : vertices) {
 			for (int i = 0; i < 3; i++) {
-				if (vert_min[i] > vert[i]) vert_min[i] = vert[i];
-				if (vert_max[i] < vert[i]) vert_max[i] = vert[i];
+				if (vert_min[i] > vert.position[i]) vert_min[i] = vert.position[i];
+				if (vert_max[i] < vert.position[i]) vert_max[i] = vert.position[i];
 			}
 		}
-		bounding_box.box_max = vert_max;
-		bounding_box.box_min = vert_min;
-	}
-	else {
-		bounding_box.box_max = vec3(0, 0, 0);
-		bounding_box.box_min = vec3(0, 0, 0);
+		bounding_box.push_back(vec3(vert_min.x, vert_min.y, vert_min.z));
+		bounding_box.push_back(vec3(vert_max.x, vert_min.y, vert_min.z));
+		bounding_box.push_back(vec3(vert_min.x, vert_max.y, vert_min.z));
+		bounding_box.push_back(vec3(vert_max.x, vert_max.y, vert_min.z));
+		bounding_box.push_back(vec3(vert_min.x, vert_min.y, vert_max.z));
+		bounding_box.push_back(vec3(vert_max.x, vert_min.y, vert_max.z));
+		bounding_box.push_back(vec3(vert_min.x, vert_max.y, vert_max.z));
+		bounding_box.push_back(vec3(vert_max.x, vert_max.y, vert_max.z));
 	}
 }
 
-void MeshModel::calculateFaceNormals()
+void MeshModel::processRawVerts(const std::vector<vec3>& verts, const std::vector<Face>& faces)
 {
-	for (auto& face : faces) {
-		// load face verts
-		vec3 p0, p1, p2;
-		getFaceVerts(face, p0, p1, p2);
-		face.face_mid = (p0 + p1 + p2) / 3.f;
-		face.face_normal = normalize(cross((p1 - p0), p2 - p0));
+	vertices.clear();
+	for (const auto& face : faces) {
+		Vertex v0, v1, v2;
+
+		v0.position = verts[face.v[0] - 1];
+		v1.position = verts[face.v[1] - 1];
+		v2.position = verts[face.v[2] - 1];
+
+		v0.normal = verts[face.vn[0] - 1];
+		v1.normal = verts[face.vn[1] - 1];
+		v2.normal = verts[face.vn[2] - 1];
+
+		vertices.push_back(v0);
+		vertices.push_back(v1);
+		vertices.push_back(v2);
 	}
 }
 
-void MeshModel::calculateTriangles()
-{
-	renderVertices.clear();
-
-	for (auto const& face : faces) {
-		vec3 v3s[3];
-		getFaceVerts(face, v3s[0], v3s[1], v3s[2]);
-		for (int i = 0; i < 3; i++) {
-			v3s[i] = applyTransformToPoint(getTransform(), v3s[i]);
-			renderVertices.triangles.push_back(v3s[i]);
-			renderVertices.triangles_colors.push_back(color_mesh);
-		}
-	}
-	/*
-	if (is_draw_normals_per_vert) {
-		for (auto const& face : faces) {
-			vec3 v3s[3];
-			getFaceVertNormals(face, v3s[0], v3s[1], v3s[2]);
-			for (int i = 0; i < 3; i++) {
-				vec4 v4(v3s[i].x, v3s[i].y, v3s[i].z, 1);
-				v4 = mvmult(world_transform, v4);
-				renderVertices.triangles.push_back(v4);
-				triangles.colors.push_back(color_vert_normal);
-			}
-		}
-	}
-
-	if (is_draw_normals_per_face) {
-		for (auto const& face : faces) {
-			vec4 v4s[3];
-			triangleFromNormal(face.face_mid, face.face_normal, 1, 4, v4s[0], v4s[1], v4s[2]);
-			for (int i = 0; i < 3; i++) {
-				v4s[i] = mvmult(world_transform, v4s[i]);
-				triangles.vertices.push_back(v4s[i]);
-				triangles.colors.push_back(color_face_normal);
-			}
-		}
-	}
-	*/
-	if (is_draw_bounding_box) {
-		const vec3 min = bounding_box.box_min;
-		const vec3 max = bounding_box.box_max;
-		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(min.x, min.y, min.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(max.x, min.y, min.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(min.x, max.y, min.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(max.x, max.y, min.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(min.x, min.y, max.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(max.x, min.y, max.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(min.x, max.y, max.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(max.x, max.y, max.z)));
-		for (int i = 0; i < 8; i++) renderVertices.triangles_colors.push_back(color_bounding_box);
-	}
-}
 
 Face::Face() : 
 	v {0},
@@ -240,30 +185,4 @@ Face::Face(int v0, int v1, int v2) :
 	vn{ v0, v1, v2 },
 	vt{ v0, v1, v2 }
 {
-}
-
-void RenderVertices::pushTriangle(vec3 v0, vec3 v1, vec3 v2, vec3 c0, vec3 c1, vec3 c2)
-{ // unsure this is what this is supposed to do, but i guess we'll leave this as it is
-	triangles.push_back(v0);
-	triangles.push_back(v1);
-	triangles.push_back(v2);
-	triangles_colors.push_back(c0);
-	triangles_colors.push_back(c1);
-	triangles_colors.push_back(c2);
-}
-
-void RenderVertices::pushNormal(vec3 src, vec3 dst, vec3 c_src, vec3 c_dst)
-{
-	normals.push_back(src);
-	normals.push_back(dst);
-	normals_colors.push_back(c_src);
-	normals_colors.push_back(c_dst);
-}
-
-void RenderVertices::clear()
-{
-	triangles.clear();
-	triangles_colors.clear();
-	normals.clear();
-	normals_colors.clear();
 }

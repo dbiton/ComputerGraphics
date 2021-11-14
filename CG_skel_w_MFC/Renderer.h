@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include "PrimTypes.h"
+#include "MeshModel.h"
 #include "CG_skel_w_MFC.h"
 #include "vec.h"
 #include "mat.h"
@@ -7,14 +9,7 @@
 
 using namespace std;
 
-typedef vec3 Color;
 // ObjectCoord stored in ModelMesh and does not get used
-
-struct Vertex {
-	vec3 coord;
-	vec3 normal;
-	Color color;
-};
 
 class Renderer
 {
@@ -26,32 +21,33 @@ class Renderer
 	GLuint gScreenVtc;
 
 	mat4 projection;
-	mat4 transform_model;
-	mat4 transform_world;
+	mat4 transform_object;
 	mat4 transform_camera_inverse;
+
 public:
 	Renderer();
 	Renderer(int width, int height);
 	~Renderer(void);
 
-	void Init();
 	// triangles are in object space
-	void DrawTriangles(const vector<Vertex>* vertices, const vector<vec3>* face_normals = NULL);
+	void DrawTriangles(const std::vector<Vertex>& vertices);
+
 	void SetCameraTransform(const mat4& cTransform);
 	void SetProjection(const mat4& projection);
-	void SetObjectMatrices(const mat4& oTransform, const mat3& nTransform);
+	void SetObjectTransform(const mat4& oTransform);
+
 	void SwapBuffers();
 	void ClearColorBuffer();
 	void ClearDepthBuffer();
 	void SetDemoBuffer();
-
+	void CreateBuffers(int width, int height);
 private:
-	void DrawLine(const vec2& p0, const Color& c0, const vec2& p1, const Color& c1);
+	vec2 clipToScreen(const vec3& clip_pos);
+
+	void DrawLine(const vec2& p0, const vec2& p1, const Color& c);
 	void DrawPixel(int x, int y, const Color& c);
-	void FillTriangle(const vec2& p0, const Color& c0, const vec2& p1, const Color& c1, const vec2& p2, const Color& c2);
 
 	void CreateOpenGLBuffer();
 	void InitOpenGLRendering();
-	void CreateBuffers(int width, int height);
 	void CreateLocalBuffer();
 };

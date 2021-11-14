@@ -124,6 +124,7 @@ copy $(ProjectDir)*.glsl $(OutputPath)</Command>
     <ClInclude Include="mat.h" />
     <ClInclude Include="MeshModel.h" />
     <ClInclude Include="PrimMeshModel.h" />
+    <ClInclude Include="PrimTypes.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Scene.h" />

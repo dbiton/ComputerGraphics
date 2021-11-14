@@ -3,17 +3,12 @@
 #include "gl/glew.h"
 #include <vector>
 #include <string>
+#include "MeshModel.h"
 #include "Renderer.h"
-#include "Entity.h"
-using namespace std;
 
-class Model : public Entity {
-protected:
-	virtual ~Model() {}
-public:
-	virtual void draw(Renderer* renderer) = 0;
-};
 
+class MeshModel;
+class Renderer;
 
 class Light : public Entity{
 };
@@ -35,19 +30,19 @@ public:
 };
 
 class Scene {
-
-	vector<Model*> models;
-	vector<Light*> lights;
-	vector<Camera*> cameras;
-	Renderer *renderer;
+	std::vector<MeshModel*> models;
+	std::vector<Light*> lights;
+	std::vector<Camera*> cameras;
+	Renderer* renderer;
 
 public:
-	Scene() {};
-	Scene(Renderer *_renderer) : renderer(_renderer) {
+	Scene(Renderer *_renderer) : renderer(_renderer) 
+	{
 		cameras.push_back(new Camera());
 		activeCamera = 0;
 	};
-	void loadOBJModel(string fileName);
+
+	void loadOBJModel(std::string fileName);
 	void draw();
 	void drawDemo();
 	
