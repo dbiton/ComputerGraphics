@@ -27,7 +27,7 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices)
     Color color_mesh(1, 1, 1);
     Color color_face_normal(0, 1, 0);
     Color color_vert_normal(0, 0, 1);
-    GLfloat fn_len = 1;
+    GLfloat fn_len = 0.5;
     GLfloat vn_len = 0.5;
 
     mat4 object2clip = projection * transform_camera_inverse * transform_object;
@@ -39,13 +39,15 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices)
         vec3 bb_max;
         vec3 bb_min;
 
-        // load vertices and draw mesh
+        // load vertices
         for (int j = 0; j < 3; j++) {
             v[j] = vertices[i + j].position;
             vn[j] = vertices[i + j].normal;
+        }
+        // draw mesh
+        for (int j = 0; j < 3; j++) {
             DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[(j + 1) % 3])), color_mesh);
         }
-
         // draw face normal
         fm = (v[0] + v[1] + v[2]) / 3;
         fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * fn_len;

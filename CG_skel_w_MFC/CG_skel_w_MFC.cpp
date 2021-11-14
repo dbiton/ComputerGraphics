@@ -23,11 +23,6 @@
 #include <string>
 
 
-// tmp - for the MeshModel test
-#include "MeshModel.h"
-// tmp
-
-
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
 #define FILE_OPEN 1
@@ -191,12 +186,6 @@ using namespace std;
 int main(int argc, char** argv)
 {
     int nRetCode = 0;
-
-    // tmp - this is for checking MeshModel and should be removed eventaully
-
-    MeshModel mesh("models/cube.obj");
-
-    // tmp
 
     // initialize MFC and print and error on failure
     if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))

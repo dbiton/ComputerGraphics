@@ -7,7 +7,6 @@
 class Entity
 {
 	mat4 transform;
-	vec3 pos, rot, scale;
 public:
 	Entity();
 	virtual ~Entity();
@@ -27,5 +26,7 @@ public:
 	void moveBy(const vec3 &v);
 	void rotateBy(const vec3 &r);		// eular angles, radians
 	void scaleBy(const vec3 &s);
+private:
+	void updateTransform();
 };
 

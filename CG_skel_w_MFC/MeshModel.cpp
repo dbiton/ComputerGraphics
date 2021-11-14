@@ -126,6 +126,7 @@ void MeshModel::SetDrawBoundingBox(bool b)
 
 void MeshModel::draw(Renderer* renderer)
 {
+	renderer->SetObjectTransform(getTransform());
 	renderer->DrawTriangles(vertices);
 }
 
