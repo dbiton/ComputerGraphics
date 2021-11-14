@@ -29,6 +29,11 @@ void Scene::drawDemo()
     renderer->SwapBuffers();
 }
 
+Camera& Scene::getActiveCamera()
+{
+    return *cameras[activeCamera];
+}
+
 // TODO check that all of these are the right order!
 
 void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up)

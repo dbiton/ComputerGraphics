@@ -40,7 +40,8 @@ public:
 	{
 		cameras.push_back(new Camera());
 		cameras[0]->LookAt(vec4(5, 1, 2, 1), vec4(0, 0, 0, 0), vec4(0, 0, 1, 1));
-		cameras[0]->Ortho(-5, 5, -5, 5, -5, 5);
+		//cameras[0]->Ortho(-5, 5, -5, 5, -5, 5);
+		cameras[0]->Perspective(90.f, 1.f, 1, 2);
 		activeCamera = 0;
 	};
 
@@ -48,6 +49,8 @@ public:
 	void draw();
 	void drawDemo();
 	
+	Camera& getActiveCamera();
+
 	int activeModel;
 	int activeLight;
 	int activeCamera;

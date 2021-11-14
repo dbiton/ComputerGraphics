@@ -6,12 +6,12 @@
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
-Renderer::Renderer() : m_width(512), m_height(512), m_outBuffer(nullptr)
+Renderer::Renderer() : m_width(512), m_height(512), m_outBuffer(nullptr), m_zbuffer(nullptr)
 {
     InitOpenGLRendering();
     CreateBuffers(512, 512);
 }
-Renderer::Renderer(int width, int height) : m_width(width), m_height(height), m_outBuffer(nullptr)
+Renderer::Renderer(int width, int height) : m_width(width), m_height(height), m_outBuffer(nullptr), m_zbuffer(nullptr)
 {
     InitOpenGLRendering();
     CreateBuffers(width, height);
@@ -248,8 +248,10 @@ void Renderer::SwapBuffers()
 
 void Renderer::ClearColorBuffer()
 {
+    if (m_outBuffer) memset(m_outBuffer, 0, sizeof(float) * 3 * m_width * m_height);
 }
 
 void Renderer::ClearDepthBuffer()
 {
+    if (m_zbuffer) memset(m_zbuffer, 0, sizeof(float) * m_width * m_height);
 }

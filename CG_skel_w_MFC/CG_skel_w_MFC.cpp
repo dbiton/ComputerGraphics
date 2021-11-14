@@ -41,6 +41,8 @@ bool lb_down, rb_down, mb_down;
 void display(void)
 {
     //Call the scene and ask it to draw itself
+    renderer->ClearColorBuffer();
+    renderer->ClearDepthBuffer();
     scene->draw();
 }
 
@@ -55,11 +57,38 @@ void reshape(int width, int height)
 
 void keyboard(unsigned char key, int x, int y)
 {
+    float move_coe = 0.1;
+
     switch (key) {
+    // S
+    case 115:
+        scene->getActiveCamera().moveBy(vec3(0, move_coe, 0));
+        break;
+    // W
+    case 119:
+        scene->getActiveCamera().moveBy(vec3(0, -move_coe, 0));
+        break;
+    // D
+    case 100:
+        scene->getActiveCamera().moveBy(vec3(-move_coe, 0, 0));
+        break;
+    // A
+    case 97:
+        scene->getActiveCamera().moveBy(vec3(move_coe, 0, 0));
+        break;
+    // Q
+    case 113:
+        scene->getActiveCamera().moveBy(vec3(0, 0, move_coe));
+        break;
+    // E
+    case 101:
+        scene->getActiveCamera().moveBy(vec3(0, 0, -move_coe));
+        break;
     case 033:
         exit(EXIT_SUCCESS);
         break;
     }
+    display();
 }
 
 void mouse(int button, int state, int x, int y)
@@ -79,8 +108,6 @@ void mouse(int button, int state, int x, int y)
         mb_down = (state == GLUT_UP) ? 0 : 1;
         break;
     }
-
-    // add your code
 }
 
 void motion(int x, int y)
@@ -91,6 +118,17 @@ void motion(int x, int y)
     // update last x,y
     last_x = x;
     last_y = y;
+
+    float rotation_coe = .5f;
+
+    if (rb_down) {
+    }
+    else if (rb_down) {
+    }
+    else if (mb_down) {
+        scene->getActiveCamera().rotateBy(rotation_coe * vec3(dy, -dx, 0));
+    }
+    display();
 }
 
 void fileMenu(int id)
