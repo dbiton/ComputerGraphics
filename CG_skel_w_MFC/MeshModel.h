@@ -15,7 +15,8 @@ class MeshModel : public Entity
 protected:
 	// data as imported from obj - in model space
 	std::vector<Vertex> vertices;
-	std::vector<vec3> bounding_box;
+	vec3 bounding_box_min;
+	vec3 bounding_box_max;
 
 	bool is_draw_normals_per_vert;
 	bool is_draw_normals_per_face;
@@ -40,6 +41,10 @@ public:
 	void SetDrawNormalsPerVert(bool b);
 	void SetDrawNormalsPerFace(bool b);
 	void SetDrawBoundingBox(bool b);
+
+	void ToggleDrawNormalsPerVert();
+	void ToggleDrawNormalsPerFace();
+	void ToggleDrawBoundingBox();
 
 	virtual void draw(Renderer* renderer);
 };

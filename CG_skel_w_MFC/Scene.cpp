@@ -8,6 +8,7 @@ void Scene::loadOBJModel(string fileName)
 {
     MeshModel* model = new MeshModel(fileName);
     models.push_back(model);
+    activeModel = models.size() - 1;
     draw();
 }
 
@@ -27,11 +28,6 @@ void Scene::drawDemo()
 {
     renderer->SetDemoBuffer();
     renderer->SwapBuffers();
-}
-
-Camera& Scene::getActiveCamera()
-{
-    return *cameras[activeCamera];
 }
 
 // TODO check that all of these are the right order!

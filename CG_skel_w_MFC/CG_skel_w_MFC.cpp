@@ -25,9 +25,21 @@
 
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
-#define FILE_OPEN 1
-#define MAIN_DEMO 1
-#define MAIN_ABOUT 2
+enum {
+    FILE_OPEN = 1
+};
+
+enum {
+    MAIN_DEMO = 1,
+    MAIN_ABOUT = 2,
+    MAIN_HELP = 3
+};
+
+enum {
+    TOGGLE_FACE_NORMALS = 1,
+    TOGGLE_VERTEX_NORMALS = 2,
+    TOGGLE_BOUNDING_BOX = 3
+};
 
 Scene* scene;
 Renderer* renderer;
@@ -55,6 +67,34 @@ void reshape(int width, int height)
     // at least it seems like we don't need to re-init the whole OpenGL rendering...
 }
 
+inline void message(char* message) { AfxMessageBox(_T(message)); }
+
+void errorNoActiveModel() { message("No active model!"); } // TODO add a message specifying how to make a model the active model
+
+void toggleFaceNormals() {
+    if (scene->activeModel == -1) errorNoActiveModel();
+    else {
+        scene->getActiveModel()->ToggleDrawNormalsPerFace();
+        scene->draw();
+    }
+}
+
+void toggleVertexNormals() {
+    if (scene->activeModel == -1) errorNoActiveModel();
+    else {
+        scene->getActiveModel()->ToggleDrawNormalsPerVert();
+        scene->draw();
+    }
+}
+
+void toggleBoundingBox() {
+    if (scene->activeModel == -1) errorNoActiveModel();
+    else {
+        scene->getActiveModel()->ToggleDrawBoundingBox();
+        scene->draw();
+    }
+}
+
 void keyboard(unsigned char key, int x, int y)
 {
     float move_coe = 0.1;
@@ -62,28 +102,31 @@ void keyboard(unsigned char key, int x, int y)
     switch (key) {
     // S
     case 115:
-        scene->getActiveCamera().moveBy(vec3(0, move_coe, 0));
+        scene->getActiveCamera()->moveBy(vec3(0, move_coe, 0));
         break;
     // W
     case 119:
-        scene->getActiveCamera().moveBy(vec3(0, -move_coe, 0));
+        scene->getActiveCamera()->moveBy(vec3(0, -move_coe, 0));
         break;
     // D
     case 100:
-        scene->getActiveCamera().moveBy(vec3(-move_coe, 0, 0));
+        scene->getActiveCamera()->moveBy(vec3(-move_coe, 0, 0));
         break;
     // A
     case 97:
-        scene->getActiveCamera().moveBy(vec3(move_coe, 0, 0));
+        scene->getActiveCamera()->moveBy(vec3(move_coe, 0, 0));
         break;
     // Q
     case 113:
-        scene->getActiveCamera().moveBy(vec3(0, 0, move_coe));
+        scene->getActiveCamera()->moveBy(vec3(0, 0, move_coe));
         break;
     // E
     case 101:
-        scene->getActiveCamera().moveBy(vec3(0, 0, -move_coe));
+        scene->getActiveCamera()->moveBy(vec3(0, 0, -move_coe));
         break;
+    case 'f': toggleFaceNormals(); break;
+    case 'v': toggleVertexNormals(); break;
+    case 'b': toggleBoundingBox(); break;
     case 033:
         exit(EXIT_SUCCESS);
         break;
@@ -126,7 +169,7 @@ void motion(int x, int y)
     else if (rb_down) {
     }
     else if (mb_down) {
-        scene->getActiveCamera().rotateBy(rotation_coe * vec3(dy, -dx, 0));
+        scene->getActiveCamera()->rotateBy(rotation_coe * vec3(dy, -dx, 0));
     }
     display();
 }
@@ -146,6 +189,15 @@ void fileMenu(int id)
     }
 }
 
+void togglesMenu(int id) {
+    switch (id) {
+    case TOGGLE_FACE_NORMALS: toggleFaceNormals(); break;
+    case TOGGLE_VERTEX_NORMALS: toggleVertexNormals(); break;
+    case TOGGLE_BOUNDING_BOX: toggleBoundingBox(); break;
+    default: message("NOT IMPLEMENTED GTFO"); break;
+    }
+}
+
 void mainMenu(int id)
 {
     switch (id)
@@ -154,7 +206,10 @@ void mainMenu(int id)
         scene->drawDemo(); // oh we're drawing the demo here, didn't notice
         break;
     case MAIN_ABOUT:
-        AfxMessageBox(_T("Computer Graphics"));
+        message("Computer Graphics Part 1 - Wireframes\nby Itay Beit Halachmi and Dvir David Biton");
+        break;
+    case MAIN_HELP:
+        message(""); // TODO: Self-documentation!
         break;
     }
 }
@@ -164,10 +219,16 @@ void initMenu()
 
     int menuFile = glutCreateMenu(fileMenu);
     glutAddMenuEntry("Open..", FILE_OPEN);
+    int menuToggles = glutCreateMenu(togglesMenu);
+    glutAddMenuEntry("Face Normals", TOGGLE_FACE_NORMALS);
+    glutAddMenuEntry("Vertex Normals", TOGGLE_VERTEX_NORMALS);
+    glutAddMenuEntry("Bounding Box", TOGGLE_BOUNDING_BOX);
     glutCreateMenu(mainMenu);
     glutAddSubMenu("File", menuFile);
+    glutAddSubMenu("Toggle", menuToggles);
     glutAddMenuEntry("Demo", MAIN_DEMO);
     glutAddMenuEntry("About", MAIN_ABOUT);
+    glutAddMenuEntry("Help", MAIN_HELP);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 //----------------------------------------------------------------------------
@@ -199,7 +260,7 @@ int my_main(int argc, char** argv)
 
     renderer = new Renderer(512, 512);
     scene = new Scene(renderer);
-    
+
     //----------------------------------------------------------------------------
     // Initialize Callbacks
 

@@ -21,9 +21,8 @@ Renderer::~Renderer(void)
 {
 }
 
-void Renderer::DrawTriangles(const vector<Vertex>& vertices)
+void Renderer::DrawTriangles(const vector<Vertex>& vertices, bool drawFaceNormals, bool drawVertexNormals)
 {
-    Color color_bounding_box(1, 0, 0);
     Color color_mesh(1, 1, 1);
     Color color_face_normal(0, 1, 0);
     Color color_vert_normal(0, 0, 1);
@@ -49,17 +48,48 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices)
             DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[(j + 1) % 3])), color_mesh);
         }
         // draw face normal
-        fm = (v[0] + v[1] + v[2]) / 3;
-        fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * fn_len;
-        DrawLine(clipToScreen(applyTransformToPoint(object2clip, fm)), clipToScreen(applyTransformToPoint(object2clip, fm + fn)), color_face_normal);
-
-        // draw vertex normals
-        for (int j = 0; j < 3; j++) {
-            DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[j] + vn[j] * vn_len)), color_vert_normal);
+        if (drawFaceNormals) {
+            fm = (v[0] + v[1] + v[2]) / 3;
+            fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * fn_len;
+            DrawLine(clipToScreen(applyTransformToPoint(object2clip, fm)), clipToScreen(applyTransformToPoint(object2clip, fm + fn)), color_face_normal);
         }
 
-        // draw bounding box
+        // draw vertex normals
+        if (drawVertexNormals) {
+            for (int j = 0; j < 3; j++) {
+                DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[j] + vn[j] * vn_len)), color_vert_normal);
+            }
+        }
     }
+}
+
+void Renderer::DrawBox(const vec3& min, const vec3& max) {
+    const mat4 object2clip = projection * transform_camera_inverse * transform_object;
+
+    const vec2 v000 = clipToScreen(applyTransformToPoint(object2clip, min)),
+               v100 = clipToScreen(applyTransformToPoint(object2clip, vec3(max.x, min.y, min.z))),
+               v010 = clipToScreen(applyTransformToPoint(object2clip, vec3(min.x, max.y, min.z))),
+               v110 = clipToScreen(applyTransformToPoint(object2clip, vec3(max.x, max.y, min.z))),
+               v001 = clipToScreen(applyTransformToPoint(object2clip, vec3(min.x, min.y, max.z))),
+               v101 = clipToScreen(applyTransformToPoint(object2clip, vec3(max.x, min.y, max.z))),
+               v011 = clipToScreen(applyTransformToPoint(object2clip, vec3(min.x, max.y, max.z))),
+               v111 = clipToScreen(applyTransformToPoint(object2clip, max));
+    const Color color_bounding_box(1, 0, 0);
+
+    DrawLine(v000, v100, color_bounding_box);
+    DrawLine(v000, v010, color_bounding_box);
+    DrawLine(v000, v001, color_bounding_box);
+
+    DrawLine(v110, v100, color_bounding_box);
+    DrawLine(v101, v100, color_bounding_box);
+    DrawLine(v110, v010, color_bounding_box);
+    DrawLine(v011, v010, color_bounding_box);
+    DrawLine(v101, v001, color_bounding_box);
+    DrawLine(v011, v001, color_bounding_box);
+
+    DrawLine(v111, v011, color_bounding_box);
+    DrawLine(v111, v101, color_bounding_box);
+    DrawLine(v111, v110, color_bounding_box);
 }
 
 void Renderer::SetCameraTransform(const mat4& cTransform)
