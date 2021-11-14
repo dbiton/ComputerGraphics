@@ -564,6 +564,29 @@ mat4 RotateX( const GLfloat theta )
     return c;
 }
 
+inline
+mat4 RotateY(const GLfloat theta)
+{
+    GLfloat angle = (M_PI / 180.0) * theta;
+
+    mat4 c;
+    c[0][0] = c[2][2] = cos(angle);
+    c[2][0] = sin(angle);
+    c[0][2] = -c[2][0];
+    return c;
+}
+
+inline
+mat4 RotateZ(const GLfloat theta)
+{
+    GLfloat angle = (M_PI / 180.0) * theta;
+
+    mat4 c;
+    c[0][0] = c[1][1] = cos(angle);
+    c[0][1] = sin(angle);
+    c[1][0] = -c[2][1];
+    return c;
+}
 
 //----------------------------------------------------------------------------
 //

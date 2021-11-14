@@ -182,7 +182,7 @@ void MeshModel::calculateTriangles()
 		vec3 v3s[3];
 		getFaceVerts(face, v3s[0], v3s[1], v3s[2]);
 		for (int i = 0; i < 3; i++) {
-			v3s[i] = applyTransformToPoint(world_transform, v3s[i]);
+			v3s[i] = applyTransformToPoint(getTransform(), v3s[i]);
 			renderVertices.triangles.push_back(v3s[i]);
 			renderVertices.triangles_colors.push_back(color_mesh);
 		}
@@ -216,14 +216,14 @@ void MeshModel::calculateTriangles()
 	if (is_draw_bounding_box) {
 		const vec3 min = bounding_box.box_min;
 		const vec3 max = bounding_box.box_max;
-		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(min.x, min.y, min.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(max.x, min.y, min.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(min.x, max.y, min.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(max.x, max.y, min.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(min.x, min.y, max.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(max.x, min.y, max.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(min.x, max.y, max.z)));
-		renderVertices.triangles.push_back(applyTransformToPoint(world_transform, vec3(max.x, max.y, max.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(min.x, min.y, min.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(max.x, min.y, min.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(min.x, max.y, min.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(max.x, max.y, min.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(min.x, min.y, max.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(max.x, min.y, max.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(min.x, max.y, max.z)));
+		renderVertices.triangles.push_back(applyTransformToPoint(getTransform(), vec3(max.x, max.y, max.z)));
 		for (int i = 0; i < 8; i++) renderVertices.triangles_colors.push_back(color_bounding_box);
 	}
 }

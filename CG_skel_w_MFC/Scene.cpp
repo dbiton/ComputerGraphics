@@ -14,8 +14,7 @@ void Scene::draw()
 {
 	// 1. Send the renderer the current camera transform and the projection
 	// 2. Tell all models to draw themselves
-	renderer->SetCameraTransform(cameras[activeCamera]->getTransform());
-	renderer->SetProjection(cameras[activeCamera]->getProjection());
+	renderer->SetCamera(cameras[activeCamera]);
 	for (const auto& model : models) {
 		model->draw(renderer);
 	}
@@ -26,4 +25,9 @@ void Scene::drawDemo()
 {
 	renderer->SetDemoBuffer();
 	renderer->SwapBuffers();
+}
+
+const mat4& Camera::getProjection() const
+{
+	return projection;
 }

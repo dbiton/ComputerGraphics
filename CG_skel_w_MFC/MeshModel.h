@@ -31,17 +31,22 @@ struct RenderVertices {
 	std::vector<vec3> normals_colors;	// color for src and dst of normal
 
 	void pushTriangle(vec3 v0, vec3 v1, vec3 v2, vec3 c0, vec3 c1, vec3 c2);
-	void pushNormal(vec3 src, vec3 dst, vec3 c_src, vec3 c_dst);
-	void clear();
+	void pushNormal(vec3 src, vec3 dir, vec3 c_src, vec3 c_dst);
+	void clear() {
+		triangles.clear();
+		triangles_colors.clear();
+		normals.clear();
+		normals_colors.clear();
+	}
 };
 
 class MeshModel : public Model
 {
 protected:
-	// data as imported from obj - unchanged by transform
+	// data as imported from obj - in model space
 	std::vector<vec3> verts;
 	std::vector<Face> faces;
-	// bounding box is unchanged by transform
+	// bounding box in models space
 	BoundingBox bounding_box;
 
 	bool is_draw_normals_per_vert;
@@ -52,9 +57,8 @@ protected:
 	vec3 color_vert_normal;
 	vec3 color_face_normal; 
 	vec3 color_bounding_box;
-
-	mat4 world_transform;
-
+	
+	// data in world space
 	RenderVertices renderVertices;
 protected:
 	MeshModel();

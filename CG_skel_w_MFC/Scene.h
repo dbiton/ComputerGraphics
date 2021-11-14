@@ -16,7 +16,6 @@ public:
 
 
 class Light : public Entity{
-
 };
 
 class Camera : public Entity{
