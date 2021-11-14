@@ -1,8 +1,9 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-/.vs/CG_skel/v16
-/CG_skel_w_MFC/Debug
-/freeglut/Debug
-/glew/Debug
+﻿.vs/
+CG_skel_w_MFC/Debug/
+CG_skel_w_MFC/Release/
+Debug/
+freeglut/lib/
+freeglut/Release/
+glew/lib/
+glew/Release/
+Release/

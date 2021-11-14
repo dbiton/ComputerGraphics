@@ -7,6 +7,7 @@
 class Entity
 {
 	mat4 transform;
+	vec3 pos, rot, scale;
 public:
 	Entity();
 	virtual ~Entity();

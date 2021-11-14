@@ -61,7 +61,7 @@ protected:
 	// data in world space
 	RenderVertices renderVertices;
 protected:
-	MeshModel();
+	MeshModel() noexcept;
 
 	void fitBoundingBox();
 	void calculateFaceNormals();

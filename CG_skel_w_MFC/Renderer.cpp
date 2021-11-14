@@ -6,7 +6,7 @@
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
-Renderer::Renderer() :m_width(512), m_height(512)
+Renderer::Renderer() : m_width(512), m_height(512), m_outBuffer(nullptr)
 {
 	InitOpenGLRendering();
 	CreateBuffers(512, 512);
@@ -34,6 +34,9 @@ void Renderer::DrawTriangles(const vector<Vertex>* vertices, const vector<vec3>*
 	}
 }
 
+void Renderer::SetCameraTransform(const mat4& cTransform)
+{
+}
 
 
 void Renderer::CreateBuffers(int width, int height)
@@ -42,6 +45,10 @@ void Renderer::CreateBuffers(int width, int height)
 	m_height = height;
 	CreateOpenGLBuffer(); //Do not remove this line.
 	m_outBuffer = new float[3 * m_width * m_height];
+}
+
+void Renderer::CreateLocalBuffer()
+{
 }
 
 void Renderer::SetDemoBuffer()
@@ -176,4 +183,12 @@ void Renderer::SwapBuffers()
 	a = glGetError();
 	glutSwapBuffers();
 	a = glGetError();
+}
+
+void Renderer::ClearColorBuffer()
+{
+}
+
+void Renderer::ClearDepthBuffer()
+{
 }
