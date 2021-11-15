@@ -30,15 +30,28 @@ enum {
 };
 
 enum {
-    MAIN_DEMO = 1,
-    MAIN_ABOUT = 2,
-    MAIN_HELP = 3
+    MAIN_DEMO,
+    MAIN_ABOUT,
+    MAIN_HELP,
+    MAIN_SWAP_CONTROL
 };
 
 enum {
-    TOGGLE_FACE_NORMALS = 1,
-    TOGGLE_VERTEX_NORMALS = 2,
-    TOGGLE_BOUNDING_BOX = 3
+    TOGGLE_FACE_NORMALS,
+    TOGGLE_VERTEX_NORMALS,
+    TOGGLE_BOUNDING_BOX,
+    TOGGLE_INACTIVES_DIMMING,
+    TOGGLE_AXES
+};
+
+enum {
+    CONTROLLING_CAMERA,
+    CONTROLLING_MODEL
+};
+
+enum {
+    NEW_OBJ,
+    NEW_CUBE
 };
 
 Scene* scene;
@@ -46,6 +59,7 @@ Renderer* renderer;
 
 int last_x, last_y;
 bool lb_down, rb_down, mb_down;
+int control_mode;
 
 //----------------------------------------------------------------------------
 // Callbacks
@@ -55,7 +69,7 @@ void display(void)
     //Call the scene and ask it to draw itself
     renderer->ClearColorBuffer();
     renderer->ClearDepthBuffer();
-    scene->draw();
+    if (scene->activeCamera != -1) scene->draw();
 }
 
 void reshape(int width, int height)
@@ -69,21 +83,35 @@ void reshape(int width, int height)
 
 inline void message(char* message) { AfxMessageBox(_T(message)); }
 
-void errorNoActiveModel() { message("No active model!"); } // TODO add a message specifying how to make a model the active model
+Entity* controlled() { return (control_mode == CONTROLLING_CAMERA) ? (Entity*)scene->getActiveCamera() : (Entity*)scene->getActiveModel(); }
 
 void toggleFaceNormals() {
-    if (scene->activeModel == -1) errorNoActiveModel();
-    else scene->getActiveModel()->ToggleDrawNormalsPerFace();
+    if (scene->activeModel != -1) scene->getActiveModel()->ToggleDrawNormalsPerFace();
 }
 
 void toggleVertexNormals() {
-    if (scene->activeModel == -1) errorNoActiveModel();
-    else scene->getActiveModel()->ToggleDrawNormalsPerVert();
+    if (scene->activeModel != -1) scene->getActiveModel()->ToggleDrawNormalsPerVert();
 }
 
 void toggleBoundingBox() {
-    if (scene->activeModel == -1) errorNoActiveModel();
-    else scene->getActiveModel()->ToggleDrawBoundingBox();
+    if (scene->activeModel != -1) scene->getActiveModel()->ToggleDrawBoundingBox();
+}
+
+void toggleInactivesDimming() {
+    scene->dimInactiveModels = !scene->dimInactiveModels;
+}
+
+int menuModels;
+
+void updateMenu() {
+    if (control_mode == CONTROLLING_MODEL) glutChangeToMenuEntry(3, "Control Camera", MAIN_SWAP_CONTROL);
+    else glutChangeToMenuEntry(3, "Control Model", MAIN_SWAP_CONTROL);
+}
+
+void swapControl() {
+    if (control_mode == CONTROLLING_CAMERA) control_mode = CONTROLLING_MODEL;
+    else control_mode = CONTROLLING_CAMERA;
+    updateMenu();
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -91,36 +119,23 @@ void keyboard(unsigned char key, int x, int y)
     float move_coe = 0.1;
 
     switch (key) {
-    // S
-    case 115:
-        scene->getActiveCamera()->moveBy(vec3(0, move_coe, 0));
-        break;
-    // W
-    case 119:
-        scene->getActiveCamera()->moveBy(vec3(0, -move_coe, 0));
-        break;
-    // D
-    case 100:
-        scene->getActiveCamera()->moveBy(vec3(-move_coe, 0, 0));
-        break;
-    // A
-    case 97:
-        scene->getActiveCamera()->moveBy(vec3(move_coe, 0, 0));
-        break;
-    // Q
-    case 113:
-        scene->getActiveCamera()->moveBy(vec3(0, 0, move_coe));
-        break;
-    // E
-    case 101:
-        scene->getActiveCamera()->moveBy(vec3(0, 0, -move_coe));
-        break;
+
+    case 'w': controlled()->moveBy(vec3(0, -move_coe, 0)); break;
+    case 'a': controlled()->moveBy(vec3(move_coe, 0, 0)); break;
+    case 's': controlled()->moveBy(vec3(0, move_coe, 0)); break;
+    case 'd': controlled()->moveBy(vec3(-move_coe, 0, 0)); break;
+    case 'q': controlled()->moveBy(vec3(0, 0, move_coe)); break;
+    case 'e': controlled()->moveBy(vec3(0, 0, -move_coe)); break;
+
     case 'f': toggleFaceNormals(); break;
     case 'v': toggleVertexNormals(); break;
     case 'b': toggleBoundingBox(); break;
-    case 033:
-        exit(EXIT_SUCCESS);
-        break;
+    case 'i': toggleInactivesDimming(); break;
+
+    case 'c': swapControl(); break;
+
+    case 033: exit(EXIT_SUCCESS); break; // escape
+
     }
     display();
 }
@@ -140,8 +155,17 @@ void mouse(int button, int state, int x, int y)
         break;
     case GLUT_MIDDLE_BUTTON:
         mb_down = (state == GLUT_UP) ? 0 : 1;
+        last_x = x;
+        last_y = y;
+        break;
+    case 3: // scrollwheel up
+        controlled()->setScale(controlled()->getScale() * 1.1);
+        break;
+    case 4: // scrollwheel down
+        controlled()->setScale(controlled()->getScale() * 0.9);
         break;
     }
+    display();
 }
 
 void motion(int x, int y)
@@ -160,24 +184,44 @@ void motion(int x, int y)
     else if (rb_down) {
     }
     else if (mb_down) {
-        scene->getActiveCamera()->rotateBy(rotation_coe * vec3(dy, -dx, 0));
+        // TODO this code, when applied to a camera, makes it so the entire scene rotates around 0.
+        // intentional? maybe should rotate the entire scene around the camera's "looking at" point instead?
+        // or should we rotate the "looking at" point itself?
+        const Entity* toRotate = controlled();
+        const vec3 pos = toRotate->getPosition();
+        controlled()->setPosition(vec3(0, 0, 0));
+        controlled()->rotateBy(rotation_coe * vec3(dy, -dx, 0));
+        controlled()->setPosition(pos);
     }
     display();
 }
 
-void fileMenu(int id)
-{
-    switch (id)
-    {
-    case FILE_OPEN:
+void newModelMenu(int id) {
+    std::string name;
+    switch (id) {
+    case NEW_OBJ: {
         CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.obj|*.*"));
         if (dlg.DoModal() == IDOK)
         {
-            std::string s((LPCTSTR)dlg.GetPathName());
+            name = dlg.GetFileName();
             scene->loadOBJModel((LPCTSTR)dlg.GetPathName());
         }
+        else return; // gonna add a model to the models menu, unless this failed
+    } break;
+    case NEW_CUBE: // TODO add a dialog for choosing p and dim?
+        scene->AddBox(vec3(0, 0, 0), vec3(1, 1, 1));
+        name = "Cube";
         break;
     }
+    glutSetMenu(menuModels);
+    char newEntry[50];
+    sprintf(newEntry, "(%d) %s", scene->activeModel, name.c_str());
+    glutAddMenuEntry(newEntry, scene->activeModel);
+}
+
+void modelsMenu(int id) {
+    scene->activeModel = id;
+    display();
 }
 
 void togglesMenu(int id) {
@@ -185,6 +229,8 @@ void togglesMenu(int id) {
     case TOGGLE_FACE_NORMALS: toggleFaceNormals(); break;
     case TOGGLE_VERTEX_NORMALS: toggleVertexNormals(); break;
     case TOGGLE_BOUNDING_BOX: toggleBoundingBox(); break;
+    case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
+    case TOGGLE_AXES: // TODO if we want
     default: message("NOT IMPLEMENTED GTFO"); break;
     }
     display();
@@ -200,32 +246,40 @@ void mainMenu(int id)
     case MAIN_ABOUT:
         message("Computer Graphics Part 1 - Wireframes\nby Itay Beit Halachmi and Dvir David Biton");
         break;
-    case MAIN_HELP:
-        message(""); // TODO: Self-documentation!
+    case MAIN_HELP: // TODO: Self-documentation! if we want
+        // message("");
         break;
+    case MAIN_SWAP_CONTROL: swapControl(); break;
     }
 }
 
+constexpr bool ALLOW_DEMO = false;
+
 void initMenu()
 {
+    int menuNewModel = glutCreateMenu(newModelMenu);
+    glutAddMenuEntry("From OBJ", NEW_OBJ);
+    glutAddMenuEntry("Primitive: Cube", NEW_CUBE);
+    menuModels = glutCreateMenu(modelsMenu);
+    glutAddSubMenu("New...", menuNewModel);
 
-    int menuFile = glutCreateMenu(fileMenu);
-    glutAddMenuEntry("Open..", FILE_OPEN);
     int menuToggles = glutCreateMenu(togglesMenu);
     glutAddMenuEntry("Face Normals", TOGGLE_FACE_NORMALS);
     glutAddMenuEntry("Vertex Normals", TOGGLE_VERTEX_NORMALS);
     glutAddMenuEntry("Bounding Box", TOGGLE_BOUNDING_BOX);
+    glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING); // this will get its name once updateMenu() happens
+    glutAddMenuEntry("Axes", TOGGLE_AXES);
     glutCreateMenu(mainMenu);
-    glutAddSubMenu("File", menuFile);
+    glutAddSubMenu("Models", menuModels);
     glutAddSubMenu("Toggle", menuToggles);
-    glutAddMenuEntry("Demo", MAIN_DEMO);
+    glutAddMenuEntry("3", MAIN_SWAP_CONTROL); // this will get its name once updateMenu() happens
+    if (ALLOW_DEMO) glutAddMenuEntry("Demo", MAIN_DEMO);
     glutAddMenuEntry("About", MAIN_ABOUT);
     glutAddMenuEntry("Help", MAIN_HELP);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
+    updateMenu();
 }
 //----------------------------------------------------------------------------
-
-
 
 int my_main(int argc, char** argv)
 {
@@ -247,8 +301,6 @@ int my_main(int argc, char** argv)
         /*		...*/
     }
     fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-
-
 
     renderer = new Renderer(512, 512);
     scene = new Scene(renderer);

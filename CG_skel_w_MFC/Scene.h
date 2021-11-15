@@ -35,14 +35,10 @@ class Scene {
 	std::vector<Camera*> cameras;
 	Renderer* renderer;
 
+	void AddModel(MeshModel* model);
+
 public:
-	Scene(Renderer *_renderer) : renderer(_renderer), activeModel(-1), activeLight(-1), activeCamera(-1)
-	{
-		cameras.push_back(new Camera());
-		cameras[0]->LookAt(vec4(5, 1, 2, 1), vec4(0, 0, 0, 0), vec4(0, 0, 1, 1));
-		cameras[0]->Frustum(-5, 5, -5, 5, -1, 1);
-		activeCamera = 0;
-	};
+	Scene(Renderer *_renderer) : renderer(_renderer), activeModel(-1), activeLight(-1), activeCamera(-1) { };
 
 	void loadOBJModel(std::string fileName);
 	void draw();
@@ -51,10 +47,13 @@ public:
 	int activeModel;
 	int activeLight;
 	int activeCamera;
+	bool dimInactiveModels = true;
 
 	MeshModel* getActiveModel() { return models[activeModel]; }
 	Light* getActiveLight() { return lights[activeLight]; }
 	Camera* getActiveCamera() { return cameras[activeCamera]; }
+
+	void AddBox(vec3 p, vec3 dim);
 
 	// might just make the vectors public lol
 };

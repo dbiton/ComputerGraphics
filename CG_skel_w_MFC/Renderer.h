@@ -30,7 +30,7 @@ public:
 	~Renderer(void);
 
 	// triangles are in object space
-	void DrawTriangles(const std::vector<Vertex>& vertices, bool drawFaceNormals, bool drawVertexNormals);
+	void DrawTriangles(const std::vector<Vertex>& vertices, bool isActiveModel, bool drawFaceNormals, bool drawVertexNormals);
 	void DrawBox(const vec3& min, const vec3& max);
 
 	void SetCameraTransform(const mat4& cTransform);

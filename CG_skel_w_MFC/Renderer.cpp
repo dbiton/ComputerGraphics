@@ -21,12 +21,22 @@ Renderer::~Renderer(void)
 {
 }
 
-void Renderer::DrawTriangles(const vector<Vertex>& vertices, bool drawFaceNormals, bool drawVertexNormals)
+GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) {
+    return (length(p1 - p2) + length(p1 - p3) + length(p2 - p3)) / 3;
+}
+
+void Renderer::DrawTriangles(const vector<Vertex>& vertices, bool isActiveModel, bool drawFaceNormals, bool drawVertexNormals)
 {
     Color color_mesh(1, 1, 1);
     Color color_face_normal(0, 1, 0);
-    Color color_vert_normal(0, 0, 1);
-    GLfloat fn_len = 0.5;
+    Color color_vert_normal(0, 0.5, 1);
+    if (!isActiveModel) {
+        const float fade = 0.5;
+        color_mesh *= fade;
+        color_face_normal *= fade;
+        color_vert_normal *= fade;
+    }
+    GLfloat fn_len = 0.25;
     GLfloat vn_len = 0.5;
 
     mat4 object2clip = projection * transform_camera_inverse * transform_object;
@@ -47,17 +57,20 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices, bool drawFaceNormal
         for (int j = 0; j < 3; j++) {
             DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[(j + 1) % 3])), color_mesh);
         }
+
+        GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
+
         // draw face normal
         if (drawFaceNormals) {
             fm = (v[0] + v[1] + v[2]) / 3;
-            fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * fn_len;
+            fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len;
             DrawLine(clipToScreen(applyTransformToPoint(object2clip, fm)), clipToScreen(applyTransformToPoint(object2clip, fm + fn)), color_face_normal);
         }
 
         // draw vertex normals
         if (drawVertexNormals) {
             for (int j = 0; j < 3; j++) {
-                DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[j] + vn[j] * vn_len)), color_vert_normal);
+                DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[j] + normalize(vn[j]) * normalsLength * vn_len)), color_vert_normal);
             }
         }
     }
@@ -106,7 +119,6 @@ void Renderer::SetObjectTransform(const mat4& oTransform)
 {
     transform_object = oTransform;
 }
-
 
 void Renderer::CreateBuffers(int width, int height)
 {
