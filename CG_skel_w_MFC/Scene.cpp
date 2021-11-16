@@ -47,7 +47,7 @@ void Scene::drawDemo()
 }
 
 void Scene::AddBox(vec3 p, vec3 dim) { // TODO this aint no box
-    AddModel(new MeshModel(PrimMeshModel::Box(p, dim)));
+    AddModel(new MeshModel(PrimMeshModel::Prism(p, 16, 4, 3)));
 }
 
 // TODO check that all of these are the right order!

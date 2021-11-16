@@ -140,19 +140,8 @@ void Renderer::CreateLocalBuffer()
 
 void Renderer::SetDemoBuffer()
 {
-    //vertical line
     const int halfWidth = m_width / 2,
               halfHeight = m_height / 2;
-    // old demo code
-    /*
-    for (int i = 0; i < m_height; i++) {
-        m_outBuffer[INDEX(m_width, halfWidth, i, 0)] = 1; m_outBuffer[INDEX(m_width, halfWidth, i, 1)] = 0; m_outBuffer[INDEX(m_width, halfWidth, i, 2)] = 0;
-    }
-    //horizontal line
-    for (int i = 0; i < m_width; i++) {
-        m_outBuffer[INDEX(m_width, i, halfHeight, 0)] = 1; m_outBuffer[INDEX(m_width, i, halfHeight, 1)] = 0; m_outBuffer[INDEX(m_width, i, halfHeight, 2)] = 1;
-    } */
-    // new demo code
     DrawLine(vec2(halfWidth, 0), vec2(halfWidth, m_height), Color(1, 0, 0));
     DrawLine(vec2(0, halfHeight), vec2(m_width, halfHeight), Color(1, 0, 1));
     constexpr bool TEST_RAYS = true;
