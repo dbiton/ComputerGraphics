@@ -124,15 +124,30 @@ void MeshModel::SetDrawBoundingBox(bool b)
 	is_draw_bounding_box = b;
 }
 
-void MeshModel::draw(Renderer* renderer)
+void MeshModel::ToggleDrawNormalsPerVert()
+{
+	is_draw_normals_per_vert = !is_draw_normals_per_vert;
+}
+
+void MeshModel::ToggleDrawNormalsPerFace()
+{
+	is_draw_normals_per_face = !is_draw_normals_per_face;
+}
+
+void MeshModel::ToggleDrawBoundingBox()
+{
+	is_draw_bounding_box = !is_draw_bounding_box;
+}
+
+void MeshModel::draw(Renderer* renderer, bool isActiveModel)
 {
 	renderer->SetObjectTransform(getTransform());
-	renderer->DrawTriangles(vertices);
+	renderer->DrawTriangles(vertices, isActiveModel, is_draw_normals_per_face, is_draw_normals_per_vert);
+	if (is_draw_bounding_box) renderer->DrawBox(bounding_box_min, bounding_box_max);
 }
 
 void MeshModel::fitBoundingBox()
-{	
-	bounding_box.clear();
+{
 	vec3 vert_min(FLT_MAX, FLT_MAX, FLT_MAX);
 	vec3 vert_max(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 	if (vertices.size() > 0) {
@@ -142,14 +157,9 @@ void MeshModel::fitBoundingBox()
 				if (vert_max[i] < vert.position[i]) vert_max[i] = vert.position[i];
 			}
 		}
-		bounding_box.push_back(vec3(vert_min.x, vert_min.y, vert_min.z));
-		bounding_box.push_back(vec3(vert_max.x, vert_min.y, vert_min.z));
-		bounding_box.push_back(vec3(vert_min.x, vert_max.y, vert_min.z));
-		bounding_box.push_back(vec3(vert_max.x, vert_max.y, vert_min.z));
-		bounding_box.push_back(vec3(vert_min.x, vert_min.y, vert_max.z));
-		bounding_box.push_back(vec3(vert_max.x, vert_min.y, vert_max.z));
-		bounding_box.push_back(vec3(vert_min.x, vert_max.y, vert_max.z));
-		bounding_box.push_back(vec3(vert_max.x, vert_max.y, vert_max.z));
+		bounding_box_min = vert_min;
+		bounding_box_max = vert_max;
+		setPosition((bounding_box_min + bounding_box_max) / 2);
 	}
 }
 

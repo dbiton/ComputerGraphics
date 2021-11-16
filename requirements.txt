@@ -1,0 +1,41 @@
+1. Geometry
+	 Implement the class MeshModel. The user should be able to load an OBJ file and transform it (translation, rotation and scaling) in both the model and world frames. The function draw() will send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.
+		* Implemented.
+	 If the OBJ file contains normal-per-vertex, allow the user to choose if the normal should be drawn. Decide how you want to visualize the normal.
+		* Implemented.
+	 Compute the normal-per-face. That is the normal to each triangle of the model. Allow the user to choose if normals-per-face should be drawn.
+		* Implemented.
+	 Compute the bounding box of the model in model frame. Allow the user to choose if the bounding box should be drawn.
+		* Implemented.
+	 Implement a class PrimMeshModel that inherits from MeshModel. The class will have at least one geometric primitive (like cube, pyramid, sphere, etc.) hard-coded into it. The user should be able to add a primitive to the scene.
+		* Implemented, but currently the box is just once face lmao
+2. Cameras
+	 Allow the user to add new cameras to the scene.
+		* Not implemented yet
+	 Allow the user to transform the camera in world and view frame, and to select the type of projection and its parameters (z_near,z_far, aspect ratio, etc)
+		* Partially implemented. Can manipulate the active camera, but not change its projection
+	 Allow the user to choose if the cameras should be rendered (as a small plus sign for example)
+		* Not implemented yet
+3. The scene
+	 Allow several models and camera simultaneously in the scene.
+		* Partially implemented. Multiple models are currently allowed.
+	 Allow the user to select the active model. The active model will be the model currently controlled by the user.
+		* Implemented. The active model is brighter than all other models, but this can be toggled.
+	 Allow the user to select the active camera. The renderer will render the scene using the active camera’s transformation and projection. The user will control only the active camera.
+		* Not implemented yet.
+	 Allow the user to focus the active camera on the active model (use LookAt).
+		* Not implemented yet.
+	 Allow the user to zoom in/out on the active model.
+		* Implemented. The camera itself can zoom on the scene.
+	 Implement the function draw(). The function will call the draw method of all the models and will submit the renderer any information necessary in order to render the scene.
+		* Implemented. (probably)
+4. The renderer
+	 Implement the functions in the renderer’s signature. You may add additional methods.
+		* Implemented. (probably)
+5. GUI
+	 When the user resizes the window, re-render the scene correctly, while maintaining aspect ratio.
+		* Partially implemented. Resizing works, but the aspect ratio changes
+	 Allow the user to set the step size of incremental transformation (e.g , when the user moves the mouse to translate an object)
+		* Not yet implemented.
+	 In general, the UI should be easy to use. At the very least, you should be able to set the position of models and cameras quickly.
+		* Not a feature on its own, but yeah, not yet implemented either

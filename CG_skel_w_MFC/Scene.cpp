@@ -1,14 +1,30 @@
 #include "stdafx.h"
 #include "Scene.h"
 #include "MeshModel.h"
+#include "PrimMeshModel.h"
 #include <string>
 
 using namespace std;
+
+void Scene::AddModel(MeshModel* model) {
+    models.push_back(model);
+    activeModel = models.size() - 1;
+    if (activeCamera == -1) { // happens if this is the first model we're loading. so we set up a default frustum camera to look at it
+        vec3 min = models[activeModel]->getBoundingBoxMin(),
+             max = models[activeModel]->getBoundingBoxMax();
+        cameras.push_back(new Camera());
+        activeCamera = 0;
+        cameras[0]->LookAt(models[activeModel]->getPosition() + max * vec3(3, 1, 0.5), models[activeModel]->getPosition(), vec4(0, 0, 1, 1));
+        cameras[0]->Frustum(min.x * 2, max.x * 2, min.x * 2, max.x * 2, min.z, max.z);
+    }
+    draw();
+}
+
 void Scene::loadOBJModel(string fileName)
 {
     MeshModel* model = new MeshModel(fileName);
-    models.push_back(model);
-    draw();
+    model->setPosition(vec3(0, 0, 0));
+    AddModel(model);
 }
 
 void Scene::draw()
@@ -17,8 +33,9 @@ void Scene::draw()
     // 2. Tell all models to draw themselves
     renderer->SetCameraTransform(cameras[activeCamera]->getTransform());
     renderer->SetProjection(cameras[activeCamera]->getProjection());
-    for (const auto& model : models) {
-        model->draw(renderer);
+    for (int i = 0; i < models.size(); i++)
+    {
+        models[i]->draw(renderer, !dimInactiveModels || i == activeModel);
     }
     renderer->SwapBuffers();
 }
@@ -29,9 +46,8 @@ void Scene::drawDemo()
     renderer->SwapBuffers();
 }
 
-Camera& Scene::getActiveCamera()
-{
-    return *cameras[activeCamera];
+void Scene::AddBox(vec3 p, vec3 dim) { // TODO this aint no box
+    AddModel(new MeshModel(PrimMeshModel::Box(p, dim)));
 }
 
 // TODO check that all of these are the right order!
