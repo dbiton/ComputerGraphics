@@ -105,6 +105,24 @@ void Renderer::DrawBox(const vec3& min, const vec3& max) {
     DrawLine(v111, v110, color_bounding_box);
 }
 
+void Renderer::DrawAxes() {
+    const mat4 object2clip = projection * transform_camera_inverse; // axes belong to the world, so no transform_object!
+    const vec2 origin = clipToScreen(applyTransformToPoint(object2clip, vec3(0, 0, 0))),
+               xplus = clipToScreen(applyTransformToPoint(object2clip, vec3(10, 0, 0))),
+               xminus = clipToScreen(applyTransformToPoint(object2clip, vec3(-10, 0, 0))),
+               yplus = clipToScreen(applyTransformToPoint(object2clip, vec3(0, 10, 0))),
+               yminus = clipToScreen(applyTransformToPoint(object2clip, vec3(0, -10, 0))),
+               zplus = clipToScreen(applyTransformToPoint(object2clip, vec3(0, 0, 10))),
+               zminus = clipToScreen(applyTransformToPoint(object2clip, vec3(0, 0, -10)));
+
+    DrawLine(origin, xplus, Color(1, 0, 0));
+    DrawLine(origin, xminus, Color(0.5, 0, 0));
+    DrawLine(origin, yplus, Color(0, 1, 0));
+    DrawLine(origin, yminus, Color(0, 0.5, 0));
+    DrawLine(origin, zplus, Color(0, 0, 1));
+    DrawLine(origin, zminus, Color(0, 0, 0.5));
+}
+
 void Renderer::SetCameraTransform(const mat4& cTransform)
 {
     transform_camera_inverse = transpose(cTransform);

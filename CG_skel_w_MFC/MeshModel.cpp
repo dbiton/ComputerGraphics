@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 Face faceFromStream(std::istream& aStream)
 {
 	Face face;
@@ -159,7 +158,7 @@ void MeshModel::fitBoundingBox()
 		}
 		bounding_box_min = vert_min;
 		bounding_box_max = vert_max;
-		setPosition((bounding_box_min + bounding_box_max) / 2);
+		setPosition(world, -(bounding_box_min + bounding_box_max) / 2); // center it in the world
 	}
 }
 

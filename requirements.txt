@@ -1,6 +1,6 @@
 1. Geometry
 	 Implement the class MeshModel. The user should be able to load an OBJ file and transform it (translation, rotation and scaling) in both the model and world frames. The function draw() will send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.
-		* Implemented.
+		* Implemented. All models spawn at the position the camera's looking at. There's separate control modes for the model frame and the world frame, and also a third "intuitive mode" for keeping movements in the world frame, and everything else in model frame. Also an option for resetting each of the frames.
 	 If the OBJ file contains normal-per-vertex, allow the user to choose if the normal should be drawn. Decide how you want to visualize the normal.
 		* Implemented.
 	 Compute the normal-per-face. That is the normal to each triangle of the model. Allow the user to choose if normals-per-face should be drawn.
@@ -8,7 +8,7 @@
 	 Compute the bounding box of the model in model frame. Allow the user to choose if the bounding box should be drawn.
 		* Implemented.
 	 Implement a class PrimMeshModel that inherits from MeshModel. The class will have at least one geometric primitive (like cube, pyramid, sphere, etc.) hard-coded into it. The user should be able to add a primitive to the scene.
-		* Implemented, but currently the box is just once face lmao
+		* Partially implemented. We need to add dialogs for choosing dimensions and whatnot
 2. Cameras
 	 Allow the user to add new cameras to the scene.
 		* Not implemented yet
@@ -24,14 +24,14 @@
 	 Allow the user to select the active camera. The renderer will render the scene using the active camera’s transformation and projection. The user will control only the active camera.
 		* Not implemented yet.
 	 Allow the user to focus the active camera on the active model (use LookAt).
-		* Not implemented yet.
+		* Implemented, using the "Focus" option in the context menu.
 	 Allow the user to zoom in/out on the active model.
 		* Implemented. The camera itself can zoom on the scene.
 	 Implement the function draw(). The function will call the draw method of all the models and will submit the renderer any information necessary in order to render the scene.
-		* Implemented. (probably)
+		* Implemented.
 4. The renderer
 	 Implement the functions in the renderer’s signature. You may add additional methods.
-		* Implemented. (probably)
+		* Implemented.
 5. GUI
 	 When the user resizes the window, re-render the scene correctly, while maintaining aspect ratio.
 		* Partially implemented. Resizing works, but the aspect ratio changes
