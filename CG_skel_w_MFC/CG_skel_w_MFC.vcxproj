@@ -108,6 +108,7 @@ copy $(ProjectDir)*.glsl $(OutputPath)</Command>
     <ClCompile Include="CG_skel_w_MFC.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="InitShader.cpp" />
+    <ClCompile Include="InputDialog.cpp" />
     <ClCompile Include="MeshModel.cpp" />
     <ClCompile Include="PrimMeshModel.cpp" />
     <ClCompile Include="Renderer.cpp" />
@@ -121,6 +122,7 @@ copy $(ProjectDir)*.glsl $(OutputPath)</Command>
     <ClInclude Include="CG_skel_w_MFC.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="InitShader.h" />
+    <ClInclude Include="InputDialog.h" />
     <ClInclude Include="mat.h" />
     <ClInclude Include="MeshModel.h" />
     <ClInclude Include="PrimMeshModel.h" />

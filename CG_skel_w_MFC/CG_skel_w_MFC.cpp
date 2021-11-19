@@ -18,6 +18,7 @@
 #include "InitShader.h"
 #include "Scene.h"
 #include "Renderer.h"
+#include "InputDialog.h"
 #include <string>
 
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
@@ -47,6 +48,11 @@ enum {
     CONTROL_CAMERA_INTUITIVE,
 
     CONTROL_ALL // for reset all
+};
+
+enum {
+    PROJECTION_ORTHO,
+    PROJECTION_FRUSTUM
 };
 
 enum { // used for intuitive mode
@@ -233,6 +239,35 @@ void resetMenu(int id, bool redisplay) {
 
 void resetMenu(int id) { resetMenu(id, true); }
 
+void projectionMenu(int id) {
+    if (scene->activeCamera == -1) return; // nothing to do!
+    Camera* camera = scene->getActiveCamera();
+    switch (id) {
+    case PROJECTION_ORTHO: {
+        CProjectionDialog dialog("Orthographic Projection Parameters", camera->lastBottom, camera->lastTop,
+            camera->lastLeft, camera->lastRight,
+            camera->lastNear, camera->lastFar);
+        if (dialog.DoModal() == IDOK) {
+            camera->Ortho(dialog.getLeft(), dialog.getRight(),
+                dialog.getBottom(), dialog.getTop(),
+                dialog.getNear(), dialog.getFar());
+            display();
+        }
+    } break;
+    case PROJECTION_FRUSTUM: {
+        CProjectionDialog dialog("Frustum Projection Parameters", camera->lastBottom, camera->lastTop,
+            camera->lastLeft, camera->lastRight,
+            camera->lastNear, camera->lastFar);
+        if (dialog.DoModal() == IDOK) {
+            camera->Frustum(dialog.getLeft(), dialog.getRight(),
+                dialog.getBottom(), dialog.getTop(),
+                dialog.getNear(), dialog.getFar());
+            display();
+        }
+    } break;
+    }
+}
+
 void newModelMenu(int id) {
     std::string name;
     switch (id) { // all new models will be automatically placed at the camera's LookingAt position
@@ -339,11 +374,16 @@ void initMenu()
     glutAddMenuEntry("Camera (world frame)", CONTROL_CAMERA_IN_WORLD);
     glutAddMenuEntry("All active frames", CONTROL_ALL);
 
+    const int menuProjection = glutCreateMenu(projectionMenu);
+    glutAddMenuEntry("Orthographic", PROJECTION_ORTHO);
+    glutAddMenuEntry("Frustum", PROJECTION_FRUSTUM);
+
     glutCreateMenu(mainMenu);
     glutAddSubMenu("Models", menuModels);
     glutAddSubMenu("Toggle", menuToggles);
     glutAddSubMenu("Control Mode", menuControl);
     glutAddSubMenu("Reset Frame", menuReset);
+    glutAddSubMenu("Change Projection", menuProjection);
     glutAddMenuEntry("Focus", MAIN_FOCUS);
     if (ALLOW_DEMO) glutAddMenuEntry("Demo", MAIN_DEMO);
     glutAddMenuEntry("About", MAIN_ABOUT);

@@ -80,14 +80,25 @@ void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up)
     world = mat4(u, v, n, t) * Translate(-eye);
 }
 
+void Camera::UpdateLastParameters(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar) {
+    lastBottom = bottom;
+    lastTop = top;
+    lastLeft = left;
+    lastRight = right;
+    lastNear = zNear;
+    lastFar = zFar;
+}
+
 void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
 {
+    UpdateLastParameters(left, right, bottom, top, zNear, zFar);
     projection = Scale(2.0 / (right - left), 2.0 / (top - bottom), 2.0 / (zNear - zFar))
                  * Translate(-0.5 * (right + left), -0.5 * (top + bottom), 0.5 * (zNear + zFar));
 }
 
 void Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
 {
+    UpdateLastParameters(left, right, bottom, top, zNear, zFar);
     mat4 H = mat4();
     H[2][0] = (left + right) / (2.0 * zNear);
     H[2][1] = (top + bottom) / (2.0 * zNear);

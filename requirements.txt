@@ -13,7 +13,7 @@
 	 Allow the user to add new cameras to the scene.
 		* Not implemented yet
 	 Allow the user to transform the camera in world and view frame, and to select the type of projection and its parameters (z_near,z_far, aspect ratio, etc)
-		* Partially implemented. Can manipulate the active camera, but not change its projection
+		* Implemented.
 	 Allow the user to choose if the cameras should be rendered (as a small plus sign for example)
 		* Not implemented yet
 3. The scene

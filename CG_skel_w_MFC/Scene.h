@@ -18,7 +18,13 @@ class Camera : public Entity{
 	vec4 lookingAt;
 	vec4 upDirection;
 
+	void UpdateLastParameters(const float left, const float right,
+		const float bottom, const float top,
+		const float zNear, const float zFar);
+
 public:
+	float lastBottom, lastTop, lastLeft, lastRight, lastNear, lastFar;
+
 	void LookAt(const vec4& eye, const vec4& at, const vec4& up );
 	void Ortho( const float left, const float right,
 		const float bottom, const float top,
