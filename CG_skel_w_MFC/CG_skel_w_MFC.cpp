@@ -35,7 +35,8 @@ enum {
     TOGGLE_VERTEX_NORMALS,
     TOGGLE_BOUNDING_BOX,
     TOGGLE_INACTIVES_DIMMING,
-    TOGGLE_AXES
+    TOGGLE_AXES,
+    TOGGLE_CAMERAS
 };
 
 enum {
@@ -68,6 +69,10 @@ enum {
     NEW_PYRAMID,
     NEW_PRISM,
     NEW_SPHERE
+};
+
+enum {
+    NEW_CAMERA
 };
 
 constexpr bool ALLOW_DEMO = false;
@@ -118,6 +123,10 @@ void toggleInactivesDimming() noexcept {
 
 void toggleAxes() noexcept {
     scene->drawAxes = !scene->drawAxes;
+}
+
+void toggleCameras() noexcept {
+    scene->drawCameras = !scene->drawCameras;
 }
 
 mat4& controlled(int context, int control_mode) {
@@ -306,6 +315,22 @@ void newModelMenu(int id) {
     glutAddMenuEntry(newEntry, scene->activeModel);
 }
 
+void cameraMenu(int id) {
+    std::string name;
+    switch (id) {
+    case NEW_CAMERA: {
+        char s[50];
+        sprintf(s, "(%d) Camera", scene->AddCamera());
+        glutAddMenuEntry(s, scene->activeCamera);
+        break;
+    }
+    default:
+        scene->activeCamera = std::abs(id) - 1;
+        display();
+        break;
+    }
+}
+
 void modelsMenu(int id) {
     scene->activeModel = id;
     display();
@@ -318,6 +343,7 @@ void togglesMenu(int id) {
     case TOGGLE_BOUNDING_BOX: toggleBoundingBox(); break;
     case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
     case TOGGLE_AXES: toggleAxes(); break;
+    case TOGGLE_CAMERAS: toggleCameras(); break;
     }
     display();
 }
@@ -352,12 +378,16 @@ void initMenu()
     menuModels = glutCreateMenu(modelsMenu);
     glutAddSubMenu("New...", menuNewModel);
 
+    const int menuCameras = glutCreateMenu(cameraMenu);
+    glutAddMenuEntry("New", NEW_CAMERA);
+
     const int menuToggles = glutCreateMenu(togglesMenu);
     glutAddMenuEntry("Face Normals", TOGGLE_FACE_NORMALS);
     glutAddMenuEntry("Vertex Normals", TOGGLE_VERTEX_NORMALS);
     glutAddMenuEntry("Bounding Box", TOGGLE_BOUNDING_BOX);
     glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING);
     glutAddMenuEntry("Axes", TOGGLE_AXES);
+    glutAddMenuEntry("Cameras", TOGGLE_CAMERAS);
 
     const int menuControl = glutCreateMenu(controlMenu);
     glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);
@@ -380,6 +410,7 @@ void initMenu()
 
     glutCreateMenu(mainMenu);
     glutAddSubMenu("Models", menuModels);
+    glutAddSubMenu("Cameras", menuCameras);
     glutAddSubMenu("Toggle", menuToggles);
     glutAddSubMenu("Control Mode", menuControl);
     glutAddSubMenu("Reset Frame", menuReset);

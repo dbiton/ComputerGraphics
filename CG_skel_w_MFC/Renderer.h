@@ -11,6 +11,8 @@ using namespace std;
 
 // ObjectCoord stored in ModelMesh and does not get used
 
+class Camera;
+
 class Renderer
 {
 	float* m_outBuffer; // 3*width*height
@@ -33,6 +35,7 @@ public:
 	void DrawTriangles(const std::vector<Vertex>& vertices, bool isActiveModel, bool drawFaceNormals, bool drawVertexNormals);
 	void DrawBox(const vec3& min, const vec3& max);
 	void DrawAxes();
+	void DrawCamera(const Camera* camera);
 
 	void SetCameraTransform(const mat4& cTransform);
 	void SetProjection(const mat4& projection);
@@ -45,6 +48,7 @@ public:
 	void CreateBuffers(int width, int height);
 private:
 	vec2 clipToScreen(const vec3& clip_pos);
+	vec2 clipToScreen(const vec4& clip_pos);
 
 	void DrawLine(const vec2& p0, const vec2& p1, const Color& c);
 	void DrawPixel(int x, int y, const Color& c);

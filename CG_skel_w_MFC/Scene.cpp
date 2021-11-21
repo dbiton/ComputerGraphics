@@ -32,6 +32,13 @@ void Scene::draw()
     renderer->SetProjection(getActiveCamera()->getProjection());
 
     if (drawAxes) renderer->DrawAxes();
+    if (drawCameras) {
+        for (int i = 0; i < cameras.size(); i++) {
+            if (i != activeCamera) {
+                renderer->DrawCamera(cameras[i]);
+            }
+        }
+    }
     for (int i = 0; i < models.size(); i++)
     {
         models[i]->draw(renderer, !dimInactiveModels || i == activeModel);
@@ -43,6 +50,12 @@ void Scene::drawDemo()
 {
     renderer->SetDemoBuffer();
     renderer->SwapBuffers();
+}
+
+int Scene::AddCamera()
+{
+    cameras.push_back(new Camera());
+    return cameras.size() - 1;
 }
 
 void Scene::AddCuboid(vec3 p, vec3 dim) {
@@ -87,6 +100,10 @@ void Camera::UpdateLastParameters(const float left, const float right, const flo
     lastRight = right;
     lastNear = zNear;
     lastFar = zFar;
+}
+
+Camera::Camera()
+{
 }
 
 void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)

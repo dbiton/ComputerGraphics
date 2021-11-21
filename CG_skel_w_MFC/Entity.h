@@ -8,7 +8,7 @@ struct Entity
 {
 	mat4 self; // the self frame, so either a camera's view frame, or a model's model frame (duh)
 	mat4 world; // the world frame
-	mat4 getTransform() { return world * self; }
+	mat4 getTransform() const { return world * self; }
 };
 
 // matrix getters/setters/manipulations
@@ -20,7 +20,7 @@ inline void setPosition(mat4& mat, const vec3& v) noexcept
 	mat[2][3] = v.z;
 }
 
-inline vec3 getPosition(mat4& mat)
+inline vec3 getPosition(const mat4& mat)
 {
 	return vec3(mat[0][3], mat[1][3], mat[2][3]);
 }

@@ -123,6 +123,28 @@ void Renderer::DrawAxes() {
     DrawLine(origin, zminus, Color(0, 0, 0.5));
 }
 
+void Renderer::DrawCamera(const Camera* camera) {
+    const mat4 camera_marker_transform = camera->getTransform();
+
+    const vec4 forward = camera->getLookingAt();
+    const vec4 up = camera->getUpDirection();
+    const vec4 side = cross(forward, up);
+    const vec4 pos = getPosition(camera_marker_transform);
+
+    const mat4 object2clip = projection * transform_camera_inverse * camera_marker_transform;
+
+    const GLfloat len_axis = 4.f;
+
+    const vec2 pos_2d = clipToScreen(object2clip * pos);
+    const vec2 side_2d = clipToScreen(object2clip * (pos + len_axis * side));
+    const vec2 up_2d = clipToScreen(object2clip * (pos + len_axis * up));
+    const vec2 forward_2d = clipToScreen(object2clip * (pos + len_axis * forward));
+
+    DrawLine(pos_2d, side_2d, Color(0, 1, 1));
+    DrawLine(pos_2d, up_2d, Color(1, 0, 1));
+    DrawLine(pos_2d, forward_2d, Color(1, 1, 0));
+}
+
 void Renderer::SetCameraTransform(const mat4& cTransform)
 {
     transform_camera_inverse = transpose(cTransform);
@@ -146,6 +168,12 @@ void Renderer::CreateBuffers(int width, int height)
     if (m_outBuffer) delete m_outBuffer;
     m_outBuffer = new float[3 * m_width * m_height];
 }
+
+vec2 Renderer::clipToScreen(const vec4& clip_pos)
+{
+    return vec2((clip_pos.x + 1) / 2 * m_width, (clip_pos.y + 1) / 2 * m_height);
+}
+
 
 vec2 Renderer::clipToScreen(const vec3& clip_pos)
 {

@@ -23,6 +23,8 @@ class Camera : public Entity{
 		const float zNear, const float zFar);
 
 public:
+	Camera();
+
 	float lastBottom, lastTop, lastLeft, lastRight, lastNear, lastFar;
 
 	void LookAt(const vec4& eye, const vec4& at, const vec4& up );
@@ -50,6 +52,7 @@ class Scene {
 public:
 	bool dimInactiveModels = true;
 	bool drawAxes = false;
+	bool drawCameras = false;
 
 	Scene(Renderer *_renderer) : renderer(_renderer), activeModel(-1), activeLight(-1), activeCamera(-1) { };
 
@@ -63,7 +66,9 @@ public:
 
 	MeshModel* getActiveModel() { return models[activeModel]; }
 	Light* getActiveLight() { return lights[activeLight]; }
-	Camera* getActiveCamera() { return cameras[activeCamera]; }
+	Camera* getActiveCamera() { printf("active: %d", activeCamera); return cameras[activeCamera]; }
+
+	int AddCamera(); // returns number of cameras
 
 	void AddCuboid(vec3 p, vec3 dim);
 	void AddPyramid(vec3 p, GLfloat height, GLfloat base_radius, int base_sides);
