@@ -49,5 +49,7 @@ public:
 	vec3 getBoundingBoxMin() { return bounding_box_min; }
 	vec3 getBoundingBoxMax() { return bounding_box_max; }
 
+	void Recenter();
+
 	virtual void draw(Renderer* renderer, bool isActiveModel);
 };

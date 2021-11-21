@@ -15,7 +15,7 @@ void Scene::AddModel(MeshModel* model) {
         cameras.push_back(new Camera());
         activeCamera = 0;
         getActiveCamera()->LookAt(getPosition(getActiveModel()->world) + max * vec3(3, 1, 0.5), getPosition(getActiveModel()->world), vec4(0, 0, 1, 1));
-        getActiveCamera()->Frustum(min.x * 2, max.x * 2, min.x * 2, max.x * 2, min.z, max.z);
+        getActiveCamera()->Frustum(min.x * 2, max.x * 2, min.x * 2, max.x * 2, 1, 1 + max.z - min.z);
     }
     moveBy(model->world, getActiveCamera()->getLookingAt()); // spawn the model where the camera's looking
     draw();

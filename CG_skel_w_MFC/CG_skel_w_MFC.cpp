@@ -158,6 +158,13 @@ void focus() {
     }
 }
 
+void resetFrame(mat4& frame, int controlMode) {
+    reset(frame);
+    if (controlMode == CONTROL_MODEL_IN_MODEL || controlMode == CONTROL_MODEL_INTUITIVE) scene->getActiveModel()->Recenter();
+}
+
+void resetFrame(mat4& frame) { resetFrame(frame, controlMode); }
+
 void keyboard(unsigned char key, int x, int y)
 {
     if (key == 33) exit(EXIT_SUCCESS); // escape
@@ -179,7 +186,7 @@ void keyboard(unsigned char key, int x, int y)
     case 'x': toggleAxes(); break;
     case 'm': toggleCameras(); break;
 
-    case 'r': reset(controlled(CONTROL_CONTEXT_NONE)); break;
+    case 'r': resetFrame(controlled(CONTROL_CONTEXT_NONE)); break;
 
     case '=': focus(); break;
 
@@ -251,7 +258,7 @@ void resetMenu(int id, bool redisplay) {
         resetMenu(CONTROL_CAMERA_IN_VIEW, false);
         resetMenu(CONTROL_CAMERA_IN_WORLD, false);
     }
-    else reset(controlled(CONTROL_CONTEXT_NONE, id));
+    else resetFrame(controlled(CONTROL_CONTEXT_NONE, id), id);
     if (redisplay) display();
 }
 
