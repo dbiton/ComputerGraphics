@@ -136,3 +136,23 @@ protected:
     afx_msg void OnPaint();
     DECLARE_MESSAGE_MAP()
 };
+
+class CSingleFloatDialog : public CInputDialog
+{
+public:
+    CSingleFloatDialog(CString title) : CInputDialog(title) { }
+    CSingleFloatDialog(CString title, float _value) : CInputDialog(title), value(_value) { }
+    virtual ~CSingleFloatDialog() { }
+
+    float getValue() noexcept { return value; }
+
+protected:
+    float value = 0;
+    CEdit valueEdit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};

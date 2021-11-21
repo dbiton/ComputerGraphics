@@ -51,11 +51,6 @@ enum {
     CONTROL_ALL // for reset all
 };
 
-enum {
-    PROJECTION_ORTHO,
-    PROJECTION_FRUSTUM
-};
-
 enum { // used for intuitive mode
     CONTROL_CONTEXT_NONE, // for resetting
     CONTROL_CONTEXT_MOVE,
@@ -75,6 +70,12 @@ enum {
     NEW_CAMERA = -1
 };
 
+enum {
+    SENSITIVITY_MOVEMENT,
+    SENSITIVITY_SCALING,
+    SENSITIVITY_ROTATION
+};
+
 constexpr bool ALLOW_DEMO = false;
 
 Scene* scene;
@@ -84,7 +85,7 @@ int last_x, last_y;
 bool lb_down, rb_down, mb_down;
 int controlMode = CONTROL_CAMERA_IN_WORLD;
 int menuModels, menuCameras;
-float move_coe = 0.1, rotation_coe = 1, scale_coe = 1;
+float move_coe = 1, scale_coe = 1, rotation_coe = 1;
 
 //----------------------------------------------------------------------------
 // Callbacks
@@ -164,12 +165,12 @@ void keyboard(unsigned char key, int x, int y)
 
     switch (key) {
 
-    case 'w': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, -move_coe, 0)); break;
-    case 'a': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(move_coe, 0, 0)); break;
-    case 's': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, move_coe, 0)); break;
-    case 'd': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(-move_coe, 0, 0)); break;
-    case 'q': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, 0, move_coe)); break;
-    case 'e': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, 0, -move_coe)); break;
+    case 'w': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, -move_coe * 0.1, 0)); break;
+    case 'a': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(move_coe * 0.1, 0, 0)); break;
+    case 's': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, move_coe * 0.1, 0)); break;
+    case 'd': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(-move_coe * 0.1, 0, 0)); break;
+    case 'q': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, 0, move_coe * 0.1)); break;
+    case 'e': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, 0, -move_coe * 0.1)); break;
 
     case 'f': toggleFaceNormals(); break;
     case 'v': toggleVertexNormals(); break;
@@ -264,9 +265,9 @@ void projectionMenu(int id) {
             camera->lastLeft, camera->lastRight,
             camera->lastNear, camera->lastFar);
         if (dialog.DoModal() == IDOK) {
-            camera->Ortho(dialog.getLeft(), dialog.getRight(),
-                dialog.getBottom(), dialog.getTop(),
-                dialog.getNear(), dialog.getFar());
+            camera->projection = camera->Ortho(dialog.getLeft(), dialog.getRight(),
+                                               dialog.getBottom(), dialog.getTop(),
+                                               dialog.getNear(), dialog.getFar());
             display();
         }
     } break;
@@ -275,11 +276,31 @@ void projectionMenu(int id) {
             camera->lastLeft, camera->lastRight,
             camera->lastNear, camera->lastFar);
         if (dialog.DoModal() == IDOK) {
-            camera->Frustum(dialog.getLeft(), dialog.getRight(),
-                dialog.getBottom(), dialog.getTop(),
-                dialog.getNear(), dialog.getFar());
+            camera->projection = camera->Frustum(dialog.getLeft(), dialog.getRight(),
+                                                 dialog.getBottom(), dialog.getTop(),
+                                                 dialog.getNear(), dialog.getFar());
             display();
         }
+    } break;
+    }
+}
+
+void sensitivityMenu(int id) {
+    switch (id) {
+    case SENSITIVITY_MOVEMENT: {
+        CSingleFloatDialog dialog("Movement Sensitivity", move_coe);
+        if (dialog.DoModal() == IDOK) move_coe = std::abs(dialog.getValue());
+        if (move_coe == 0) move_coe = 1;
+    } break;
+    case SENSITIVITY_SCALING: {
+        CSingleFloatDialog dialog("Scaling Sensitivity", scale_coe);
+        if (dialog.DoModal() == IDOK) scale_coe = std::abs(dialog.getValue());
+        if (scale_coe == 0) scale_coe = 1;
+    } break;
+    case SENSITIVITY_ROTATION: {
+        CSingleFloatDialog dialog("Rotation Sensitivity", rotation_coe);
+        if (dialog.DoModal() == IDOK) rotation_coe = std::abs(dialog.getValue());
+        if (rotation_coe == 0) rotation_coe = 1;
     } break;
     }
 }
@@ -422,6 +443,11 @@ void initMenu()
     glutAddMenuEntry("Orthographic", PROJECTION_ORTHO);
     glutAddMenuEntry("Frustum", PROJECTION_FRUSTUM);
 
+    const int menuSensitivity = glutCreateMenu(sensitivityMenu);
+    glutAddMenuEntry("Movement", SENSITIVITY_MOVEMENT);
+    glutAddMenuEntry("Scaling", SENSITIVITY_SCALING);
+    glutAddMenuEntry("Rotation", SENSITIVITY_ROTATION);
+
     glutCreateMenu(mainMenu);
     glutAddSubMenu("Models", menuModels);
     glutAddSubMenu("Cameras", menuCameras);
@@ -429,6 +455,7 @@ void initMenu()
     glutAddSubMenu("Control Mode", menuControl);
     glutAddSubMenu("Reset Frame", menuReset);
     glutAddSubMenu("Change Projection", menuProjection);
+    glutAddSubMenu("Sensitivity", menuSensitivity);
     glutAddMenuEntry("Focus", MAIN_FOCUS);
     if (ALLOW_DEMO) glutAddMenuEntry("Demo", MAIN_DEMO);
     glutAddMenuEntry("About", MAIN_ABOUT);

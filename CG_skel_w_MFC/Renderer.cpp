@@ -6,15 +6,15 @@
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
-Renderer::Renderer() : m_width(512), m_height(512), m_outBuffer(nullptr), m_zbuffer(nullptr)
+Renderer::Renderer()
 {
     InitOpenGLRendering();
-    CreateBuffers(512, 512);
+    CreateBuffers(512, 512, true);
 }
-Renderer::Renderer(int width, int height) : m_width(width), m_height(height), m_outBuffer(nullptr), m_zbuffer(nullptr)
+Renderer::Renderer(int width, int height)
 {
     InitOpenGLRendering();
-    CreateBuffers(width, height);
+    CreateBuffers(width, height, true);
 }
 
 Renderer::~Renderer(void)
@@ -156,10 +156,16 @@ void Renderer::SetObjectTransform(const mat4& oTransform)
     transform_object = oTransform;
 }
 
-void Renderer::CreateBuffers(int width, int height)
+void Renderer::CreateBuffers(int width, int height, bool first)
 {
     m_width = width;
     m_height = height;
+    if (first) {
+        m_outBuffer = nullptr;
+        m_zbuffer = nullptr;
+        m_firstWidth = m_width;
+        m_firstHeight = m_height;
+    }
     CreateOpenGLBuffer(); //Do not remove this line.
     if (m_outBuffer) delete m_outBuffer;
     m_outBuffer = new float[3 * m_width * m_height];

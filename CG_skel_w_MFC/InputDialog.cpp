@@ -305,3 +305,36 @@ void CProjectionDialog::OnPaint()
 
     bottomEdit.SetFocus();
 }
+
+
+// -------------------------
+//    Class CSingleFloatDialog
+// -------------------------
+
+void CSingleFloatDialog::DoDataExchange(CDataExchange* pDX)
+{
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, IDC_CMD_EDIT, value);
+}
+
+// CSingleFloatDialog message handlers
+BEGIN_MESSAGE_MAP(CSingleFloatDialog, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CSingleFloatDialog::OnCreate(LPCREATESTRUCT lpcs)
+{
+    valueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 10, 200, 30), this, IDC_CMD_EDIT);
+
+    return 0;
+}
+
+void CSingleFloatDialog::OnPaint()
+{
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    valueEdit.SetFocus();
+}

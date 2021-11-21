@@ -18,6 +18,7 @@ class Renderer
 	float* m_outBuffer; // 3*width*height
 	float* m_zbuffer; // width*height
 	int m_width, m_height;
+	float m_firstWidth, m_firstHeight;
 
 	GLuint gScreenTex;
 	GLuint gScreenVtc;
@@ -45,7 +46,10 @@ public:
 	void ClearColorBuffer();
 	void ClearDepthBuffer();
 	void SetDemoBuffer();
-	void CreateBuffers(int width, int height);
+	void CreateBuffers(int width, int height, bool first = false);
+	float GetHeightMultiplier() { return m_height / m_firstHeight; }
+	float GetWidthMultiplier() { return m_width / m_firstWidth; }
+
 private:
 	vec2 clipToScreen(const vec3& clip_pos);
 	vec2 clipToScreen(const vec4& clip_pos);

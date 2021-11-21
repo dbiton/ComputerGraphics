@@ -26,10 +26,24 @@ void Scene::loadOBJModel(string fileName)
     AddModel(new MeshModel(fileName));
 }
 
+mat4 Scene::Projection() {
+    Camera* camera = getActiveCamera();
+    const float midHeight = (camera->lastTop + camera->lastBottom) / 2,
+                midWidth = (camera->lastLeft + camera->lastRight) / 2,
+                dh = (camera->lastTop - camera->lastBottom) / 2 * renderer->GetHeightMultiplier(),
+                dw = (camera->lastLeft - camera->lastRight) / 2 * renderer->GetWidthMultiplier();
+    if (camera->lastType == PROJECTION_ORTHO) {
+        return camera->Ortho(midWidth + dw, midWidth - dw, midHeight + dh, midHeight - dh, camera->lastNear, camera->lastFar, false);
+    }
+    else {
+        return camera->Frustum(midWidth + dw, midWidth - dw, midHeight + dh, midHeight - dh, camera->lastNear, camera->lastFar, false);
+    }
+}
+
 void Scene::draw()
 {
     renderer->SetCameraTransform(getActiveCamera()->getTransform());
-    renderer->SetProjection(getActiveCamera()->getProjection());
+    renderer->SetProjection(Projection());
 
     if (drawAxes) renderer->DrawAxes();
     if (drawCameras) {
@@ -93,29 +107,30 @@ void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up)
     world = mat4(u, v, n, t) * Translate(-eye);
 }
 
-void Camera::UpdateLastParameters(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar) {
+void Camera::UpdateLastParameters(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, const int type) {
     lastBottom = bottom;
     lastTop = top;
     lastLeft = left;
     lastRight = right;
     lastNear = zNear;
     lastFar = zFar;
+    lastType = type;
 }
 
 Camera::Camera()
 {
 }
 
-void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
+mat4 Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember)
 {
-    UpdateLastParameters(left, right, bottom, top, zNear, zFar);
-    projection = Scale(2.0 / (right - left), 2.0 / (top - bottom), 2.0 / (zNear - zFar))
-                 * Translate(-0.5 * (right + left), -0.5 * (top + bottom), 0.5 * (zNear + zFar));
+    if (remember) UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_ORTHO);
+    return Scale(2.0 / (right - left), 2.0 / (top - bottom), 2.0 / (zNear - zFar))
+           * Translate(-0.5 * (right + left), -0.5 * (top + bottom), 0.5 * (zNear + zFar));
 }
 
-void Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
+mat4 Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember)
 {
-    UpdateLastParameters(left, right, bottom, top, zNear, zFar);
+    if (remember)UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_FRUSTUM);
     mat4 H = mat4();
     H[2][0] = (left + right) / (2.0 * zNear);
     H[2][1] = (top + bottom) / (2.0 * zNear);
@@ -128,15 +143,10 @@ void Camera::Frustum(const float left, const float right, const float bottom, co
     N[2][3] = -1;
     N[3][3] = 0;
 
-    projection = N * S * H;
+    return N * S * H;
 }
 
 mat4 Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar)
 {
     return mat4(); // TODO wth is this
-}
-
-const mat4& Camera::getProjection() const
-{
-    return projection;
 }
