@@ -53,7 +53,7 @@ CCmdDialog::~CCmdDialog()
 
 string CCmdDialog::GetCmd()
 {
-    return ((LPCTSTR)mCmd);
+    return CT2CA(mCmd);
 }
 
 void CCmdDialog::DoDataExchange(CDataExchange* pDX)
@@ -161,7 +161,7 @@ CCmdXyzDialog::~CCmdXyzDialog()
 
 string CCmdXyzDialog::GetCmd()
 {
-    return ((LPCTSTR)mCmd);
+    return CT2CA(mCmd);
 }
 
 vec3 CCmdXyzDialog::GetXYZ()

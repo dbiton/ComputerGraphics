@@ -130,7 +130,7 @@ mat4 Camera::Ortho(const float left, const float right, const float bottom, cons
 
 mat4 Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember)
 {
-    if (remember)UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_FRUSTUM);
+    if (remember) UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_FRUSTUM);
     mat4 H = mat4();
     H[2][0] = (left + right) / (2.0 * zNear);
     H[2][1] = (top + bottom) / (2.0 * zNear);
