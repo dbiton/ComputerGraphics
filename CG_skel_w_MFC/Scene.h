@@ -13,30 +13,35 @@ class Renderer;
 class Light : public Entity{
 };
 
+enum {
+	PROJECTION_ORTHO,
+	PROJECTION_FRUSTUM
+};
+
 class Camera : public Entity{
-	mat4 projection;
 	vec4 lookingAt;
 	vec4 upDirection;
 
 	void UpdateLastParameters(const float left, const float right,
 		const float bottom, const float top,
-		const float zNear, const float zFar);
+		const float zNear, const float zFar, const int type);
 
 public:
 	Camera();
 
+	mat4 projection;
 	float lastBottom, lastTop, lastLeft, lastRight, lastNear, lastFar;
+	int lastType; // all of this is needed to update the projection matrix upon reshape
 
 	void LookAt(const vec4& eye, const vec4& at, const vec4& up );
-	void Ortho( const float left, const float right,
+	mat4 Ortho( const float left, const float right,
 		const float bottom, const float top,
-		const float zNear, const float zFar );
-	void Frustum( const float left, const float right,
+		const float zNear, const float zFar, bool remember = true);
+	mat4 Frustum( const float left, const float right,
 		const float bottom, const float top,
-		const float zNear, const float zFar );
+		const float zNear, const float zFar, bool remember = true);
 	mat4 Perspective( const float fovy, const float aspect,
 		const float zNear, const float zFar);
-	const mat4& getProjection() const;
 	const vec4& getLookingAt() const { return lookingAt; }
 	const vec4& getUpDirection() const { return upDirection; }
 };
@@ -48,6 +53,7 @@ class Scene {
 	Renderer* renderer;
 
 	void AddModel(MeshModel* model);
+	mat4 Projection();
 
 public:
 	bool dimInactiveModels = true;
