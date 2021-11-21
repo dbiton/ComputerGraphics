@@ -59,7 +59,8 @@ protected:
 class CXyzDialog : public CInputDialog
 {
 public:
-    CXyzDialog(CString title = _T("Input Dialog"));
+    CXyzDialog(CString title = _T("Input Dialog"), float _mX = 0, float _mY = 0, float _mZ = 0);
+    void setText(std::string _textX, std::string _textY, std::string _textZ);
     virtual ~CXyzDialog();
 
     vec3 GetXYZ();
@@ -71,6 +72,8 @@ protected:
     CEdit mXEdit;
     CEdit mYEdit;
     CEdit mZEdit;
+
+    std::string textX, textY, textZ;
 
     virtual void DoDataExchange(CDataExchange* pDX);
 

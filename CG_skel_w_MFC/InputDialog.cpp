@@ -91,9 +91,16 @@ void CCmdDialog::OnPaint()
 //    Class CXyzDialog
 // ----------------------
 
-CXyzDialog::CXyzDialog(CString title)
-    : CInputDialog(title), mX(0.0), mY(0.0), mZ(0.0)
+CXyzDialog::CXyzDialog(CString title, float _mX, float _mY, float _mZ)
+    : CInputDialog(title), mX(_mX), mY(_mY), mZ(_mZ), textX("X"), textY("Y"), textZ("Z")
 { }
+
+void CXyzDialog::setText(std::string _textX, std::string _textY, std::string _textZ)
+{
+    textX = _textX;
+    textY = _textY;
+    textZ = _textZ;
+}
 
 CXyzDialog::~CXyzDialog()
 { }
@@ -120,13 +127,13 @@ END_MESSAGE_MAP()
 int CXyzDialog::OnCreate(LPCREATESTRUCT lpcs)
 {
     mXEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-      CRect(130, 70, 340, 90), this, IDC_X_EDIT);
+      CRect(200, 70, 340, 90), this, IDC_X_EDIT);
 
     mYEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-      CRect(130, 140, 340, 160), this, IDC_Y_EDIT);
+      CRect(200, 140, 340, 160), this, IDC_Y_EDIT);
 
     mZEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-      CRect(130, 210, 340, 230), this, IDC_Z_EDIT);
+      CRect(200, 210, 340, 230), this, IDC_Z_EDIT);
 
     return 0;
 }
@@ -137,13 +144,13 @@ void CXyzDialog::OnPaint()
     dc.SetBkMode(TRANSPARENT);
 
     CRect x_rect(100, 72, 450, 90);
-    dc.DrawText(CString(X_EDIT_TITLE), -1, &x_rect, DT_SINGLELINE);
+    dc.DrawText(CString(textX.c_str()), -1, &x_rect, DT_SINGLELINE);
 
     CRect y_rect(100, 142, 450, 160);
-    dc.DrawText(CString(Y_EDIT_TITLE), -1, &y_rect, DT_SINGLELINE);
+    dc.DrawText(CString(textY.c_str()), -1, &y_rect, DT_SINGLELINE);
 
     CRect z_rect(100, 212, 450, 230);
-    dc.DrawText(CString(Z_EDIT_TITLE), -1, &z_rect, DT_SINGLELINE);
+    dc.DrawText(CString(textZ.c_str()), -1, &z_rect, DT_SINGLELINE);
 
     mXEdit.SetFocus();
 }

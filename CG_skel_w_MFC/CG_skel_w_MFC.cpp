@@ -323,25 +323,46 @@ void newModelMenu(int id) {
         }
         else return; // gonna add a model to the models menu, unless this failed
     } break;
-    case NEW_CUBOID: // TODO add dialogs for choosing dimensions and whatnot
-        scene->AddCuboid(vec3(0, 0, 0), vec3(1, 1, 1));
+    case NEW_CUBOID: { // TODO add dialogs for choosing dimensions and whatnot
+        vec3 dim(1, 1, 1);
+        CXyzDialog dlg(_T("Cuboid Dimensions Parameters"), 1, 1, 1);
+        dlg.setText("Width", "Height", "Length");
+        if (dlg.DoModal() != IDOK) return;
+        dim = dlg.GetXYZ();
+        scene->AddCuboid(vec3(0, 0, 0), dim);
         name = "Cuboid";
         break;
-
-    case NEW_PYRAMID:
-        scene->AddPyramid(vec3(0, 0, 0), 1, 1, 4);
+    }
+    case NEW_PYRAMID: {
+        vec3 param;
+        CXyzDialog dlg(_T("Pyramid Parameters"), 1, 2, 4);
+        dlg.setText("Height", "Radius", "Sides");
+        if (dlg.DoModal() != IDOK) return;
+        param = dlg.GetXYZ();
+        scene->AddPyramid(vec3(0, 0, 0), param.x, param.y, param.z);
         name = "Pyramid";
         break;
-
-    case NEW_PRISM:
-        scene->AddPrism(vec3(0, 0, 0), 1, 1, 7);
+    }
+    case NEW_PRISM: {
+        vec3 param;
+        CXyzDialog dlg(_T("Prisim Parameters"), 1, 2, 8);
+        dlg.setText("Height", "Radius", "Sides");
+        if (dlg.DoModal() != IDOK) return;
+        param = dlg.GetXYZ();
+        scene->AddPrism(vec3(0, 0, 0), param.x, param.y, param.z);
         name = "Prism";
         break;
-
-    case NEW_SPHERE:
-        scene->AddSphere(vec3(0, 0, 0), 1, 2);
+    }
+    case NEW_SPHERE: {
+        float subdivisions = 1;
+        CSingleFloatDialog dialog(_T("Sphere Resolution"), subdivisions);
+        if (dialog.DoModal() != IDOK) return;
+        subdivisions = std::floor(subdivisions);
+        if (subdivisions < 1) subdivisions = 1;
+        scene->AddSphere(vec3(0, 0, 0), 1, subdivisions);
         name = "Sphere";
         break;
+    }
     }
     glutSetMenu(menuModels);
     char newEntry[50];
