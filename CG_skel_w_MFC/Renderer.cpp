@@ -125,20 +125,16 @@ void Renderer::DrawAxes() {
 
 void Renderer::DrawCamera(const Camera* camera) {
     const mat4 camera_marker_transform = camera->getTransform();
-
-    const vec4 forward = camera->getLookingAt();
-    const vec4 up = camera->getUpDirection();
-    const vec4 side = cross(forward, up);
-    const vec4 pos = getPosition(camera_marker_transform);
-
     const mat4 object2clip = projection * transform_camera_inverse * camera_marker_transform;
 
-    const GLfloat len_axis = 4.f;
+    const vec4 pos = getPosition(camera_marker_transform);
 
-    const vec2 pos_2d = clipToScreen(object2clip * pos);
-    const vec2 side_2d = clipToScreen(object2clip * (pos + len_axis * side));
-    const vec2 up_2d = clipToScreen(object2clip * (pos + len_axis * up));
-    const vec2 forward_2d = clipToScreen(object2clip * (pos + len_axis * forward));
+    const GLfloat len_axis = 1.f;
+
+    const vec2 pos_2d = clipToScreen(applyTransform(object2clip, pos));
+    const vec2 side_2d = clipToScreen(applyTransform(object2clip, (pos + len_axis * vec3(1, 0, 0))));
+    const vec2 up_2d = clipToScreen(applyTransform(object2clip, (pos + len_axis * vec3(0, 1, 0))));
+    const vec2 forward_2d = clipToScreen(applyTransform(object2clip, (pos + len_axis * vec3(0, 0, 1))));
 
     DrawLine(pos_2d, side_2d, Color(0, 1, 1));
     DrawLine(pos_2d, up_2d, Color(1, 0, 1));

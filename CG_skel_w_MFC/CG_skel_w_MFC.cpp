@@ -159,6 +159,9 @@ void focus(){
 
 void keyboard(unsigned char key, int x, int y)
 {
+    if (key == 33) exit(EXIT_SUCCESS); // escape
+    if (scene->activeCamera == -1) return;
+
     switch (key) {
 
     case 'w': moveBy(controlled(CONTROL_CONTEXT_MOVE), vec3(0, -move_coe, 0)); break;
@@ -177,8 +180,6 @@ void keyboard(unsigned char key, int x, int y)
     case 'r': reset(controlled(controlMode)); break;
 
     case '=': focus(); break;
-
-    case 033: exit(EXIT_SUCCESS); break; // escape
 
     }
     display();
@@ -203,10 +204,14 @@ void mouse(int button, int state, int x, int y)
         last_y = y;
         break;
     case 3: // scrollwheel up
-        scaleBy(controlled(CONTROL_CONTEXT_SCALE), 1 + (0.1 * scale_coe));
+        if (scene->activeCamera != -1) {
+            scaleBy(controlled(CONTROL_CONTEXT_SCALE), 1 + (0.1 * scale_coe));
+        }
         break;
     case 4: // scrollwheel down
-        scaleBy(controlled(CONTROL_CONTEXT_SCALE), 1 - (0.1 * scale_coe));
+        if (scene->activeCamera != -1) {
+            scaleBy(controlled(CONTROL_CONTEXT_SCALE), 1 - (0.1 * scale_coe));
+        }
         break;
     }
     display();
@@ -226,7 +231,9 @@ void motion(int x, int y)
     else if (rb_down) {
     }
     else if (mb_down) {
-        rotateBy(controlled(CONTROL_CONTEXT_ROTATE), rotation_coe * vec3(dy, -dx, 0));
+        if (scene->activeCamera != -1) {
+            rotateBy(controlled(CONTROL_CONTEXT_ROTATE), rotation_coe * vec3(dy, -dx, 0));
+        }
     }
     display();
 }
@@ -280,7 +287,7 @@ void projectionMenu(int id) {
 void newModelMenu(int id) {
     if (scene->activeModel == -1) {
         glutSetMenu(menuCameras);
-        glutAddMenuEntry("(0) Camera", scene->activeCamera);
+        glutAddMenuEntry("(0) Camera", 0);
     }
 
     std::string name;
@@ -326,15 +333,14 @@ void cameraMenu(int id) {
             int camera_num = scene->AddCamera(*scene->getActiveCamera());
             char s[50];
             sprintf(s, "(%d) Camera", camera_num);
-            glutAddMenuEntry(s, scene->activeCamera);
+            glutAddMenuEntry(s, camera_num);
         }
         else {
             message("A model must be presenet before adding a camera.");
         }
     }
     else {
-        printf("%d\n", id);
-        //scene->activeCamera = id;
+        scene->activeCamera = id;
     }
     display();
 }

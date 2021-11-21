@@ -53,8 +53,9 @@ void Scene::drawDemo()
 }
 
 int Scene::AddCamera(const Camera& camera) {
+    activeCamera = cameras.size();
     cameras.push_back(new Camera(camera));
-    return cameras.size() - 1;
+    return activeCamera;
 }
 
 void Scene::AddCuboid(vec3 p, vec3 dim) {

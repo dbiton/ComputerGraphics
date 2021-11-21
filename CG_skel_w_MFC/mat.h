@@ -530,12 +530,16 @@ inline vec4 mvmult(const mat4& a, const vec4& b) noexcept {
 
 inline vec3 applyTransformToPoint(const mat4& transform, const vec3& point) noexcept {
     const vec4 res = mvmult(transform, vec4(point.x, point.y, point.z, 1.0));
-    return vec3(res.x, res.y, res.z);
+    return vec3(res.x / res.w, res.y / res.w, res.z / res.w);
 }
 
 inline vec3 applyTransformToNormal(const mat4& transform, const vec3& normal) noexcept {
     const vec4 res = mvmult(transform, vec4(normal.x, normal.y, normal.z, 0.0));
     return vec3(res.x, res.y, res.z);
+}
+
+inline vec3 applyTransform(const mat4& transform, const vec4& point) noexcept {
+    return applyTransformToPoint(transform, vec3(point.x / point.w, point.y / point.w, point.z / point.w));
 }
 
 //----------------------------------------------------------------------------
