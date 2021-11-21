@@ -145,15 +145,81 @@ PrimMeshModel PrimMeshModel::Prism(vec3 p, GLfloat height, GLfloat base_radius, 
 
 PrimMeshModel PrimMeshModel::Sphere(vec3 p, GLfloat radius, int subdivisions)
 {
-    for (int i = 0; i < subdivisions; i++) {
-        for (int j = 0; j < subdivisions; j++) {
+    PrimMeshModel sphere;
 
+    std::vector<vec3> verts;
+    std::vector<Face> faces;
+
+    // create 12 vertices of a icosahedron
+    const GLfloat t = (1.0 + std::sqrt(5.0)) / 2.0;
+
+    verts.push_back(p + radius * normalize(vec3(-1, t, 0)));
+    verts.push_back(p + radius * normalize(vec3(1, t, 0)));
+    verts.push_back(p + radius * normalize(vec3(-1, -t, 0)));
+    verts.push_back(p + radius * normalize(vec3(1, -t, 0)));
+
+    verts.push_back(p + radius * normalize(vec3(0, -1, t)));
+    verts.push_back(p + radius * normalize(vec3(0, 1, t)));
+    verts.push_back(p + radius * normalize(vec3(0, -1, -t)));
+    verts.push_back(p + radius * normalize(vec3(0, 1, -t)));
+
+    verts.push_back(p + radius * normalize(vec3(t, 0, -1)));
+    verts.push_back(p + radius * normalize(vec3(t, 0, 1)));
+    verts.push_back(p + radius * normalize(vec3(-t, 0, -1)));
+    verts.push_back(p + radius * normalize(vec3(-t, 0, 1)));
+
+    // 5 faces around point 0
+    faces.push_back(Face(1, 12, 6));
+    faces.push_back(Face(1, 6, 2));
+    faces.push_back(Face(1, 2, 8));
+    faces.push_back(Face(1, 8, 11));
+    faces.push_back(Face(1, 11, 12));
+
+    // 5 adjacent faces
+    faces.push_back(Face(2, 6, 10));
+    faces.push_back(Face(6, 12, 5));
+    faces.push_back(Face(12, 11, 3));
+    faces.push_back(Face(11, 8, 7));
+    faces.push_back(Face(8, 2, 9));
+
+    // 5 faces around point 3
+    faces.push_back(Face(4, 10, 5));
+    faces.push_back(Face(4, 5, 3));
+    faces.push_back(Face(4, 3, 7));
+    faces.push_back(Face(4, 7, 9));
+    faces.push_back(Face(4, 9, 10));
+
+    // 5 adjacent faces
+    faces.push_back(Face(5, 10, 6));
+    faces.push_back(Face(3, 5, 12));
+    faces.push_back(Face(7, 3, 11));
+    faces.push_back(Face(9, 7, 8));
+    faces.push_back(Face(10, 9, 2));
+
+    // refine triangles
+    for (int i = 0; i < subdivisions; i++)
+    {
+        std::vector<Face> _faces;
+        for (const auto& face : faces)
+        {
+            vec3 face_verts[3] = { verts[face.v[0] - 1], verts[face.v[1] - 1], verts[face.v[2] - 1] };
+            int n = verts.size() + 1;
+            for (int j = 0; j < 3; j++) {
+                vec3 face_mid = (face_verts[j] + face_verts[(j + 1) % 3]) / 2;
+                // project to sphere
+                face_mid = radius * normalize(face_mid);
+                verts.push_back(face_mid);
+            }
+            _faces.push_back(Face(face.v[0], n, n + 2));
+            _faces.push_back(Face(face.v[1], n + 1, n));
+            _faces.push_back(Face(face.v[2], n + 2, n + 1));
+            _faces.push_back(Face(n, n + 1, n + 2));
         }
+        faces = _faces;
     }
-    return Cube(p, radius);
-}
 
-// cubes and pyramids (and tetrahedrons, icosahedrons, etc if we want) should be simple enough to define, but spheres
-// (and maybe cylinders, paraboloids etc if we want) require us to settle on what LOD (Level Of Detail) to use when approximating
-// their perfect curvature... maybe implement the same shape but with multiple different LOD's? could be interesting
-// of course we only need at least one, and we should probably start with the cube
+    sphere.processRawVerts(verts, faces);
+    sphere.fitBoundingBox();
+
+    return sphere;
+}

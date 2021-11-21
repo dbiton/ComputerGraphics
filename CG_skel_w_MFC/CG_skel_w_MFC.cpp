@@ -317,7 +317,7 @@ void newModelMenu(int id) {
         break;
 
     case NEW_SPHERE:
-        scene->AddSphere(vec3(0, 0, 0), 1, 8);
+        scene->AddSphere(vec3(0, 0, 0), 1, 2);
         name = "Sphere";
         break;
     }
@@ -388,7 +388,7 @@ void initMenu()
     glutAddMenuEntry("Primitive: Cuboid", NEW_CUBOID);
     glutAddMenuEntry("Primitive: Pyramid", NEW_PYRAMID);
     glutAddMenuEntry("Primitive: Prism", NEW_PRISM);
-    //glutAddMenuEntry("Primitive: Sphere", NEW_SPHERE); // TODO currently unimplemented, either remove this option or implement spheres
+    glutAddMenuEntry("Primitive: Sphere", NEW_SPHERE);
     menuModels = glutCreateMenu(modelsMenu);
     glutAddSubMenu("New...", menuNewModel);
     
