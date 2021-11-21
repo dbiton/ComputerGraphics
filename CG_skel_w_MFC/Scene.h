@@ -66,9 +66,9 @@ public:
 
 	MeshModel* getActiveModel() { return models[activeModel]; }
 	Light* getActiveLight() { return lights[activeLight]; }
-	Camera* getActiveCamera() { printf("active: %d", activeCamera); return cameras[activeCamera]; }
+	Camera* getActiveCamera() { return cameras[activeCamera]; }
 
-	int AddCamera(); // returns number of cameras
+	int AddCamera(const Camera& camera);
 
 	void AddCuboid(vec3 p, vec3 dim);
 	void AddPyramid(vec3 p, GLfloat height, GLfloat base_radius, int base_sides);

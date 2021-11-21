@@ -52,9 +52,8 @@ void Scene::drawDemo()
     renderer->SwapBuffers();
 }
 
-int Scene::AddCamera()
-{
-    cameras.push_back(new Camera());
+int Scene::AddCamera(const Camera& camera) {
+    cameras.push_back(new Camera(camera));
     return cameras.size() - 1;
 }
 

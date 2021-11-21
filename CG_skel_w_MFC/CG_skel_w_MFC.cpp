@@ -72,7 +72,7 @@ enum {
 };
 
 enum {
-    NEW_CAMERA
+    NEW_CAMERA = -1
 };
 
 constexpr bool ALLOW_DEMO = false;
@@ -83,7 +83,7 @@ Renderer* renderer;
 int last_x, last_y;
 bool lb_down, rb_down, mb_down;
 int controlMode = CONTROL_CAMERA_IN_WORLD;
-int menuModels;
+int menuModels, menuCameras;
 float move_coe = 0.1, rotation_coe = 1, scale_coe = 1;
 
 //----------------------------------------------------------------------------
@@ -278,6 +278,11 @@ void projectionMenu(int id) {
 }
 
 void newModelMenu(int id) {
+    if (scene->activeModel == -1) {
+        glutSetMenu(menuCameras);
+        glutAddMenuEntry("(0) Camera", scene->activeCamera);
+    }
+
     std::string name;
     switch (id) { // all new models will be automatically placed at the camera's LookingAt position
     case NEW_OBJ: {
@@ -316,19 +321,22 @@ void newModelMenu(int id) {
 }
 
 void cameraMenu(int id) {
-    std::string name;
-    switch (id) {
-    case NEW_CAMERA: {
-        char s[50];
-        sprintf(s, "(%d) Camera", scene->AddCamera());
-        glutAddMenuEntry(s, scene->activeCamera);
-        break;
+    if (id == NEW_CAMERA) {
+        if (scene->activeModel != -1) {
+            int camera_num = scene->AddCamera(*scene->getActiveCamera());
+            char s[50];
+            sprintf(s, "(%d) Camera", camera_num);
+            glutAddMenuEntry(s, scene->activeCamera);
+        }
+        else {
+            message("A model must be presenet before adding a camera.");
+        }
     }
-    default:
-        scene->activeCamera = std::abs(id) - 1;
-        display();
-        break;
+    else {
+        printf("%d\n", id);
+        //scene->activeCamera = id;
     }
+    display();
 }
 
 void modelsMenu(int id) {
@@ -377,8 +385,8 @@ void initMenu()
     //glutAddMenuEntry("Primitive: Sphere", NEW_SPHERE); // TODO currently unimplemented, either remove this option or implement spheres
     menuModels = glutCreateMenu(modelsMenu);
     glutAddSubMenu("New...", menuNewModel);
-
-    const int menuCameras = glutCreateMenu(cameraMenu);
+    
+    menuCameras = glutCreateMenu(cameraMenu);
     glutAddMenuEntry("New", NEW_CAMERA);
 
     const int menuToggles = glutCreateMenu(togglesMenu);
