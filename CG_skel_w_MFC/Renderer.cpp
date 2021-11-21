@@ -121,8 +121,22 @@ void Renderer::DrawAxes() {
     DrawLine(zminus, zplus, Color(0, 0, 1));
 }
 
+mat4& InverseTransform(const mat4& transform) {
+    // step 1: isolate translation transform;
+    const mat4 translate = Translate(-transform[0][3], -transform[1][3], -transform[2][3]);
+
+    // step 2: find (uniform) scaling factor of the remaining 3x3
+    const mat4 scale = Scale(1.0 / std::cbrt(Determinant(transform)));
+
+    // step 3: transpose remaining matrix
+    const mat4 rotation = transpose(scale * translate * transform);
+
+    return rotation * scale * translate; // final product
+}
+
+
 void Renderer::DrawCamera(const Camera* camera) {
-    const mat4 camera_marker_transform = camera->getTransform();
+    const mat4 camera_marker_transform = InverseTransform(camera->getTransform());
     const mat4 object2clip = projection * transform_camera_inverse * camera_marker_transform;
 
     const vec4 pos = getPosition(camera_marker_transform);
@@ -141,7 +155,7 @@ void Renderer::DrawCamera(const Camera* camera) {
 
 void Renderer::SetCameraTransform(const mat4& cTransform)
 {
-    transform_camera_inverse = transpose(cTransform);
+    transform_camera_inverse = cTransform;
 }
 
 void Renderer::SetProjection(const mat4& _projection)

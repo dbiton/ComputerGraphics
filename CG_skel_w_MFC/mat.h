@@ -163,8 +163,8 @@ inline mat2 matrixCompMult(const mat2& A, const mat2& B) {
 }
 
 inline mat2 transpose(const mat2& A) {
-    return mat2(A[0][0], A[1][0],
-                A[0][1], A[1][1]);
+    return mat2(A[0][0], A[0][1],
+                A[1][0], A[1][1]);
 }
 
 //----------------------------------------------------------------------------
@@ -332,9 +332,9 @@ inline mat3 matrixCompMult(const mat3& A, const mat3& B) {
 }
 
 inline mat3 transpose(const mat3& A) {
-    return mat3(A[0][0], A[1][0], A[2][0],
-                A[0][1], A[1][1], A[2][1],
-                A[0][2], A[1][2], A[2][2]);
+    return mat3(A[0][0], A[0][1], A[0][2],
+                A[1][0], A[1][1], A[1][2],
+                A[2][0], A[2][1], A[2][2]);
 }
 
 //----------------------------------------------------------------------------
@@ -507,11 +507,11 @@ inline mat4 matrixCompMult(const mat4& A, const mat4& B) {
                 A[3][0] * B[3][0], A[3][1] * B[3][1], A[3][2] * B[3][2], A[3][3] * B[3][3]);
 }
 
-inline mat4 transpose(const mat4& A) {
-    return mat4(A[0][0], A[1][0], A[2][0], A[3][0],
-                A[0][1], A[1][1], A[2][1], A[3][1],
-                A[0][2], A[1][2], A[2][2], A[3][2],
-                A[0][3], A[1][3], A[2][3], A[3][3]);
+inline mat4 transpose(const mat4& A) { // turns out this should've been the other way around, because of how the 16-float constructor works... nice code
+    return mat4(A[0][0], A[0][1], A[0][2], A[0][3], 
+                A[1][0], A[1][1], A[1][2], A[1][3],
+                A[2][0], A[2][1], A[2][2], A[2][3],
+                A[3][0], A[3][1], A[3][2], A[3][3]);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -623,6 +623,12 @@ inline mat4 Scale(const GLfloat s) { // also uniform scaling cuz why not
     mat4 c = mat4(s);
     c[3][3] = 1;
     return c;
+}
+
+inline float Determinant(const mat4& mat) { // this code assumes the matrix is in homogenous coordinates, so the whole bottom row and last column can be ignored!
+    return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1])
+        - mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0])
+        + mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
 }
 
 //----------------------------------------------------------------------------
