@@ -109,18 +109,16 @@ void Renderer::DrawAxes() {
     const mat4 object2clip = projection * transform_camera_inverse; // axes belong to the world, so no transform_object!
     const vec2 origin = clipToScreen(applyTransformToPoint(object2clip, vec3(0, 0, 0))),
                xplus = clipToScreen(applyTransformToPoint(object2clip, vec3(10, 0, 0))),
-               xminus = clipToScreen(applyTransformToPoint(object2clip, vec3(-10, 0, 0))),
+               xminus = 2 * origin - xplus,
                yplus = clipToScreen(applyTransformToPoint(object2clip, vec3(0, 10, 0))),
-               yminus = clipToScreen(applyTransformToPoint(object2clip, vec3(0, -10, 0))),
+               yminus = 2 * origin - yplus,
                zplus = clipToScreen(applyTransformToPoint(object2clip, vec3(0, 0, 10))),
-               zminus = clipToScreen(applyTransformToPoint(object2clip, vec3(0, 0, -10)));
+               zminus = 2 * origin - zplus;
 
-    DrawLine(origin, xplus, Color(1, 0, 0));
-    DrawLine(origin, xminus, Color(0.5, 0, 0));
-    DrawLine(origin, yplus, Color(0, 1, 0));
-    DrawLine(origin, yminus, Color(0, 0.5, 0));
-    DrawLine(origin, zplus, Color(0, 0, 1));
-    DrawLine(origin, zminus, Color(0, 0, 0.5));
+    // because we don't do clipping, we can't really determine directions at this point
+    DrawLine(xminus, xplus, Color(1, 0, 0));
+    DrawLine(yminus, yplus, Color(0, 1, 0));
+    DrawLine(zminus, zplus, Color(0, 0, 1));
 }
 
 void Renderer::DrawCamera(const Camera* camera) {
@@ -205,8 +203,16 @@ void Renderer::SetDemoBuffer()
 
 inline static constexpr int sign(int n) noexcept { return (n > 0) ? 1 : (n < 0) ? -1 : 0; }
 
+constexpr float EPSILON_INVERSE = 1e10;
+
+bool bad(float f) {
+    return !_finite(f) || std::abs(f) > EPSILON_INVERSE;
+}
+
 void Renderer::DrawLine(const vec2& p0, const vec2& p1, const Color& c)
 {
+    if (bad(p0.x) || bad(p0.y) || bad(p1.x) || bad(p1.y)) return; // do nothing!
+
     const int x0 = std::round(p0.x),
               y0 = std::round(p0.y),
               x1 = std::round(p1.x),

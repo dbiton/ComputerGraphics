@@ -414,7 +414,7 @@ void initMenu()
     glutAddSubMenu("New...", menuNewModel);
     
     menuCameras = glutCreateMenu(cameraMenu);
-    glutAddMenuEntry("New", NEW_CAMERA);
+    glutAddMenuEntry("New...", NEW_CAMERA);
 
     const int menuToggles = glutCreateMenu(togglesMenu);
     glutAddMenuEntry("Face Normals", TOGGLE_FACE_NORMALS);
