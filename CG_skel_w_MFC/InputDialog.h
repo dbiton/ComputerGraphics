@@ -15,7 +15,7 @@ class CInputDialog : public CDialog
     DECLARE_DYNAMIC(CInputDialog)
 
 public:
-    CInputDialog(CString title = "Input Dialog");
+    CInputDialog(CString title = _T("Input Dialog"));
     virtual ~CInputDialog();
 
     virtual BOOL OnInitDialog();
@@ -36,7 +36,7 @@ private:
 class CCmdDialog : public CInputDialog
 {
 public:
-    CCmdDialog(CString title = "Input Dialog");
+    CCmdDialog(CString title = _T("Input Dialog"));
     virtual ~CCmdDialog();
 
     string GetCmd();
@@ -59,7 +59,7 @@ protected:
 class CXyzDialog : public CInputDialog
 {
 public:
-    CXyzDialog(CString title = "Input Dialog");
+    CXyzDialog(CString title = _T("Input Dialog"));
     virtual ~CXyzDialog();
 
     vec3 GetXYZ();
@@ -86,7 +86,7 @@ protected:
 class CCmdXyzDialog : public CInputDialog
 {
 public:
-    CCmdXyzDialog(CString title = "Input Dialog");
+    CCmdXyzDialog(CString title = _T("Input Dialog"));
     virtual ~CCmdXyzDialog();
 
     string GetCmd();

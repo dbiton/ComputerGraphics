@@ -40,10 +40,10 @@ enum {
 };
 
 enum {
-	CONTROL_MODEL_IN_WORLD,
-	CONTROL_MODEL_IN_MODEL,
+    CONTROL_MODEL_IN_WORLD,
+    CONTROL_MODEL_IN_MODEL,
     CONTROL_CAMERA_IN_WORLD,
-	CONTROL_CAMERA_IN_VIEW,
+    CONTROL_CAMERA_IN_VIEW,
 
     CONTROL_MODEL_INTUITIVE, // intuitive control modes cuz the above modes are dog
     CONTROL_CAMERA_INTUITIVE,
@@ -104,7 +104,7 @@ void reshape(int width, int height)
     renderer->CreateBuffers(width, height); // at least it seems like we don't need to re-init the whole OpenGL rendering...
 }
 
-inline void message(const char* message) { AfxMessageBox(_T(message)); }
+inline void message(CString message) { AfxMessageBox(message); }
 
 void toggleFaceNormals() {
     if (scene->activeModel != -1) scene->getActiveModel()->ToggleDrawNormalsPerFace();
@@ -151,7 +151,7 @@ mat4& controlled(int context) {
     return controlled(context, controlMode);
 }
 
-void focus(){
+void focus() {
     if (scene->activeCamera != -1) { // only if there's a camera to begin with...
         scene->focus();
         display();
@@ -177,8 +177,9 @@ void keyboard(unsigned char key, int x, int y)
     case 'b': toggleBoundingBox(); break;
     case 'i': toggleInactivesDimming(); break;
     case 'x': toggleAxes(); break;
+    case 'm': toggleCameras(); break;
 
-    case 'r': reset(controlled(controlMode)); break;
+    case 'r': reset(controlled(CONTROL_CONTEXT_NONE)); break;
 
     case '=': focus(); break;
 
@@ -261,24 +262,24 @@ void projectionMenu(int id) {
     Camera* camera = scene->getActiveCamera();
     switch (id) {
     case PROJECTION_ORTHO: {
-        CProjectionDialog dialog("Orthographic Projection Parameters", camera->lastBottom, camera->lastTop,
+        CProjectionDialog dialog(_T("Orthographic Projection Parameters"), camera->lastBottom, camera->lastTop,
             camera->lastLeft, camera->lastRight,
             camera->lastNear, camera->lastFar);
         if (dialog.DoModal() == IDOK) {
             camera->projection = camera->Ortho(dialog.getLeft(), dialog.getRight(),
-                                               dialog.getBottom(), dialog.getTop(),
-                                               dialog.getNear(), dialog.getFar());
+                dialog.getBottom(), dialog.getTop(),
+                dialog.getNear(), dialog.getFar());
             display();
         }
     } break;
     case PROJECTION_FRUSTUM: {
-        CProjectionDialog dialog("Frustum Projection Parameters", camera->lastBottom, camera->lastTop,
+        CProjectionDialog dialog(_T("Frustum Projection Parameters"), camera->lastBottom, camera->lastTop,
             camera->lastLeft, camera->lastRight,
             camera->lastNear, camera->lastFar);
         if (dialog.DoModal() == IDOK) {
             camera->projection = camera->Frustum(dialog.getLeft(), dialog.getRight(),
-                                                 dialog.getBottom(), dialog.getTop(),
-                                                 dialog.getNear(), dialog.getFar());
+                dialog.getBottom(), dialog.getTop(),
+                dialog.getNear(), dialog.getFar());
             display();
         }
     } break;
@@ -288,17 +289,17 @@ void projectionMenu(int id) {
 void sensitivityMenu(int id) {
     switch (id) {
     case SENSITIVITY_MOVEMENT: {
-        CSingleFloatDialog dialog("Movement Sensitivity", move_coe);
+        CSingleFloatDialog dialog(_T("Movement Sensitivity"), move_coe);
         if (dialog.DoModal() == IDOK) move_coe = std::abs(dialog.getValue());
         if (move_coe == 0) move_coe = 1;
     } break;
     case SENSITIVITY_SCALING: {
-        CSingleFloatDialog dialog("Scaling Sensitivity", scale_coe);
+        CSingleFloatDialog dialog(_T("Scaling Sensitivity"), scale_coe);
         if (dialog.DoModal() == IDOK) scale_coe = std::abs(dialog.getValue());
         if (scale_coe == 0) scale_coe = 1;
     } break;
     case SENSITIVITY_ROTATION: {
-        CSingleFloatDialog dialog("Rotation Sensitivity", rotation_coe);
+        CSingleFloatDialog dialog(_T("Rotation Sensitivity"), rotation_coe);
         if (dialog.DoModal() == IDOK) rotation_coe = std::abs(dialog.getValue());
         if (rotation_coe == 0) rotation_coe = 1;
     } break;
@@ -317,8 +318,8 @@ void newModelMenu(int id) {
         CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.obj|*.*"));
         if (dlg.DoModal() == IDOK)
         {
-            name = dlg.GetFileName();
-            scene->loadOBJModel((LPCTSTR)dlg.GetPathName());
+            name = CT2CA(dlg.GetFileName());
+            scene->loadOBJModel(CT2CA(dlg.GetPathName()).m_psz);
         }
         else return; // gonna add a model to the models menu, unless this failed
     } break;
@@ -357,7 +358,7 @@ void cameraMenu(int id) {
             glutAddMenuEntry(s, camera_num);
         }
         else {
-            message("A model must be presenet before adding a camera.");
+            message(_T("A model must be presenet before adding a camera."));
         }
     }
     else {
@@ -383,6 +384,48 @@ void togglesMenu(int id) {
     display();
 }
 
+void showHelp() {
+    CString help = _T("Wireframe Renderer Manual\n");
+    message(help
+        + _T("=== Models ==\n")
+        + _T("Add new models into the scene in the \"New...\" submenu, using either existing .obj files or preprogrammed primitives,\n")
+        + _T("or select one of the existing models in the scene to become the active model, which may be controlled and focused on.\n")
+        + _T("\n")
+        + _T("=== Cameras ===\n")
+        + _T("Duplicate the current camera using the \"New...\" option, or select the active camera from one of the existing cameras.\n")
+        + _T("The active camera is the camera that may be controlled. (P.S.: You may resize the window to your heart's content)\n")
+        + _T("\n")
+        + _T("=== Toggle ===\n")
+        + _T("* Face Normals (default off, hotkey f): Toggles showing face normals on the active model.\n")
+        + _T("* Vertex Normals (default off, hotkey v): Toggles showing vertex normals on the active model.\n")
+        + _T("* Bounding Box (default off, hotkey b): Toggles showing the bounding box of the active model.\n")
+        + _T("* Camera Indicators (default off, hotkey m): Toggles rendering other cameras in the scene.\n")
+        + _T("* Inactives Dimming (default on, hotkey i): Toggles dimming the colors of models that aren't the active model.\n")
+        + _T("* Axes (default off, hotkey x): Toggles showing the world's axes.\n")
+        + _T("\n")
+        + _T("=== Control Mode ===\n")
+        + _T("Select which frame of the active model/camera to be controlled, using wasd+qe for movement, scrollwheel for scaling, and holding middle-click for rotations.\n")
+        + _T("There is also \"Intuitive Mode\" for each, which relegates movement to the World, and everything else to the \"Self\".\n")
+        + _T("Make sure your keyboard language is in english!\n")
+        + _T("\n")
+        + _T("=== Reset ===\n")
+        + _T("Reset the specified frame of the active model/camera to its origin. May produce weird results. Can also reset all active frames.\n")
+        + _T("Use the hotkey 'r' to reset the currently-controlled frame. (resetting during Intuitive Mode will reset the Self frame)\n")
+        + _T("\n")
+        + _T("=== Change Projection ===\n")
+        + _T("Set projection parameters after choosing either an Orthographic projection, or a Frustum (\"Realistic\") projection.\n")
+        + _T("Keep in mind that clipping has not (yet) been implemented!\n")
+        + _T("\n")
+        + _T("=== Sensitivity ===\n")
+        + _T("Change the sensitivity of control over movement, scaling, or rotation.\n")
+        + _T("Inputting 0 will reset to the default, and inputting negative numbers will result in their absolute value being used.\n")
+        + _T("\n")
+        + _T("=== Other ===\n")
+        + _T("* Focus (hotkey =): Forces the active camera to point directly at the active model. May produce weird results if applied more than once.\n")
+        + _T("* About: General info and credit.\n")
+        + _T("* Help: You're here!"));
+}
+
 void mainMenu(int id)
 {
     switch (id)
@@ -394,11 +437,9 @@ void mainMenu(int id)
         focus();
         break;
     case MAIN_ABOUT:
-        message("Computer Graphics Part 1 - Wireframes\nby Itay Beit Halachmi and Dvir David Biton");
+        message(_T("Computer Graphics Part 1 - Wireframes\nby Itay Beit Halachmi and Dvir David Biton"));
         break;
-    case MAIN_HELP: // TODO: Self-documentation! if we want
-        // message("");
-        break;
+    case MAIN_HELP: showHelp(); break;
     }
 }
 
@@ -412,7 +453,7 @@ void initMenu()
     glutAddMenuEntry("Primitive: Sphere", NEW_SPHERE);
     menuModels = glutCreateMenu(modelsMenu);
     glutAddSubMenu("New...", menuNewModel);
-    
+
     menuCameras = glutCreateMenu(cameraMenu);
     glutAddMenuEntry("New...", NEW_CAMERA);
 
@@ -420,9 +461,9 @@ void initMenu()
     glutAddMenuEntry("Face Normals", TOGGLE_FACE_NORMALS);
     glutAddMenuEntry("Vertex Normals", TOGGLE_VERTEX_NORMALS);
     glutAddMenuEntry("Bounding Box", TOGGLE_BOUNDING_BOX);
+    glutAddMenuEntry("Camera Indicators", TOGGLE_CAMERAS);
     glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING);
     glutAddMenuEntry("Axes", TOGGLE_AXES);
-    glutAddMenuEntry("Cameras", TOGGLE_CAMERAS);
 
     const int menuControl = glutCreateMenu(controlMenu);
     glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);
