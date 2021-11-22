@@ -136,7 +136,7 @@ mat4& InverseTransform(const mat4& transform) {
 
 
 void Renderer::DrawCamera(const Camera* camera) {
-    const mat4 camera_marker_transform = InverseTransform(camera->getTransform());
+    const mat4 camera_marker_transform = camera->getTransform();
     const mat4 object2clip = projection * transform_camera_inverse * camera_marker_transform;
 
     const vec4 pos = getPosition(camera_marker_transform);
@@ -155,7 +155,7 @@ void Renderer::DrawCamera(const Camera* camera) {
 
 void Renderer::SetCameraTransform(const mat4& cTransform)
 {
-    transform_camera_inverse = cTransform;
+    transform_camera_inverse = InverseTransform(cTransform);
 }
 
 void Renderer::SetProjection(const mat4& _projection)
