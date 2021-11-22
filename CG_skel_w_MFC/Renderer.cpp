@@ -217,7 +217,7 @@ void Renderer::SetDemoBuffer()
 
 inline static constexpr int sign(int n) noexcept { return (n > 0) ? 1 : (n < 0) ? -1 : 0; }
 
-constexpr float EPSILON_INVERSE = 1e10;
+constexpr float EPSILON_INVERSE = 1e7;
 
 bool bad(float f) {
     return !_finite(f) || std::abs(f) > EPSILON_INVERSE;
