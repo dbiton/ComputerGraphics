@@ -13,6 +13,13 @@ using namespace std;
 
 class Camera;
 
+enum ShadeType{
+	SHADE_NONE,
+	SHADE_FLAT,
+	SHADE_GOURAUD,
+	SHADE_PHONG
+};
+
 class Renderer
 {
 	float* m_outBuffer; // 3*width*height
@@ -33,7 +40,13 @@ public:
 	~Renderer(void);
 
 	// triangles are in object space
-	void DrawTriangles(const std::vector<Vertex>& vertices, bool isActiveModel, bool drawFaceNormals, bool drawVertexNormals);
+	void DrawTriangles(const std::vector<Vertex>& vertices, 
+		bool isActiveModel, 
+		bool drawFaceNormals, 
+		bool drawVertexNormals,
+		bool drawWireframe = true,
+		ShadeType shadeType = SHADE_NONE,
+		Material material = Material::DefaultMaterial());
 	void DrawBox(const vec3& min, const vec3& max);
 	void DrawAxes();
 	void DrawCamera(const Camera* camera);
@@ -53,7 +66,8 @@ public:
 private:
 	vec2 clipToScreen(const vec3& clip_pos);
 	vec2 clipToScreen(const vec4& clip_pos);
-
+	
+	void ShadeTriangle(const vec3& po, const vec3& p1, const vec3& p2, Material material, ShadeType shadeType);
 	void DrawLine(const vec2& p0, const vec2& p1, const Color& c);
 	void DrawPixel(int x, int y, const Color& c);
 

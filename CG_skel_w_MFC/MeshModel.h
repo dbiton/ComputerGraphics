@@ -2,6 +2,7 @@
 #include "PrimTypes.h"
 #include "Entity.h"
 #include "scene.h"
+#include "Material.h"
 #include "vec.h"
 #include "mat.h"
 #include <string>
@@ -26,6 +27,8 @@ protected:
 	vec3 color_vert_normal;
 	vec3 color_face_normal; 
 	vec3 color_bounding_box;
+
+	Material material;
 protected:
 	MeshModel() noexcept;
 

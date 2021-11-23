@@ -25,7 +25,13 @@ GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) {
     return (length(p1 - p2) + length(p1 - p3) + length(p2 - p3)) / 3;
 }
 
-void Renderer::DrawTriangles(const vector<Vertex>& vertices, bool isActiveModel, bool drawFaceNormals, bool drawVertexNormals)
+void Renderer::DrawTriangles(const vector<Vertex>& vertices, 
+    bool isActiveModel, 
+    bool drawFaceNormals, 
+    bool drawVertexNormals,
+    bool drawWireframe,
+    SHADE_NONE shadeType,
+    Material material)
 {
     Color color_mesh(1, 1, 1);
     Color color_face_normal(0, 1, 0);
@@ -53,9 +59,17 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices, bool isActiveModel,
             v[j] = vertices[i + j].position;
             vn[j] = vertices[i + j].normal;
         }
-        // draw mesh
-        for (int j = 0; j < 3; j++) {
-            DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[(j + 1) % 3])), color_mesh);
+        
+        if (shadeType != SHADE_NONE) {
+            ShadeTriangle(v[0], v[1], v[2], material, shadeType);
+        }
+
+
+        // draw wireframe mesh
+        if (drawWireframe) {
+            for (int j = 0; j < 3; j++) {
+                DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[(j + 1) % 3])), color_mesh);
+            }
         }
 
         GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
@@ -224,6 +238,10 @@ bool bad(float f) {
     return !_finite(f) || std::abs(f) > EPSILON_INVERSE;
 }
 
+void Renderer::ShadeTriangle(const vec3& po, const vec3& p1, const vec3& p2, Material material, ShadeType shadeType) {
+
+}
+
 void Renderer::DrawLine(const vec2& p0, const vec2& p1, const Color& c)
 {
     if (bad(p0.x) || bad(p0.y) || bad(p1.x) || bad(p1.y)) return; // do nothing!
@@ -353,5 +371,5 @@ void Renderer::ClearColorBuffer()
 
 void Renderer::ClearDepthBuffer()
 {
-    if (m_zbuffer) memset(m_zbuffer, 0, sizeof(float) * m_width * m_height);
+    if (m_zbuffer) memset(m_zbuffer, FLT_MAX, sizeof(float) * m_width * m_height);
 }
