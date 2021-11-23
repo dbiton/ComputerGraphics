@@ -140,6 +140,30 @@ protected:
     DECLARE_MESSAGE_MAP()
 };
 
+class CPrespectiveProjectionDialog : public CInputDialog
+{
+public:
+    CPrespectiveProjectionDialog(CString title) : CInputDialog(title) { }
+    CPrespectiveProjectionDialog(CString title, float _fovy, float _aspect, float _zNear, float _zFar)
+        : CInputDialog(title), fovy(_fovy), aspect(_aspect), zNear(_zNear), zFar(_zFar) { }
+    virtual ~CPrespectiveProjectionDialog() { }
+
+    float getFovY() noexcept { return fovy; }
+    float getAspect() noexcept { return aspect; }
+    float getNear() noexcept { return zNear; }
+    float getFar() noexcept { return zFar; }
+
+protected:
+    float fovy = 0, aspect = 0, zNear = 0, zFar = 0;
+    CEdit fovyEdit, aspectEdit, zNearEdit, zFarEdit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};
+
 class CSingleFloatDialog : public CInputDialog
 {
 public:

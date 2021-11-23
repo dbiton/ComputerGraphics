@@ -76,6 +76,12 @@ enum {
     SENSITIVITY_ROTATION
 };
 
+enum {
+    PROJ_FRUSTUM,
+    PROJ_ORTHO,
+    PROJ_PERSPECTIVE
+};
+
 constexpr bool ALLOW_DEMO = false;
 
 Scene* scene;
@@ -268,7 +274,7 @@ void projectionMenu(int id) {
     if (scene->activeCamera == -1) return; // nothing to do!
     Camera* camera = scene->getActiveCamera();
     switch (id) {
-    case PROJECTION_ORTHO: {
+    case PROJ_ORTHO: {
         CProjectionDialog dialog(_T("Orthographic Projection Parameters"), camera->lastBottom, camera->lastTop,
             camera->lastLeft, camera->lastRight,
             camera->lastNear, camera->lastFar);
@@ -279,13 +285,26 @@ void projectionMenu(int id) {
             display();
         }
     } break;
-    case PROJECTION_FRUSTUM: {
+    case PROJ_FRUSTUM: {
         CProjectionDialog dialog(_T("Frustum Projection Parameters"), camera->lastBottom, camera->lastTop,
             camera->lastLeft, camera->lastRight,
             camera->lastNear, camera->lastFar);
         if (dialog.DoModal() == IDOK) {
             camera->projection = camera->Frustum(dialog.getLeft(), dialog.getRight(),
                 dialog.getBottom(), dialog.getTop(),
+                dialog.getNear(), dialog.getFar());
+            display();
+        }
+    } break;
+    case PROJ_PERSPECTIVE: {
+        float fovy, aspect;
+        camera->getPerspectiveParameters(fovy, aspect);
+        
+        CPrespectiveProjectionDialog dialog(_T("Prespective Projection Parameters"),
+            fovy, aspect,
+            camera->lastNear, camera->lastFar);
+        if (dialog.DoModal() == IDOK) {
+            camera->projection = camera->Perspective(dialog.getFovY(), dialog.getAspect(),
                 dialog.getNear(), dialog.getFar());
             display();
         }
@@ -361,10 +380,10 @@ void newModelMenu(int id) {
         break;
     }
     case NEW_SPHERE: {
-        float subdivisions = 1;
+        int subdivisions = 1;
         CSingleFloatDialog dialog(_T("Sphere Resolution"), subdivisions);
         if (dialog.DoModal() != IDOK) return;
-        subdivisions = std::floor(subdivisions);
+        subdivisions = std::floor(dialog.getValue());
         if (subdivisions < 1) subdivisions = 1;
         scene->AddSphere(vec3(0, 0, 0), 1, subdivisions);
         name = "Sphere";
@@ -509,8 +528,9 @@ void initMenu()
     glutAddMenuEntry("All active frames", CONTROL_ALL);
 
     const int menuProjection = glutCreateMenu(projectionMenu);
-    glutAddMenuEntry("Orthographic", PROJECTION_ORTHO);
-    glutAddMenuEntry("Frustum", PROJECTION_FRUSTUM);
+    glutAddMenuEntry("Orthographic", PROJ_ORTHO);
+    glutAddMenuEntry("Frustum", PROJ_FRUSTUM);
+    glutAddMenuEntry("Perspective", PROJ_PERSPECTIVE);
 
     const int menuSensitivity = glutCreateMenu(sensitivityMenu);
     glutAddMenuEntry("Movement", SENSITIVITY_MOVEMENT);

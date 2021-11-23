@@ -41,9 +41,10 @@ public:
 		const float bottom, const float top,
 		const float zNear, const float zFar, bool remember = true);
 	mat4 Perspective( const float fovy, const float aspect,
-		const float zNear, const float zFar);
+		const float zNear, const float zFar, bool remember = true);
 	const vec4& getLookingAt() const { return lookingAt; }
 	const vec4& getUpDirection() const { return upDirection; }
+	void getPerspectiveParameters(float& fovy, float& aspect);
 };
 
 class Scene {

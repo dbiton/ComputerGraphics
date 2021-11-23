@@ -313,6 +313,74 @@ void CProjectionDialog::OnPaint()
     bottomEdit.SetFocus();
 }
 
+// -------------------------
+//    Class CPerspectiveProjectionDialog
+// -------------------------
+// time for some custom dialogs pog
+// most of this is just copypaste stuff... the only stuff that matters
+// is the enum, and the rectangles that define where the text+textboxes go.
+// honestly most of the headache is just figuring out the rectangles... 
+
+enum {
+    PER_ASPECT_EDIT = 210, // don't know if there's a reason to start here, i'm just roughly following the convention of the defines above
+    PER_FOVY_EDIT,
+    PER_ZNEAR_EDIT,
+    PER_ZFAR_EDIT
+};
+
+void CPrespectiveProjectionDialog::DoDataExchange(CDataExchange* pDX)
+{
+    // no idea how any of this works, but apparently this automatically verifies that the input is a float,
+    // and also makes it so the fields get their value when the dialog closes, so that's cool
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, PER_ASPECT_EDIT, aspect);
+    DDX_Text(pDX, PER_FOVY_EDIT, fovy);
+    DDX_Text(pDX, PER_ZNEAR_EDIT, zNear);
+    DDX_Text(pDX, PER_ZFAR_EDIT, zFar);
+}
+
+// CPrespectiveProjectionDialog message handlers
+BEGIN_MESSAGE_MAP(CPrespectiveProjectionDialog, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CPrespectiveProjectionDialog::OnCreate(LPCREATESTRUCT lpcs)
+{ // this creates the textboxes
+    fovyEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 10, 200, 30), this, PER_FOVY_EDIT);
+
+    aspectEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 50, 200, 70), this, PER_ASPECT_EDIT);
+
+    zNearEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 90, 200, 110), this, PER_ZNEAR_EDIT);
+
+    zFarEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(265, 90, 400, 110), this, PER_ZFAR_EDIT);
+
+    return 0;
+}
+
+void CPrespectiveProjectionDialog::OnPaint()
+{ // this creates extra text around the textboxes. this extra text is always rendered below the textboxes.
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    CRect bottomRect(10, 10, 200, 30);
+    dc.DrawText(CString("fov:"), -1, &bottomRect, DT_SINGLELINE);
+
+    CRect leftRect(10, 50, 400, 70);
+    dc.DrawText(CString("aspect:"), -1, &leftRect, DT_SINGLELINE);
+
+    CRect zNearRec(10, 90, 600, 110);
+    dc.DrawText(CString("Near:"), -1, &zNearRec, DT_SINGLELINE);
+
+    CRect zFarRec(220, 90, 400, 110);
+    dc.DrawText(CString("Far:"), -1, &zFarRec, DT_SINGLELINE);
+
+    fovyEdit.SetFocus();
+}
 
 // -------------------------
 //    Class CSingleFloatDialog

@@ -121,20 +121,22 @@ PrimMeshModel PrimMeshModel::Prism(vec3 p, GLfloat height, GLfloat base_radius, 
             const GLfloat angle = 2 * M_PI * i / base_sides;
             const vec3 v(cos(angle) * base_radius, sin(angle) * base_radius, (side - 0.5) * height);
             verts.push_back(v);
-            // create face
-            if (i < base_sides - 1) {
-                // side face
-                faces.push_back(Face(i + 1 + base_sides * side, i + 2 + base_sides * side, i + 1 + (1 - side) * (base_sides + 1)));
-                // base face
-                if (i > 0) {
-                    faces.push_back(Face(i + 1 + base_sides * side, i + 2 + base_sides * side, 1 + base_sides * side));
-                }
-            }
         }
     }
+
+    faces.push_back(Face(1, 2, 1 + base_sides + 1));
+    faces.push_back(Face(1 + base_sides, 2 + base_sides, 1));
+    for (int i = 1; i < base_sides - 1; i++) {
+        // side face
+        faces.push_back(Face(i + 1 + base_sides, i + 2 + base_sides, i + 1));
+        faces.push_back(Face(i + 1, i + 2, i + 1 + base_sides + 1));
+        // base face
+        faces.push_back(Face(1 + base_sides, i + 2 + base_sides, i + 1 + base_sides));
+        faces.push_back(Face(1, i + 2, i + 1));
+    }
     // two last faces
-    faces.push_back(Face(base_sides, 1, base_sides + 1));
-    faces.push_back(Face(1, base_sides + 1, base_sides * 2 - 1));
+    faces.push_back(Face(base_sides + 1, 1, base_sides));
+    //faces.push_back(Face(1, base_sides + 1, base_sides * 2 - 1));
 
 
     prism.processRawVerts(verts, faces);

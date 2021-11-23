@@ -3,6 +3,7 @@
 #include "MeshModel.h"
 #include "PrimMeshModel.h"
 #include <string>
+#include <cmath>
 
 using namespace std;
 
@@ -146,7 +147,20 @@ mat4 Camera::Frustum(const float left, const float right, const float bottom, co
     return N * S * H;
 }
 
-mat4 Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar)
+mat4 Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar, bool remember)
 {
-    return mat4(); // TODO wth is this
+    float fovy_rad = fovy * 180 / M_PI;
+    float left, right, bottom, top;
+    top = zNear * std::tan(fovy_rad / 2);
+    bottom = -top;
+    right = top / aspect;
+    left = -right;
+    return Camera::Frustum(left, right, bottom, top, zNear, zFar, remember);
+}
+
+void Camera::getPerspectiveParameters(float& fovy, float& aspect) {
+    // distance to the the line defined as (left, y, near)
+    float distance_to_left = std::sqrt(lastLeft * lastLeft + lastNear * lastNear);
+    fovy = 2 * std::atan2(lastTop, distance_to_left) / M_PI * 180;
+    aspect = (lastTop - lastBottom) / (lastRight - lastLeft);
 }
