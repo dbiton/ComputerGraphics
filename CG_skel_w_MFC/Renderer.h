@@ -67,9 +67,11 @@ private:
 	vec2 clipToScreen(const vec3& clip_pos);
 	vec2 clipToScreen(const vec4& clip_pos);
 	
-	void ShadeTriangle(const vec3& po, const vec3& p1, const vec3& p2, Material material, ShadeType shadeType);
+	void ShadeTriangle(vec3 p3d[3], vec2 p2d[3], Material material, ShadeType shadeType);
 	void DrawLine(const vec2& p0, const vec2& p1, const Color& c);
 	void DrawPixel(int x, int y, const Color& c);
+
+	bool PixelInsideTriangle(vec2 pixel, vec2 p2d[3]);
 
 	void CreateOpenGLBuffer();
 	void InitOpenGLRendering();

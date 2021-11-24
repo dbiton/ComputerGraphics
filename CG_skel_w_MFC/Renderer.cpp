@@ -47,10 +47,10 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices,
 
     mat4 object2clip = projection * transform_camera_inverse * transform_object;
     for (int i = 0; i < vertices.size(); i += 3) {
+        GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
         vec3 v[3];
         vec3 vn[3];
-        vec3 fn; // face normal
-        vec3 fm; // face mid
+        vec2 v2d[3];
         vec3 bb_max;
         vec3 bb_min;
 
@@ -58,26 +58,27 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices,
         for (int j = 0; j < 3; j++) {
             v[j] = vertices[i + j].position;
             vn[j] = vertices[i + j].normal;
+            v2d[i] = clipToScreen(applyTransformToPoint(object2clip, v[i]));
         }
         
+        vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len;; // face normal
+        vec3 fm = (v[0] + v[1] + v[2]) / 3; // face mid
+
         if (shadeType != SHADE_NONE) {
-            ShadeTriangle(v[0], v[1], v[2], material, shadeType);
+            ShadeTriangle(v, v2d, material, shadeType);
         }
 
 
         // draw wireframe mesh
         if (drawWireframe) {
             for (int j = 0; j < 3; j++) {
-                DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])), clipToScreen(applyTransformToPoint(object2clip, v[(j + 1) % 3])), color_mesh);
+                DrawLine(v2d[j], v2d[(j + 1) % 3], color_mesh);
             }
         }
 
-        GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
 
         // draw face normal
         if (drawFaceNormals) {
-            fm = (v[0] + v[1] + v[2]) / 3;
-            fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len;
             DrawLine(clipToScreen(applyTransformToPoint(object2clip, fm)), clipToScreen(applyTransformToPoint(object2clip, fm + fn)), color_face_normal);
         }
 
@@ -238,8 +239,27 @@ bool bad(float f) {
     return !_finite(f) || std::abs(f) > EPSILON_INVERSE;
 }
 
-void Renderer::ShadeTriangle(const vec3& po, const vec3& p1, const vec3& p2, Material material, ShadeType shadeType) {
+bool Renderer::PixelInsideTriangle(vec2 pixel, vec2 p2d[3]) {
 
+}
+
+
+void Renderer::ShadeTriangle(vec3[3] p3d, vec2[3] p2d, Material material, ShadeType shadeType) {
+    std::set<vec2> visited_pixels;
+    std::vector<vec2> pixels;
+    pixels.push_back((p2d[0]+p2d[1]+p2d[2])/3);
+    while (pixels.size() > 0) {
+        vec2 pixel = pixels.back();
+        pixels.pop_back();
+        if (visited_pixels.count(pixel) == 0 && pixelOnBoundary(pixel, p2d)) {
+            
+
+            pixels.push_back(pixel + vec2(1, 0));
+            pixels.push_back(pixel + vec2(-1, 0));
+            pixels.push_back(pixel + vec2(0, 1));
+            pixels.push_back(pixel + vec2(0, -1));
+        }
+    }
 }
 
 void Renderer::DrawLine(const vec2& p0, const vec2& p1, const Color& c)
