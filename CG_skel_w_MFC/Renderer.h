@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "PrimTypes.h"
+#include "Material.h"
 #include "MeshModel.h"
 #include "CG_skel_w_MFC.h"
 #include "vec.h"
@@ -67,10 +68,11 @@ private:
 	vec2 clipToScreen(const vec3& clip_pos);
 	vec2 clipToScreen(const vec4& clip_pos);
 	
-	void ShadeTriangle(vec3 p3d[3], vec2 p2d[3], Material material, ShadeType shadeType);
+	void ShadeTriangle(vec3 p3d[3], Material material, ShadeType shadeType);
 	void DrawLine(const vec2& p0, const vec2& p1, const Color& c);
 	void DrawPixel(int x, int y, const Color& c);
 
+	float Area(vec2 p0, vec2 p1, vec2 p2);
 	bool PixelInsideTriangle(vec2 pixel, vec2 p2d[3]);
 
 	void CreateOpenGLBuffer();

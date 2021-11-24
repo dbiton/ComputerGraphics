@@ -3,6 +3,7 @@
 #include "CG_skel_w_MFC.h"
 #include "InitShader.h"
 #include "GL\freeglut.h"
+#include <set>
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
@@ -30,7 +31,7 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices,
     bool drawFaceNormals, 
     bool drawVertexNormals,
     bool drawWireframe,
-    SHADE_NONE shadeType,
+    ShadeType shadeType,
     Material material)
 {
     Color color_mesh(1, 1, 1);
@@ -47,10 +48,9 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices,
 
     mat4 object2clip = projection * transform_camera_inverse * transform_object;
     for (int i = 0; i < vertices.size(); i += 3) {
-        GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
         vec3 v[3];
         vec3 vn[3];
-        vec2 v2d[3];
+        vec3 v_clip [3] ;
         vec3 bb_max;
         vec3 bb_min;
 
@@ -58,21 +58,22 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices,
         for (int j = 0; j < 3; j++) {
             v[j] = vertices[i + j].position;
             vn[j] = vertices[i + j].normal;
-            v2d[i] = clipToScreen(applyTransformToPoint(object2clip, v[i]));
+            v_clip[j] = applyTransformToPoint(object2clip, v[j]);
         }
         
+        GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
         vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len;; // face normal
         vec3 fm = (v[0] + v[1] + v[2]) / 3; // face mid
 
-        if (shadeType != SHADE_NONE) {
-            ShadeTriangle(v, v2d, material, shadeType);
-        }
+        //if (shadeType != SHADE_NONE) {
+           ShadeTriangle(v_clip, material, shadeType);
+        //}
 
 
         // draw wireframe mesh
         if (drawWireframe) {
             for (int j = 0; j < 3; j++) {
-                DrawLine(v2d[j], v2d[(j + 1) % 3], color_mesh);
+                //DrawLine(clipToScreen(v_clip[j]), clipToScreen(v_clip[(j + 1) % 3]), color_mesh);
             }
         }
 
@@ -197,6 +198,8 @@ void Renderer::CreateBuffers(int width, int height, bool first)
     CreateOpenGLBuffer(); //Do not remove this line.
     if (m_outBuffer) delete m_outBuffer;
     m_outBuffer = new float[3 * m_width * m_height];
+    if (m_zbuffer) delete m_zbuffer;
+    m_zbuffer = new float[m_width * m_height];
 }
 
 vec2 Renderer::clipToScreen(const vec4& clip_pos)
@@ -239,25 +242,74 @@ bool bad(float f) {
     return !_finite(f) || std::abs(f) > EPSILON_INVERSE;
 }
 
-bool Renderer::PixelInsideTriangle(vec2 pixel, vec2 p2d[3]) {
-
+float Renderer::Area(vec2 p0, vec2 p1, vec2 p2)
+{
+    vec2 p1_p0 = p1-p0;
+    vec2 p2_p0 = p2-p0;
+    return 0.5f * std::abs(p1_p0.x * p2_p0.y - p2_p0.x * p1_p0.y);
 }
 
+void Renderer::ShadeTriangle(vec3 p3d[3], Material material, ShadeType shadeType) {
+    vec3 normal = normalize(cross(p3d[1] - p3d[0], p3d[2] - p3d[1]));
+    vec3 camera_dir(0, 0, 1);
+    float angle = acos(dot(normal, camera_dir));
+    
+    // backface culling
+    if (angle > M_PI / 2) {
+        return;
+    }
 
-void Renderer::ShadeTriangle(vec3[3] p3d, vec2[3] p2d, Material material, ShadeType shadeType) {
-    std::set<vec2> visited_pixels;
+    const vec2 p2d[3] = {
+        clipToScreen(p3d[0]),
+        clipToScreen(p3d[1]),
+        clipToScreen(p3d[2])
+    };
+    std::set<int> visited_pixels;
     std::vector<vec2> pixels;
-    pixels.push_back((p2d[0]+p2d[1]+p2d[2])/3);
+    vec2 p2d_mid = (p2d[0] + p2d[1] + p2d[2]) / 3;
+    p2d_mid.x = std::round(p2d_mid.x);
+    p2d_mid.y = std::round(p2d_mid.y);
+    pixels.push_back(p2d_mid);
     while (pixels.size() > 0) {
-        vec2 pixel = pixels.back();
+        const vec2 p = pixels.back();
         pixels.pop_back();
-        if (visited_pixels.count(pixel) == 0 && pixelOnBoundary(pixel, p2d)) {
-            
+        int x = p.x;
+        int y = p.y;
+        visited_pixels.insert(x + y * m_width);
+        // out of frame 
+        if (x > m_width || x < 0 || y > m_height || y < 0) continue;
 
-            pixels.push_back(pixel + vec2(1, 0));
-            pixels.push_back(pixel + vec2(-1, 0));
-            pixels.push_back(pixel + vec2(0, 1));
-            pixels.push_back(pixel + vec2(0, -1));
+        const float A = Area(p2d[0], p2d[1], p2d[2]);
+        // triangle is a line
+        if (A < FLT_EPSILON) {
+            return;
+        }
+        const float a0 = Area(p, p2d[1], p2d[2]) / A;
+        const float a1 = Area(p, p2d[2], p2d[0]) / A;
+        const float a2 = Area(p, p2d[0], p2d[1]) / A;
+        // If out of the triangle
+        if (std::abs(a0 + a1 + a2 - 1) > FLT_EPSILON) {
+            continue;
+        }
+        float depth = a0 * p3d[0].z + a1 * p3d[1].z + a2 * p3d[2].z;
+        if (depth > m_zbuffer[x + y * m_width]) {
+            m_zbuffer[x + y * m_width] = depth;
+            float color = 2 * angle / M_PI;
+            DrawPixel(x, y, vec3(color));
+        }
+        vec2 p_next[4] = {
+            p + vec2(1,  0),
+            p + vec2(-1,  0),
+            p + vec2(0,  1),
+            p + vec2(0, -1)
+        };
+        for (int i = 0; i < 4; i++) {
+            int x = p_next[i].x;
+            int y = p_next[i].y;
+            if (visited_pixels.count(x + y * m_width) == 0) {
+                visited_pixels.insert(x + y * m_width);
+                pixels.push_back(p_next[i]);
+            }
         }
     }
 }
