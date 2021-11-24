@@ -15,8 +15,10 @@ void Scene::AddModel(MeshModel* model) {
              max = getActiveModel()->getBoundingBoxMax();
         cameras.push_back(new Camera());
         activeCamera = 0;
-        getActiveCamera()->LookAt(getPosition(getActiveModel()->world) + max * vec3(3, 1, 0.5), getPosition(getActiveModel()->world), vec4(0, 0, 1, 1));
-        getActiveCamera()->Frustum(min.x * 2, max.x * 2, min.x * 2, max.x * 2, 1, 1 + max.z - min.z);
+        getActiveCamera()->Perspective(90, 1, 1, 8);
+        mat4 transform = getActiveCamera()->getTransform();
+        setPosition(transform, vec3(0, 0, min.z - 2));
+        getActiveCamera()->self = transform;
     }
     moveBy(model->world, getActiveCamera()->getLookingAt()); // spawn the model where the camera's looking
     draw();

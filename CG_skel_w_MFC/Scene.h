@@ -11,6 +11,16 @@ class MeshModel;
 class Renderer;
 
 class Light : public Entity{
+	Color color;
+	float brightness;
+};
+
+class PointLight : public Light {
+	vec3 position;
+};
+
+class ParallelLight : public Light {
+	vec3 direction;
 };
 
 enum {

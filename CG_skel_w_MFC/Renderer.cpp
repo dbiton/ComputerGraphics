@@ -250,9 +250,9 @@ float Renderer::Area(vec2 p0, vec2 p1, vec2 p2)
 }
 
 void Renderer::ShadeTriangle(vec3 p3d[3], Material material, ShadeType shadeType) {
-    vec3 normal = normalize(cross(p3d[1] - p3d[0], p3d[2] - p3d[1]));
-    vec3 camera_dir(0, 0, 1);
-    float angle = acos(dot(normal, camera_dir));
+    const vec3 normal = normalize(cross(p3d[1] - p3d[0], p3d[2] - p3d[1]));
+    const vec3 camera_dir(0, 0, 1);
+    const float angle = acos(dot(normal, camera_dir));
     
     // backface culling
     if (angle > M_PI / 2) {
@@ -264,6 +264,7 @@ void Renderer::ShadeTriangle(vec3 p3d[3], Material material, ShadeType shadeType
         clipToScreen(p3d[1]),
         clipToScreen(p3d[2])
     };
+
     std::set<int> visited_pixels;
     std::vector<vec2> pixels;
     vec2 p2d_mid = (p2d[0] + p2d[1] + p2d[2]) / 3;
@@ -294,7 +295,7 @@ void Renderer::ShadeTriangle(vec3 p3d[3], Material material, ShadeType shadeType
         float depth = a0 * p3d[0].z + a1 * p3d[1].z + a2 * p3d[2].z;
         if (depth > m_zbuffer[x + y * m_width]) {
             m_zbuffer[x + y * m_width] = depth;
-            float color = 2 * angle / M_PI;
+            const float color = 2 * angle / M_PI;
             DrawPixel(x, y, vec3(color));
         }
         vec2 p_next[4] = {
@@ -304,8 +305,8 @@ void Renderer::ShadeTriangle(vec3 p3d[3], Material material, ShadeType shadeType
             p + vec2(0, -1)
         };
         for (int i = 0; i < 4; i++) {
-            int x = p_next[i].x;
-            int y = p_next[i].y;
+            const int x = p_next[i].x;
+            const int y = p_next[i].y;
             if (visited_pixels.count(x + y * m_width) == 0) {
                 visited_pixels.insert(x + y * m_width);
                 pixels.push_back(p_next[i]);
