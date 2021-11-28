@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Renderer.h"
+#include "Scene.h"
 #include "CG_skel_w_MFC.h"
 #include "InitShader.h"
 #include "GL\freeglut.h"
@@ -26,7 +27,8 @@ GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) {
     return (length(p1 - p2) + length(p1 - p3) + length(p2 - p3)) / 3;
 }
 
-void Renderer::DrawTriangles(const vector<Vertex>& vertices, 
+void Renderer::DrawTriangles(
+    const vector<Vertex>* vertices, 
     bool isActiveModel, 
     bool drawFaceNormals, 
     bool drawVertexNormals,
@@ -47,7 +49,7 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices,
     GLfloat vn_len = 0.5;
 
     mat4 object2clip = projection * transform_camera_inverse * transform_object;
-    for (int i = 0; i < vertices.size(); i += 3) {
+    for (int i = 0; i < vertices->size(); i += 3) {
         vec3 v[3];
         vec3 vn[3];
         vec3 v_clip [3] ;
@@ -56,8 +58,8 @@ void Renderer::DrawTriangles(const vector<Vertex>& vertices,
 
         // load vertices
         for (int j = 0; j < 3; j++) {
-            v[j] = vertices[i + j].position;
-            vn[j] = vertices[i + j].normal;
+            v[j] = (*vertices)[i + j].position;
+            vn[j] = (*vertices)[i + j].normal;
             v_clip[j] = applyTransformToPoint(object2clip, v[j]);
         }
         
@@ -208,6 +210,11 @@ vec2 Renderer::clipToScreen(const vec4& clip_pos)
 }
 
 
+void Renderer::setLights(const std::vector<Light*>* _lights)
+{
+    lights = _lights;
+}
+
 vec2 Renderer::clipToScreen(const vec3& clip_pos)
 {
     return vec2((clip_pos.x + 1) / 2 * m_width, (clip_pos.y + 1) / 2 * m_height);
@@ -357,6 +364,25 @@ void Renderer::DrawPixel(int x, int y, const Color& c)
     m_outBuffer[INDEX(m_width, x, y, 0)] = c[0];
     m_outBuffer[INDEX(m_width, x, y, 1)] = c[1];
     m_outBuffer[INDEX(m_width, x, y, 2)] = c[2];
+}
+
+Color Renderer::CalcColor(const Material& material, const vec3& surface_position, const vec3& surface_normal)
+{
+    const Color& c = material.color;
+    vec3 diffuse(0);
+    vec3 specular(0);
+    for (const auto& light : *lights) {
+        vec3 l = light->dirToSource(surface_position);
+
+        vec3 dlc = material.roughness * dot(l, surface_normal) * light->getBrightness() * light->getColor();
+        diffuse += vec3(dlc.x * c.x, dlc.y * c.y, dlc.z * c.z);
+
+        vec3 slc = (1-material.roughness) * pow(, material.shininess) * light->getBrightness() * light->getColor();
+        specular += vec3(slc.x * c.x, slc.y * c.y, slc.z * c.z);
+
+        material.reflect_diffuse * dot(l, surface_normal) * ;
+    }
+    return Color();
 }
 
 

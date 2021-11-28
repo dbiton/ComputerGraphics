@@ -10,17 +10,34 @@
 class MeshModel;
 class Renderer;
 
-class Light : public Entity{
+class Light{
 	Color color;
 	float brightness;
+public:
+	Light();
+
+	void setColor(Color _color);
+	void setBrightness(float _brightness);
+
+	Color getColor() const;
+	float getBrightness() const;
+	virtual vec3 dirToSource(vec3 p) const;
 };
 
 class PointLight : public Light {
 	vec3 position;
+public:
+	void setPosition(vec3 _position);
+
+	virtual vec3 dirToSource(vec3 p) const;
 };
 
 class ParallelLight : public Light {
 	vec3 direction;
+public:
+	void setDirection(vec3 _direction);
+
+	virtual vec3 dirToSource(vec3 p) const;
 };
 
 enum {

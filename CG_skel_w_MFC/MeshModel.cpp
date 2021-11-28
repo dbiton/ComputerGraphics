@@ -141,7 +141,7 @@ void MeshModel::ToggleDrawBoundingBox()
 void MeshModel::draw(Renderer* renderer, bool isActiveModel)
 {
 	renderer->SetObjectTransform(getTransform());
-	renderer->DrawTriangles(vertices, isActiveModel, is_draw_normals_per_face, is_draw_normals_per_vert);
+	renderer->DrawTriangles(&vertices, isActiveModel, is_draw_normals_per_face, is_draw_normals_per_vert);
 	if (is_draw_bounding_box) renderer->DrawBox(bounding_box_min, bounding_box_max);
 }
 

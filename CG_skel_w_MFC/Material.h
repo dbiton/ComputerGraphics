@@ -1,13 +1,16 @@
 #pragma once
 
 #include "vec.h"
+#include "PrimTypes.h"
 
 struct Material {
-	vec3 emissive;
-	vec3 diffuse;
-	vec3 specular;
+	Color color;
 
-	static Material DefaultMaterial() {
-		return Material{ vec3(0.5), vec3(0.5), vec3(0.5) };
+	float roughness;
+	float shininess;
+
+	static Material DefaultMaterial()
+	{
+		return Material{ Color(0.5), 0.5, 0.5 };
 	}
 };

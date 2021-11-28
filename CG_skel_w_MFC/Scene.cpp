@@ -4,6 +4,7 @@
 #include "PrimMeshModel.h"
 #include <string>
 #include <cmath>
+#include <cassert>
 
 using namespace std;
 
@@ -165,4 +166,56 @@ void Camera::getPerspectiveParameters(float& fovy, float& aspect) {
     float distance_to_left = std::sqrt(lastLeft * lastLeft + lastNear * lastNear);
     fovy = 2 * std::atan2(lastTop, distance_to_left) / M_PI * 180;
     aspect = (lastTop - lastBottom) / (lastRight - lastLeft);
+}
+
+Light::Light()
+{
+}
+
+void Light::setColor(Color _color)
+{
+    color = _color;
+}
+
+void Light::setBrightness(float _brightness)
+{
+    brightness = _brightness;
+}
+
+Color Light::getColor() const
+{
+    return color;
+}
+
+float Light::getBrightness() const
+{
+    return brightness;
+}
+
+vec3 Light::dirToSource(vec3 p) const
+{
+    // the Light class is intended to only be used for ambient light, it has no direction.
+    return vec3();
+}
+
+void PointLight::setPosition(vec3 _position)
+{
+    position = _position;
+}
+
+vec3 PointLight::dirToSource(vec3 p) const
+{
+    return normalize(position - p);
+}
+
+void ParallelLight::setDirection(vec3 _direction)
+{
+    // check that _direction is normalized (or close enough to it)
+    assert(std::abs(length(_direction) - 1) < FLT_EPSILON);
+    direction = _direction;
+}
+
+vec3 ParallelLight::dirToSource(vec3 p) const
+{
+    return direction;
 }
