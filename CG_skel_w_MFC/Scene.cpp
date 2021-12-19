@@ -192,12 +192,6 @@ float Light::getBrightness() const
     return brightness;
 }
 
-vec3 Light::dirToSource(vec3 p) const
-{
-    // the Light class is intended to only be used for ambient light, it has no direction.
-    return vec3();
-}
-
 void PointLight::setPosition(vec3 _position)
 {
     position = _position;
@@ -218,4 +212,10 @@ void ParallelLight::setDirection(vec3 _direction)
 vec3 ParallelLight::dirToSource(vec3 p) const
 {
     return direction;
+}
+
+vec3 AmbientLight::dirToSource(vec3 p) const
+{
+    // this is returns (0,0,0)
+    return vec3();
 }

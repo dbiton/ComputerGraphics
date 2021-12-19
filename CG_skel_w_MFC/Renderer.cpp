@@ -52,7 +52,8 @@ void Renderer::DrawTriangles(
     for (int i = 0; i < vertices->size(); i += 3) {
         vec3 v[3];
         vec3 vn[3];
-        vec3 v_clip [3] ;
+        vec3 v_clip[3];
+        vec3 vn_clip[3];
         vec3 bb_max;
         vec3 bb_min;
 
@@ -61,24 +62,24 @@ void Renderer::DrawTriangles(
             v[j] = (*vertices)[i + j].position;
             vn[j] = (*vertices)[i + j].normal;
             v_clip[j] = applyTransformToPoint(object2clip, v[j]);
+            vn_clip[j] = applyTransformToPoint(object2clip, vn[j]);
         }
         
         GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
         vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len;; // face normal
         vec3 fm = (v[0] + v[1] + v[2]) / 3; // face mid
 
-        //if (shadeType != SHADE_NONE) {
-           ShadeTriangle(v_clip, material, shadeType);
-        //}
-
+        // draw color (shade)
+        if (shadeType != SHADE_NONE) {
+            ShadeTriangle(v_clip, vn_clip, material, SHADE_FLAT);
+        }
 
         // draw wireframe mesh
         if (drawWireframe) {
             for (int j = 0; j < 3; j++) {
-                //DrawLine(clipToScreen(v_clip[j]), clipToScreen(v_clip[(j + 1) % 3]), color_mesh);
+                DrawLine(clipToScreen(v_clip[j]), clipToScreen(v_clip[(j + 1) % 3]), color_mesh);
             }
         }
-
 
         // draw face normal
         if (drawFaceNormals) {
@@ -210,7 +211,7 @@ vec2 Renderer::clipToScreen(const vec4& clip_pos)
 }
 
 
-void Renderer::setLights(const std::vector<Light*>* _lights)
+void Renderer::setLights(const std::vector<Light*> _lights)
 {
     lights = _lights;
 }
@@ -256,28 +257,39 @@ float Renderer::Area(vec2 p0, vec2 p1, vec2 p2)
     return 0.5f * std::abs(p1_p0.x * p2_p0.y - p2_p0.x * p1_p0.y);
 }
 
-void Renderer::ShadeTriangle(vec3 p3d[3], Material material, ShadeType shadeType) {
-    const vec3 normal = normalize(cross(p3d[1] - p3d[0], p3d[2] - p3d[1]));
+void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], const Material& material, ShadeType shadeType){
+    const vec3 fm = (v[0] + v[1] + v[2]) / 3;
+    const vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1]));
     const vec3 camera_dir(0, 0, 1);
-    const float angle = acos(dot(normal, camera_dir));
+    const float angle = acos(dot(fn, camera_dir));
     
     // backface culling
     if (angle > M_PI / 2) {
         return;
     }
 
-    const vec2 p2d[3] = {
-        clipToScreen(p3d[0]),
-        clipToScreen(p3d[1]),
-        clipToScreen(p3d[2])
+    const vec2 v2d[3] = {
+        clipToScreen(v[0]),
+        clipToScreen(v[1]),
+        clipToScreen(v[2])
     };
+
+    // precalculate colors if need be
+    vec3 color_face;
+    vec3 color_vert[3];
+    if (shadeType == ShadeType::SHADE_FLAT) {
+        color_face = CalcColor(material, (v[0] + v[1] + v[2]) / 3, fn);
+    }
+    else if (shadeType == ShadeType::SHADE_GOURAUD) {
+        for (int i = 0; i < 3; i++) color_vert[i] = CalcColor(material, v[i], vn[i]);
+    }
 
     std::set<int> visited_pixels;
     std::vector<vec2> pixels;
-    vec2 p2d_mid = (p2d[0] + p2d[1] + p2d[2]) / 3;
-    p2d_mid.x = std::round(p2d_mid.x);
-    p2d_mid.y = std::round(p2d_mid.y);
-    pixels.push_back(p2d_mid);
+    vec2 v2d_mid = (v2d[0] + v2d[1] + v2d[2]) / 3;
+    v2d_mid.x = std::round(v2d_mid.x);
+    v2d_mid.y = std::round(v2d_mid.y);
+    pixels.push_back(v2d_mid);
     while (pixels.size() > 0) {
         const vec2 p = pixels.back();
         pixels.pop_back();
@@ -287,23 +299,41 @@ void Renderer::ShadeTriangle(vec3 p3d[3], Material material, ShadeType shadeType
         // out of frame 
         if (x > m_width || x < 0 || y > m_height || y < 0) continue;
 
-        const float A = Area(p2d[0], p2d[1], p2d[2]);
+        const float A = Area(v2d[0], v2d[1], v2d[2]);
         // triangle is a line
         if (A < FLT_EPSILON) {
             return;
         }
-        const float a0 = Area(p, p2d[1], p2d[2]) / A;
-        const float a1 = Area(p, p2d[2], p2d[0]) / A;
-        const float a2 = Area(p, p2d[0], p2d[1]) / A;
+        const float a0 = Area(p, v2d[1], v2d[2]) / A;
+        const float a1 = Area(p, v2d[2], v2d[0]) / A;
+        const float a2 = Area(p, v2d[0], v2d[1]) / A;
         // If out of the triangle
         if (std::abs(a0 + a1 + a2 - 1) > FLT_EPSILON) {
             continue;
         }
-        float depth = a0 * p3d[0].z + a1 * p3d[1].z + a2 * p3d[2].z;
+        const float depth = a0 * v[0].z + a1 * v[1].z + a2 * v[2].z;
         if (depth > m_zbuffer[x + y * m_width]) {
             m_zbuffer[x + y * m_width] = depth;
-            const float color = 2 * angle / M_PI;
-            DrawPixel(x, y, vec3(color));
+            Color color;
+            switch (shadeType) {
+            case ShadeType::SHADE_FLAT:
+                color = color_face;
+                break;
+            case ShadeType::SHADE_GOURAUD:
+                color = a0 * color_vert[0] + a1 * color_vert[1] + a2 * color_vert[2];
+                break;
+            case ShadeType::SHADE_PHONG:
+            {
+                const vec3 p = a0 * v[0] + a1 * v[1] + a2 * v[2];
+                const vec3 pn = a0 * vn[0] + a1 * vn[1] + a2 * vn[2];
+                color = CalcColor(material, p, pn);
+                break;
+            }
+            default:
+                printf("ShadeType unimplemented!");
+                exit(1);
+            }
+            DrawPixel(x, y, color);
         }
         vec2 p_next[4] = {
             p + vec2(1,  0),
@@ -369,20 +399,32 @@ void Renderer::DrawPixel(int x, int y, const Color& c)
 Color Renderer::CalcColor(const Material& material, const vec3& surface_position, const vec3& surface_normal)
 {
     const Color& c = material.color;
-    vec3 diffuse(0);
-    vec3 specular(0);
-    for (const auto& light : *lights) {
-        vec3 l = light->dirToSource(surface_position);
+    Color color(0);
+    for (const auto& light : lights) {
+        const vec3 l = light->dirToSource(surface_position);
 
-        vec3 dlc = material.roughness * dot(l, surface_normal) * light->getBrightness() * light->getColor();
-        diffuse += vec3(dlc.x * c.x, dlc.y * c.y, dlc.z * c.z);
+        // this is an ambient light source
+        if (l == vec3(0)) {
+            // ambient
+            const vec3 alc = material.ambient_reflect * light->getBrightness() * light->getColor();
+            color += alc * c;
+        }
+        else {
+            const vec3 v = getPosition(transform_camera_inverse) - surface_position;
+            const vec3 r = l - 2 * cross(dot(l, surface_normal), surface_normal);
 
-        vec3 slc = (1-material.roughness) * pow(, material.shininess) * light->getBrightness() * light->getColor();
-        specular += vec3(slc.x * c.x, slc.y * c.y, slc.z * c.z);
+            // diffuse
+            const vec3 dlc = material.roughness * dot(l, surface_normal) * light->getBrightness() * light->getColor();
+            color += dlc * c;
 
-        material.reflect_diffuse * dot(l, surface_normal) * ;
+            // specular
+            const vec3 slc = (1 - material.roughness) * pow(dot(r, v), material.shininess) * light->getBrightness() * light->getColor();
+            color += slc * c;
+        }
     }
-    return Color();
+    // color values should be in the [0,1] range, so we bound them using x/(1+x)
+    for (int i = 0; i < 3; i++) color[i] /= (1 + color[i]);
+    return color;
 }
 
 

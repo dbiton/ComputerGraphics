@@ -21,6 +21,11 @@ public:
 
 	Color getColor() const;
 	float getBrightness() const;
+	virtual vec3 dirToSource(vec3 p) const = 0;
+};
+
+class AmbientLight : public Light {
+public:
 	virtual vec3 dirToSource(vec3 p) const;
 };
 
