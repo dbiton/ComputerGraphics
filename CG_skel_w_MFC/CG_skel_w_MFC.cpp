@@ -115,7 +115,7 @@ inline void message(CString message) { AfxMessageBox(message); }
 void toggleFaceNormals() {
     if (scene->activeModel != -1) {
         MeshModel* model = scene->getActiveModel();
-        model->draw_wireframe = !model->draw_wireframe;
+        model->draw_normals_per_face = !model->draw_normals_per_face;
     }
 }
 
