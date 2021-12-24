@@ -7,10 +7,6 @@
 #include "mat.h"
 #include <string>
 
-using namespace std;
-
-class Renderer;
-
 class MeshModel : public Entity
 {
 protected:
@@ -19,40 +15,26 @@ protected:
 	vec3 bounding_box_min;
 	vec3 bounding_box_max;
 
-	bool is_draw_normals_per_vert;
-	bool is_draw_normals_per_face;
-	bool is_draw_bounding_box;
-
-	vec3 color_mesh;
-	vec3 color_vert_normal;
-	vec3 color_face_normal; 
-	vec3 color_bounding_box;
-
-	Material material;
-protected:
 	MeshModel() noexcept;
 
 	void fitBoundingBox();
 	void processRawVerts(const std::vector<vec3>& verts, const std::vector<Face>& faces);
 public:
 
-	MeshModel(string fileName);
-	~MeshModel(void);
+	Material* material = Material::DefaultMaterial();
+	bool draw_normals_per_vert = false;
+	bool draw_normals_per_face = false;
+	bool draw_bounding_box = false;
+	bool draw_wireframe = true;
 
-	void loadFile(string fileName);
+	MeshModel(std::string fileName);
+	~MeshModel();
+
+	void loadFile(std::string fileName);
 	
-	void SetDrawNormalsPerVert(bool b);
-	void SetDrawNormalsPerFace(bool b);
-	void SetDrawBoundingBox(bool b);
-
-	void ToggleDrawNormalsPerVert();
-	void ToggleDrawNormalsPerFace();
-	void ToggleDrawBoundingBox();
-
 	vec3 getBoundingBoxMin() { return bounding_box_min; }
 	vec3 getBoundingBoxMax() { return bounding_box_max; }
+	std::vector<Vertex>* getVertices() { return &vertices; }
 
 	void Recenter();
-
-	virtual void draw(Renderer* renderer, bool isActiveModel);
 };

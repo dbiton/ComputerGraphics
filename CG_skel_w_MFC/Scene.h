@@ -6,15 +6,14 @@
 #include "MeshModel.h"
 #include "Renderer.h"
 
-
 class MeshModel;
 class Renderer;
 
-class Light{
+class Light {
 	Color color;
 	float brightness;
 public:
-	Light();
+	Light() { }
 
 	void setColor(Color _color);
 	void setBrightness(float _brightness);
@@ -50,7 +49,7 @@ enum {
 	PROJECTION_FRUSTUM
 };
 
-class Camera : public Entity{
+class Camera : public Entity {
 	vec4 lookingAt;
 	vec4 upDirection;
 
@@ -59,9 +58,10 @@ class Camera : public Entity{
 		const float zNear, const float zFar, const int type);
 
 public:
-	Camera();
+	Camera() { }
 
 	mat4 projection;
+	int shading;
 	float lastBottom, lastTop, lastLeft, lastRight, lastNear, lastFar;
 	int lastType; // all of this is needed to update the projection matrix upon reshape
 
@@ -74,8 +74,8 @@ public:
 		const float zNear, const float zFar, bool remember = true);
 	mat4 Perspective( const float fovy, const float aspect,
 		const float zNear, const float zFar, bool remember = true);
-	const vec4& getLookingAt() const { return lookingAt; }
-	const vec4& getUpDirection() const { return upDirection; }
+	const vec4& getLookingAt() const noexcept { return lookingAt; }
+	const vec4& getUpDirection() const noexcept { return upDirection; }
 	void getPerspectiveParameters(float& fovy, float& aspect);
 };
 
@@ -89,23 +89,23 @@ class Scene {
 	mat4 Projection();
 
 public:
+	int activeModel = -1;
+	int activeLight = -1;
+	int activeCamera = -1;
+
 	bool dimInactiveModels = true;
 	bool drawAxes = false;
 	bool drawCameras = false;
 
-	Scene(Renderer *_renderer) : renderer(_renderer), activeModel(-1), activeLight(-1), activeCamera(-1) { };
+	Scene(Renderer *_renderer) : renderer(_renderer) { }
 
 	void loadOBJModel(std::string fileName);
 	void draw();
 	void drawDemo();
 	
-	int activeModel;
-	int activeLight;
-	int activeCamera;
-
-	MeshModel* getActiveModel() { return models[activeModel]; }
-	Light* getActiveLight() { return lights[activeLight]; }
-	Camera* getActiveCamera() { return cameras[activeCamera]; }
+	MeshModel* getActiveModel() noexcept { return models[activeModel]; }
+	Light* getActiveLight() noexcept { return lights[activeLight]; }
+	Camera* getActiveCamera() noexcept { return cameras[activeCamera]; }
 
 	int AddCamera(const Camera& camera);
 

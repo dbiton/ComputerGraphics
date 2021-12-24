@@ -1,0 +1,28 @@
+1. Geometry
+	 Add a uniform material for each model. The material should consist of emissive, diffuse and specular colors. Allow the user to change the different colors.
+		* Partially implemented, need to add dialogs
+	 Add at least one non-uniform material (i.e. a material that is different on different vertices). There are many different options here so be creative.
+		* Partially implemented, need to add dialogs
+2. The scene
+	 Allow the user to add several light sources to the scene. The user should be able to position and orient the light sources, and change their colors and types. Implement at least point light sources and parallel light sources.
+		* Partially implemented, need to add dialogs and visual representations
+	 Add an ambient light to the scene, and allow the user to control it.
+		* Partially implemented, need to add dialogs
+3. The renderer
+	 Implement the z-buffer algorithm to allow hidden surface removal.
+		* Implemented. Seems to suffer from some sort of weird artifacting, but it doesn't seem too bad
+	 Implement flat, Gouraud and Phong shading (only if normal-per-vertex are available) and allow the user to switch between them.
+		* Partially implemented, need to add dialogs
+
+=== Also need to implement at least 2 of the following ===
+
+4. Enable fog effect and supersampling anti-aliasing.
+	 To add fog, you should define a fog color that is combined with the object color depending on the distance of each pixel from the viewer. This is a useful link. (https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html)
+		* Not implemented, but seems simple enough
+	 To implement supersampling anti-aliasing, you should maintain a buffer that is larger than the screen, or in other words render an image that is larger than the screen. Then, to display it, downsample the image (using all the values, for example if your high resolution image is as twice as high and wide, compute the average of each 4 pixels) to generate the screen buffer.
+		* Not implemented, but seems simple enough
+5. Enable full screen blur and light bloom.
+	 To implement light bloom, you should apply a gaussian filter on the bright pixels and combine it with the original image (buffer). See this link for more details. (https://learnopengl.com/Advanced-Lighting/Bloom)
+		* Not implemented
+6. Implement the clipping algorithm that was presented in tutorial 4.
+		* Not implemented

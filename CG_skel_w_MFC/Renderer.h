@@ -8,15 +8,12 @@
 #include "mat.h"
 #include "GL/glew.h"
 
-using namespace std;
-
 // ObjectCoord stored in ModelMesh and does not get used
 
-class Camera;
-class Material;
 class Light;
+class MeshModel;
 
-enum ShadeType{
+enum {
 	SHADE_NONE,
 	SHADE_FLAT,
 	SHADE_GOURAUD,
@@ -44,17 +41,11 @@ public:
 	~Renderer(void);
 
 	// triangles are in object space
-	void DrawTriangles(
-		const std::vector<Vertex>* vertices, 
-		bool isActiveModel, 
-		bool drawFaceNormals, 
-		bool drawVertexNormals,
-		bool drawWireframe = true,
-		ShadeType shadeType = SHADE_NONE,
-		Material material = Material::DefaultMaterial());
+	void DrawTriangles(MeshModel* model, bool isActiveModel, int shading);
 	void DrawBox(const vec3& min, const vec3& max);
+	void DrawBox(MeshModel* model);
 	void DrawAxes();
-	void DrawCamera(const Camera* camera);
+	void DrawCamera(const mat4& transform);
 
 	void SetCameraTransform(const mat4& cTransform);
 	void SetProjection(const mat4& projection);
@@ -73,16 +64,13 @@ private:
 	vec2 clipToScreen(const vec3& clip_pos);
 	vec2 clipToScreen(const vec4& clip_pos);
 	
-	void ShadeTriangle(const vec3 verts[3], const vec3 vert_normals[3], const Material& material, ShadeType shadeType);
+	void ShadeTriangle(const vec3 verts[3], const vec3 vert_normals[3], std::vector<Material> mats, int shadeType);
 	void DrawLine(const vec2& p0, const vec2& p1, const Color& c);
 	void DrawPixel(int x, int y, const Color& c);
 
 	Color CalcColor(const Material& material,
 					const vec3& surface_position,
 					const vec3& surface_normal);
-
-	float Area(vec2 p0, vec2 p1, vec2 p2);
-	bool PixelInsideTriangle(vec2 pixel, vec2 p2d[3]);
 
 	void CreateOpenGLBuffer();
 	void InitOpenGLRendering();

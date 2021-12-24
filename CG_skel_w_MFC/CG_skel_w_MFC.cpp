@@ -113,15 +113,24 @@ void reshape(int width, int height)
 inline void message(CString message) { AfxMessageBox(message); }
 
 void toggleFaceNormals() {
-    if (scene->activeModel != -1) scene->getActiveModel()->ToggleDrawNormalsPerFace();
+    if (scene->activeModel != -1) {
+        MeshModel* model = scene->getActiveModel();
+        model->draw_wireframe = !model->draw_wireframe;
+    }
 }
 
 void toggleVertexNormals() {
-    if (scene->activeModel != -1) scene->getActiveModel()->ToggleDrawNormalsPerVert();
+    if (scene->activeModel != -1) {
+        MeshModel* model = scene->getActiveModel();
+        model->draw_normals_per_vert = !model->draw_normals_per_vert;
+    }
 }
 
 void toggleBoundingBox() {
-    if (scene->activeModel != -1) scene->getActiveModel()->ToggleDrawBoundingBox();
+    if (scene->activeModel != -1) {
+        MeshModel* model = scene->getActiveModel();
+        model->draw_bounding_box = !model->draw_bounding_box;
+    }
 }
 
 void toggleInactivesDimming() noexcept {

@@ -50,16 +50,7 @@ vec2 vec2fFromStream(std::istream & aStream)
 	return vec2(x, y);
 }
 
-MeshModel::MeshModel() noexcept :
-	is_draw_normals_per_vert(false),
-	is_draw_normals_per_face(false),
-	is_draw_bounding_box(false),
-	color_mesh(1.0, 1.0, 1.0),
-	color_vert_normal(1.0, 0.0, 0.0),
-	color_face_normal(0.0, 1.0, 0.0),
-	color_bounding_box(0.0, 0.0, 1.0)
-{
-}
+MeshModel::MeshModel() noexcept { }
 
 MeshModel::MeshModel(string fileName)
 {
@@ -67,9 +58,7 @@ MeshModel::MeshModel(string fileName)
 	fitBoundingBox();
 }
 
-MeshModel::~MeshModel(void)
-{
-}
+MeshModel::~MeshModel() { }
 
 void MeshModel::loadFile(string fileName)
 {
@@ -106,43 +95,6 @@ void MeshModel::loadFile(string fileName)
 	}
 
 	processRawVerts(verts, faces);
-}
-
-void MeshModel::SetDrawNormalsPerVert(bool b)
-{
-	is_draw_normals_per_vert = b;
-}
-
-void MeshModel::SetDrawNormalsPerFace(bool b)
-{
-	is_draw_normals_per_face = b;
-}
-
-void MeshModel::SetDrawBoundingBox(bool b)
-{
-	is_draw_bounding_box = b;
-}
-
-void MeshModel::ToggleDrawNormalsPerVert()
-{
-	is_draw_normals_per_vert = !is_draw_normals_per_vert;
-}
-
-void MeshModel::ToggleDrawNormalsPerFace()
-{
-	is_draw_normals_per_face = !is_draw_normals_per_face;
-}
-
-void MeshModel::ToggleDrawBoundingBox()
-{
-	is_draw_bounding_box = !is_draw_bounding_box;
-}
-
-void MeshModel::draw(Renderer* renderer, bool isActiveModel)
-{
-	renderer->SetObjectTransform(getTransform());
-	renderer->DrawTriangles(&vertices, isActiveModel, is_draw_normals_per_face, is_draw_normals_per_vert);
-	if (is_draw_bounding_box) renderer->DrawBox(bounding_box_min, bounding_box_max);
 }
 
 void MeshModel::fitBoundingBox()

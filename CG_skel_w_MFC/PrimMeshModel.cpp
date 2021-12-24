@@ -1,10 +1,7 @@
 #include "stdafx.h"
 #include "PrimMeshModel.h"
 
-PrimMeshModel::PrimMeshModel() :
-    MeshModel()
-{
-}
+PrimMeshModel::PrimMeshModel() : MeshModel() { }
 
 PrimMeshModel PrimMeshModel::Cube(vec3 p, GLfloat len)
 {

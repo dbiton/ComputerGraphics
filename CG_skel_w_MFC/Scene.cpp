@@ -11,15 +11,26 @@ using namespace std;
 void Scene::AddModel(MeshModel* model) {
     models.push_back(model);
     activeModel = models.size() - 1;
-    if (activeCamera == -1) { // happens if this is the first model we're loading. so we set up a default frustum camera to look at it
-        vec3 min = getActiveModel()->getBoundingBoxMin(),
-             max = getActiveModel()->getBoundingBoxMax();
+    if (activeCamera == -1) { // happens if this is the first model we're loading. so we set up a default scene for it
         cameras.push_back(new Camera());
         activeCamera = 0;
-        getActiveCamera()->Perspective(90, 1, 1, 8);
-        mat4 transform = getActiveCamera()->getTransform();
-        setPosition(transform, vec3(0, 0, min.z - 2));
-        getActiveCamera()->self = transform;
+        Camera* activeCamera = getActiveCamera();
+        activeCamera->Perspective(90, 1, 1, 8);
+        mat4 transform = activeCamera ->getTransform();
+        setPosition(transform, vec3(0, 0, getActiveModel()->getBoundingBoxMin().z - 2));
+        activeCamera->self = transform;
+        activeCamera->shading = SHADE_PHONG;
+
+        AmbientLight* amb = new AmbientLight();
+        amb->setColor(Color(1));
+        amb->setBrightness(0.5);
+        lights.push_back(amb);
+
+        PointLight* p = new PointLight();
+        p->setColor(Color(1));
+        p->setBrightness(2);
+        p->setPosition(vec3(100));
+        lights.push_back(p);
     }
     moveBy(model->world, getActiveCamera()->getLookingAt()); // spawn the model where the camera's looking
     draw();
@@ -53,13 +64,16 @@ void Scene::draw()
     if (drawCameras) {
         for (int i = 0; i < cameras.size(); i++) {
             if (i != activeCamera) {
-                renderer->DrawCamera(cameras[i]);
+                renderer->DrawCamera(cameras[i]->getTransform());
             }
         }
     }
     for (int i = 0; i < models.size(); i++)
     {
-        models[i]->draw(renderer, !dimInactiveModels || i == activeModel);
+        renderer->setLights(lights);
+        renderer->SetObjectTransform(models[i]->getTransform());
+        renderer->DrawTriangles(models[i], !dimInactiveModels || i == activeModel, getActiveCamera()->shading);
+        if (models[i]->draw_bounding_box) renderer->DrawBox(models[i]);
     }
     renderer->SwapBuffers();
 }
@@ -121,10 +135,6 @@ void Camera::UpdateLastParameters(const float left, const float right, const flo
     lastType = type;
 }
 
-Camera::Camera()
-{
-}
-
 mat4 Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember)
 {
     if (remember) UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_ORTHO);
@@ -166,10 +176,6 @@ void Camera::getPerspectiveParameters(float& fovy, float& aspect) {
     float distance_to_left = std::sqrt(lastLeft * lastLeft + lastNear * lastNear);
     fovy = 2 * std::atan2(lastTop, distance_to_left) / M_PI * 180;
     aspect = (lastTop - lastBottom) / (lastRight - lastLeft);
-}
-
-Light::Light()
-{
 }
 
 void Light::setColor(Color _color)
