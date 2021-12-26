@@ -27,6 +27,22 @@ class Renderer
 	int m_width, m_height;
 	float m_firstWidth, m_firstHeight;
 
+	bool m_isSuperSample;
+	int m_factorSuperSample;
+	float* m_outBufferSuperSample; // 3*width*height
+	float* m_zbufferSuperSample; // width*height
+
+	bool m_isFog;
+	Color m_fogColor;
+	float m_fogMaxDistance;
+	float m_fogMinDistance;
+
+	bool m_isBloom;
+	float* m_bloomBuffer;
+	float* m_weightsBloom;
+	float m_threshBloom;
+	int m_spreadBloom;
+
 	GLuint gScreenTex;
 	GLuint gScreenVtc;
 
@@ -60,13 +76,22 @@ public:
 	float GetWidthMultiplier() { return m_width / m_firstWidth; }
 
 	void setLights(const std::vector<Light*> _lights);
+
+	void setSupersampling(bool isSuperSample, int factorSuperSample = 3);
+	void setBloom(bool isBloom, float threshBloom = 1.f, int spreadBloom = 0);
+	void setFog(bool isFog, Color fogColor = vec3(), float fogMinDistance = 0, float fogMaxDistance = 0);
+
+	void applyEffects();
 private:
+	void blendBloomBuffer();
+
 	vec2 clipToScreen(const vec3& clip_pos);
 	vec2 clipToScreen(const vec4& clip_pos);
 	
 	void ShadeTriangle(const vec3 verts[3], const vec3 vert_normals[3], std::vector<Material> mats, int shadeType);
-	void DrawLine(const vec2& p0, const vec2& p1, const Color& c);
+	void DrawLine(vec2 p0, vec2 p1, const Color& c);
 	void DrawPixel(int x, int y, const Color& c);
+	void DrawPixelSuperSampled(int x, int y, const Color& c);
 
 	Color CalcColor(const Material& material,
 					const vec3& surface_position,

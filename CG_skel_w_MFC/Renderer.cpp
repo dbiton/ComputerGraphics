@@ -8,12 +8,18 @@
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
-Renderer::Renderer()
+Renderer::Renderer() :
+    m_isFog(false),
+    m_isSuperSample(false),
+    m_isBloom(false)
 {
     InitOpenGLRendering();
     CreateBuffers(512, 512, true);
 }
-Renderer::Renderer(int width, int height)
+Renderer::Renderer(int width, int height) : 
+    m_isFog(false),
+    m_isSuperSample(false),
+    m_isBloom(false)
 {
     InitOpenGLRendering();
     CreateBuffers(width, height, true);
@@ -189,8 +195,11 @@ void Renderer::CreateBuffers(int width, int height, bool first)
     m_width = width;
     m_height = height;
     if (first) {
+        m_outBufferSuperSample = nullptr;
+        m_bloomBuffer = nullptr;
         m_outBuffer = nullptr;
         m_zbuffer = nullptr;
+        m_zbufferSuperSample = nullptr;
         m_firstWidth = m_width;
         m_firstHeight = m_height;
     }
@@ -199,6 +208,8 @@ void Renderer::CreateBuffers(int width, int height, bool first)
     m_outBuffer = new float[3 * m_width * m_height];
     if (m_zbuffer) delete m_zbuffer;
     m_zbuffer = new float[m_width * m_height];
+    if (m_bloomBuffer) delete m_bloomBuffer;
+    m_bloomBuffer = new float[m_width * m_height];
 }
 
 vec2 Renderer::clipToScreen(const vec4& clip_pos)
@@ -261,7 +272,15 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
     // backface culling
     if (dot(fn, camera_dir) < 0) return;
 
-    const vec2 v2d[3] = { clipToScreen(v[0]), clipToScreen(v[1]), clipToScreen(v[2]) };
+    vec2 v2d[3] = { clipToScreen(v[0]), clipToScreen(v[1]), clipToScreen(v[2]) };
+    int width = m_width;
+    int height = m_height;
+    if (m_isSuperSample) {
+        for (int i = 0; i < 3; i++) v2d[i] *= m_factorSuperSample;
+        width *= m_factorSuperSample;
+        height *= m_factorSuperSample;
+    }
+
     const float A = Area(v2d[0], v2d[1], v2d[2]);
     if (A < FLT_EPSILON) return; // triangle is a line
     
@@ -283,7 +302,7 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
     while (pixels.size() > 0) {
         const vec2 p = pixels.back();
         pixels.pop_back();
-        visited_pixels.insert(p.x + p.y * m_width);
+        visited_pixels.insert(p.x + p.y * width);
         // out of frame
 
         const float a0 = Area(p, v2d[1], v2d[2]) / A,
@@ -294,11 +313,21 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
         
         const int x = p.x,
                   y = p.y; // minimize float operations...
-        if (x > m_width || x < 0 || y > m_height || y < 0) continue;
+        if (x > width || x < 0 || y > height || y < 0) continue;
 
         const float depth = a0 * v[0].z + a1 * v[1].z + a2 * v[2].z;
-        if (depth > m_zbuffer[x + y * m_width]) {
-            m_zbuffer[x + y * m_width] = depth;
+        
+        bool depth_updated = false;
+        if (m_isSuperSample && depth > m_zbufferSuperSample[x+y*width]) {
+            m_zbufferSuperSample[x + y * width] = depth;
+            depth_updated = true;
+        }
+        else if (depth > m_zbuffer[x + y * width]) {
+            m_zbuffer[x + y * width] = depth;
+            depth_updated = true;
+        }
+        
+        if (depth_updated) {
             Color color;
             switch (shading) {
             case SHADE_FLAT:
@@ -314,54 +343,84 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
                 printf("ShadeType unimplemented!");
                 exit(1);
             }
-            DrawPixel(p.x, p.y, color);
-        }
+            if (m_isFog) {
+                float fogFactor = (m_fogMaxDistance - depth) / (m_fogMaxDistance - m_fogMinDistance);
+                fogFactor = max(0.f, min(1.f, fogFactor)); // clamp
+                color = fogFactor * m_fogColor + (1 - fogFactor) * color;
+            }
+            if (m_isSuperSample) {
+                DrawPixelSuperSampled(p.x, p.y, color);
+            }
+            else {
+                DrawPixel(p.x, p.y, color);
+            }
+           }
         vec2 p_next[4] = { p + vec2(1,  0), p + vec2(-1,  0), p + vec2(0,  1), p + vec2(0, -1) };
         for (int i = 0; i < 4; i++) {
             const int x = p_next[i].x,
                       y = p_next[i].y;
-            if (visited_pixels.count(x + y * m_width) == 0) {
-                visited_pixels.insert(x + y * m_width);
+            if (visited_pixels.count(x + y * width) == 0) {
+                visited_pixels.insert(x + y * width);
                 pixels.push_back(p_next[i]);
             }
         }
     }
 }
 
-void Renderer::DrawLine(const vec2& p0, const vec2& p1, const Color& c)
+void Renderer::DrawLine(vec2 p0, vec2 p1, const Color& c)
 {
     if (bad(p0.x) || bad(p0.y) || bad(p1.x) || bad(p1.y)) return; // do nothing!
 
+    if (m_isSuperSample) {
+        p0 *= m_factorSuperSample;
+        p1 *= m_factorSuperSample;
+    }
+
     const int x0 = std::round(p0.x),
-              y0 = std::round(p0.y),
-              x1 = std::round(p1.x),
-              y1 = std::round(p1.y), // that's it! no more floats! only ints from here on out!
-              dx = x1 - x0,
-              dy = y1 - y0,
-              dy2 = 2 * abs(dy),
-              dx2 = 2 * abs(dx),
-              x_step = sign(dx),
-              y_step = sign(dy);
+        y0 = std::round(p0.y),
+        x1 = std::round(p1.x),
+        y1 = std::round(p1.y), // that's it! no more floats! only ints from here on out!
+        dx = x1 - x0,
+        dy = y1 - y0,
+        dy2 = 2 * abs(dy),
+        dx2 = 2 * abs(dx),
+        x_step = sign(dx),
+        y_step = sign(dy);
     int d = 0,
         x = x0,
         y = y0;
 
     // draw first+mid pixels
     if (dy2 < dx2) while (x != x1) {
-        DrawPixel(x, y, c);
+        if (m_isSuperSample) {
+            DrawPixelSuperSampled(x, y, c);
+        }
+        else {
+            DrawPixel(x, y, c);
+        }
         x += x_step;
         if (d >= 0) { y += y_step; d -= dx2; }
         d += dy2;
     }
     else while (y != y1) {
-        DrawPixel(x, y, c);
+        if (m_isSuperSample) {
+            DrawPixelSuperSampled(x, y, c);
+        }
+        else {
+            DrawPixel(x, y, c);
+        }
         y += y_step;
         if (d >= 0) { x += x_step; d -= dy2; }
         d += dx2;
     }
 
     // draw last pixel
-    DrawPixel(x1, y1, c);
+    if (m_isSuperSample) {
+        DrawPixelSuperSampled(x1, y1, c);
+    }
+    else {
+        DrawPixel(x1, y1, c);
+    }
 }
 
 void Renderer::DrawPixel(int x, int y, const Color& c)
@@ -370,6 +429,14 @@ void Renderer::DrawPixel(int x, int y, const Color& c)
     m_outBuffer[INDEX(m_width, x, y, 0)] = c[0];
     m_outBuffer[INDEX(m_width, x, y, 1)] = c[1];
     m_outBuffer[INDEX(m_width, x, y, 2)] = c[2];
+}
+
+void Renderer::DrawPixelSuperSampled(int x, int y, const Color& c)
+{
+    if (x < 0 || y < 0 || x >= m_width * m_factorSuperSample || y >= m_height * m_factorSuperSample) return;
+    m_outBufferSuperSample[INDEX(m_width, x, y, 0)] = c[0];
+    m_outBufferSuperSample[INDEX(m_width, x, y, 1)] = c[1];
+    m_outBufferSuperSample[INDEX(m_width, x, y, 2)] = c[2];
 }
 
 Color Renderer::CalcColor(const Material& material, const vec3& surface_position, const vec3& surface_normal)
@@ -483,9 +550,108 @@ void Renderer::SwapBuffers()
 void Renderer::ClearColorBuffer()
 {
     if (m_outBuffer) memset(m_outBuffer, 0, sizeof(float) * 3 * m_width * m_height);
+    if (m_outBufferSuperSample) memset(m_outBufferSuperSample, 0, sizeof(float) * m_factorSuperSample * 3 * m_width * m_height);
 }
 
 void Renderer::ClearDepthBuffer()
 {
     if (m_zbuffer) memset(m_zbuffer, FLT_MAX, sizeof(float) * m_width * m_height);
+    if (m_zbufferSuperSample) memset(m_zbufferSuperSample, 0, sizeof(float) * m_factorSuperSample * m_width * m_height);
+}
+
+void Renderer::setSupersampling(bool isSupersampling, int factorSuperSample) {
+    m_isSuperSample = isSupersampling;
+    m_factorSuperSample = factorSuperSample;
+    if (m_outBufferSuperSample) delete m_outBufferSuperSample;
+    if (m_zbufferSuperSample) delete m_zbufferSuperSample;
+    m_outBufferSuperSample = new float[m_factorSuperSample * 3 * m_width * m_height];
+    m_zbufferSuperSample = new float[m_factorSuperSample * m_width * m_height];
+    ClearColorBuffer();
+    ClearDepthBuffer();
+}
+
+void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
+    m_threshBloom = threshBloom;
+    m_isBloom = isBloom;
+    m_spreadBloom = spreadBloom;
+    if (m_weightsBloom) delete m_weightsBloom;
+    m_weightsBloom = new float[spreadBloom * 2 + 1];
+    float sum = 0;
+    for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
+        int d = i - (m_spreadBloom + 1);
+        m_weightsBloom[i] = exp(d * d / (2 * m_spreadBloom * m_spreadBloom));
+        sum += m_weightsBloom[i];
+    }
+    for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
+        m_weightsBloom[i] /= sum;
+    }
+}
+
+void Renderer::applyEffects() {
+    if (m_isBloom) {
+        memset(m_bloomBuffer, 0, sizeof(float) * 3 * m_width * m_height);
+        // horizontal pass
+        for (int x = 0; x < m_width; x++) {
+            for (int y = 0; y < m_height; y++) {
+                for (int c = 0; c < 3; c++) {
+                    if (m_outBuffer[INDEX(m_width, x, y, c)] > m_threshBloom) {
+                        for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
+                            int x_curr = x + i - m_spreadBloom;
+                            if (x_curr > 0 && x_curr < m_width) {
+                                m_bloomBuffer[INDEX(m_width, x_curr, y, c)] = m_outBuffer[INDEX(m_width, x, y, c)] * m_weightsBloom[i];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        blendBloomBuffer();
+        memset(m_bloomBuffer, 0, sizeof(float) * 3 * m_width * m_height);
+        // vertical pass
+        for (int x = 0; x < m_width; x++) {
+            for (int y = 0; y < m_height; y++) {
+                for (int c = 0; c < 3; c++) {
+                    if (m_outBuffer[INDEX(m_width, x, y, c)] > m_threshBloom) {
+                        for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
+                            int y_curr = y + i - m_spreadBloom;
+                            if (y_curr > 0 && y_curr < m_height) {
+                                m_bloomBuffer[INDEX(m_width, x, y_curr, c)] = m_outBuffer[INDEX(m_width, x, y, c)] * m_weightsBloom[i];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        blendBloomBuffer();
+    }
+
+    if (m_isSuperSample) {
+        float factorPixel = 1.f / (m_factorSuperSample * m_factorSuperSample);
+        for (int x = 0; x < m_width * m_factorSuperSample; x++) {
+            for (int y = 0; y < m_height * m_factorSuperSample; y++) {
+                int i = x / m_factorSuperSample;
+                int j = y / m_factorSuperSample;
+                for (int c = 0; c < 3; c++) {
+                    m_outBuffer[INDEX(m_width, i, j, c)] = m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, c)] * factorPixel;
+                }
+            }
+        }
+    }
+}
+
+void Renderer::blendBloomBuffer() {
+    for (int x = 0; x < m_width; x++) {
+        for (int y = 0; y < m_height; y++) {
+            for (int c = 0; c < 3; c++) {
+                m_outBuffer[INDEX(m_width, x, y, c)] = min(1.f, m_outBuffer[INDEX(m_width, x, y, c)] + m_bloomBuffer[INDEX(m_width, x, y, c)]);
+            }
+        }
+    }
+}
+
+void Renderer::setFog(bool isFog, Color fogColor, float fogMinDistance, float fogMaxDistance) {
+    m_isFog = isFog;
+    m_fogColor = fogColor;
+    m_fogMinDistance = fogMinDistance;
+    m_fogMaxDistance = fogMaxDistance;
 }
