@@ -376,19 +376,16 @@ void mainMenu(int id)
 
 void modelsMenu(int id) {
     if (id == -1) {
-        /*if (scene->getModels()->size() > 1) {*/
+        if (scene->activeModel == -1) {
+            message(_T("No active model selected!"));
+            return;
+        }
         scene->getModels()->erase(scene->getModels()->begin() + scene->activeModel);
         if (scene->activeModel >= scene->getModels()->size())
             scene->activeModel = scene->getModels()->size() - 1;
-        /*}
-        else {
-            message(_T("Can't delete the last model!"));
-            return;
-        }
-        */ // TODO see if we can handle having no models at all
+        makeModelsSubMenu();
     }
     else scene->activeModel = id;
-    makeModelsSubMenu();
     display();
 }
 
@@ -463,6 +460,10 @@ void materialMenu(int id) {
 
 void camerasMenu(int id) {
     if (id == -1) {
+        if (scene->activeCamera == -1) {
+            message(_T("No active camera selected!"));
+            return;
+        }
         if (scene->getCameras()->size() > 1) {
             scene->getCameras()->erase(scene->getCameras()->begin() + scene->activeCamera);
             if (scene->activeCamera >= scene->getCameras()->size())
@@ -472,9 +473,9 @@ void camerasMenu(int id) {
             message(_T("Can't delete the last camera!"));
             return;
         }
+        makeCamerasSubMenu();
     }
     else scene->activeCamera = id;
-    makeCamerasSubMenu();
     display();
 }
 
@@ -514,22 +515,30 @@ Light* getLight(int type, Light* defaults = NULL) {
         // TODO ParallelLightDialog
         return NULL;
     } break;
-    default: message(_T("Unimplemented newLightMenu option!")); // shouldn't happen!
+    default: message(_T("Unimplemented newLightMenu option!")); return NULL; // shouldn't happen!
     }
 }
 
 void lightsMenu(int id) {
     if (id == -2) {
+        if (scene->activeLight == -1) {
+            message(_T("No active light selected!"));
+            return;
+        }
         Light* activeLight = scene->getActiveLight();
         scene->UpdateActiveLight(getLight(activeLight->getType(), activeLight));
     }
     else if (id == -1) {
+        if (scene->activeLight == -1) {
+            message(_T("No active light selected!"));
+            return;
+        }
         scene->getLights()->erase(scene->getLights()->begin() + scene->activeLight);
         if (scene->activeLight >= scene->getLights()->size())
             scene->activeLight = scene->getLights()->size() - 1;
+        makeLightsSubMenu();
     }
     else scene->activeLight = id;
-    makeLightsSubMenu();
     display();
 }
 
@@ -660,14 +669,23 @@ void bloomMenu(int id) {
 
 void makeModelsSubMenu() {
     // sadly pointwise deleting the models is more of a pain than just completely remaking the menu
-    if (menuModels != -1) glutDestroyMenu(menuModels);
-    menuModels = glutCreateMenu(modelsMenu);
+    if (menuModels != -1) {
+        const int newMenu = glutCreateMenu(modelsMenu);
+        glutSetMenu(menuMain);
+        glutChangeToSubMenu(1, "Models", newMenu);
+        glutDestroyMenu(menuModels);
+        menuModels = newMenu;
+    }
+    else {
+        menuModels = glutCreateMenu(modelsMenu);
+        glutSetMenu(menuMain);
+        glutAddSubMenu("Models", menuModels);
+    }
     const int menuNewModel = glutCreateMenu(newModelMenu),
               menuMaterial = glutCreateMenu(materialMenu);
 
     // intentional indents to visualize the structure of the menu
-    glutSetMenu(menuMain);
-    glutAddSubMenu("Models", menuModels); glutSetMenu(menuModels);
+    glutSetMenu(menuModels);
     /**/glutAddSubMenu("New...", menuNewModel); glutSetMenu(menuNewModel);
     /*    */glutAddMenuEntry("From OBJ", NEW_OBJ);
     /*    */glutAddMenuEntry("Primitive: Cuboid", NEW_CUBOID);
@@ -689,14 +707,23 @@ void makeModelsSubMenu() {
 }
 
 void makeCamerasSubMenu() {
-    if (menuCameras != -1) glutDestroyMenu(menuCameras);
-    menuCameras = glutCreateMenu(camerasMenu);
+    if (menuCameras != -1) {
+        const int newMenu = glutCreateMenu(camerasMenu);
+        glutSetMenu(menuMain);
+        glutChangeToSubMenu(2, "Cameras", newMenu);
+        glutDestroyMenu(menuCameras);
+        menuCameras = newMenu;
+    }
+    else {
+        menuCameras = glutCreateMenu(camerasMenu);
+        glutSetMenu(menuMain);
+        glutAddSubMenu("Cameras", menuCameras);
+    }
     const int menuNewCamera = glutCreateMenu(newCameraMenu),
               menuShading = glutCreateMenu(shadingMenu);
 
     // intentional indents to visualize the structure of the menu
-    glutSetMenu(menuMain);
-    glutAddSubMenu("Cameras", menuCameras); glutSetMenu(menuCameras);
+    glutSetMenu(menuCameras);
     /**/glutAddSubMenu("New...", menuNewCamera); glutSetMenu(menuNewCamera);
     /*    */glutAddMenuEntry("Duplicate...", NEW_CAMERA_DUPLICATE);
     /*    */glutAddMenuEntry("With parameters...", NEW_CAMERA_PARAMS);
@@ -706,7 +733,7 @@ void makeCamerasSubMenu() {
     /*    */glutAddMenuEntry("Flat", SHADE_FLAT);
     /*    */glutAddMenuEntry("Gouraud", SHADE_GOURAUD);
     /*    */glutAddMenuEntry("Phong", SHADE_PHONG);
-    /**/glutSetMenu(menuModels);
+    /**/glutSetMenu(menuCameras);
     /**/glutAddMenuEntry("Delete active camera", -1);
     /**/for (int i = 0; i < scene->getCameras()->size(); i++) {
         /**/char newEntry[50];
@@ -717,13 +744,22 @@ void makeCamerasSubMenu() {
 }
 
 void makeLightsSubMenu() {
-    if (menuLights != -1) glutDestroyMenu(menuLights);
-    menuLights = glutCreateMenu(lightsMenu);
+    if (menuLights != -1) {
+        const int newMenu = glutCreateMenu(lightsMenu);
+        glutSetMenu(menuMain);
+        glutChangeToSubMenu(3, "Lights", newMenu);
+        glutDestroyMenu(menuLights);
+        menuLights = newMenu;
+    }
+    else {
+        menuLights = glutCreateMenu(lightsMenu);
+        glutSetMenu(menuMain);
+        glutAddSubMenu("Lights", menuLights);
+    }
     const int menuNewLight = glutCreateMenu(newLightMenu);
 
     // intentional indents to visualize the structure of the menu
-    glutSetMenu(menuMain);
-    glutAddSubMenu("Lights", menuLights); glutSetMenu(menuLights);
+    glutSetMenu(menuLights);
     /**/glutAddSubMenu("New...", menuNewLight); glutSetMenu(menuNewLight);
     /*    */glutAddMenuEntry("Ambient...", NEW_LIGHT_AMBIENT);
     /*    */glutAddMenuEntry("Point...", NEW_LIGHT_POINT);
@@ -733,7 +769,7 @@ void makeLightsSubMenu() {
     /**/glutAddMenuEntry("Delete active light", -1);
     /**/for (int i = 0; i < scene->getLights()->size(); i++) {
         /**/char newEntry[50];
-        /**/sprintf(newEntry, "(%d) %s", i, (*scene->getLights())[i]->getNameOfType());
+        /**/sprintf(newEntry, "(%d) %s", i, (*scene->getLights())[i]->getNameOfType().c_str());
         /**/glutAddMenuEntry(newEntry, i);
         }
     glutSetMenu(menuMain);
