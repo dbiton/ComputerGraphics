@@ -9,29 +9,46 @@
 class MeshModel;
 class Renderer;
 
+enum {
+	LIGHT_AMBIENT,
+	LIGHT_POINT,
+	LIGHT_PARALLEL
+};
+
 class Light {
 	Color color;
 	float brightness;
+
+protected:
+	int type;
+	Light(Color color, float brightness, int type) : color(color), brightness(brightness), type(type) { }
+
 public:
-	Light() { }
 
 	void setColor(Color _color);
 	void setBrightness(float _brightness);
 
 	Color getColor() const;
 	float getBrightness() const;
+	int getType() const;
+	std::string getNameOfType() const;
 	virtual vec3 dirToSource(const vec3& p, const mat4& object2clip) const = 0;
 };
 
 class AmbientLight : public Light {
 public:
+	AmbientLight(Color color, float brightness)
+		: Light(color, brightness, LIGHT_AMBIENT) { }
 	virtual vec3 dirToSource(const vec3& p, const mat4& object2clip) const;
 };
 
 class PointLight : public Light {
 	vec3 position;
 public:
+	PointLight(Color color, float brightness, vec3 position)
+		: Light(color, brightness, LIGHT_POINT), position(position) { }
 	void setPosition(vec3 _position);
+	vec3 getPosition() const { return position; }
 
 	virtual vec3 dirToSource(const vec3& p, const mat4& object2clip) const;
 };
@@ -39,7 +56,10 @@ public:
 class ParallelLight : public Light {
 	vec3 direction;
 public:
+	ParallelLight(Color color, float brightness, vec3 direction)
+		: Light(color, brightness, LIGHT_PARALLEL), direction(direction) { }
 	void setDirection(vec3 _direction);
+	vec3 getDirection() const { return direction; }
 
 	virtual vec3 dirToSource(const vec3& p, const mat4& object2clip) const;
 };
@@ -93,13 +113,14 @@ public:
 	int activeLight = -1;
 	int activeCamera = -1;
 
-	bool dimInactiveModels = true;
+	bool dimInactives = true;
 	bool drawAxes = false;
 	bool drawCameras = false;
+	bool drawLights = false;
 
 	Scene(Renderer *_renderer) : renderer(_renderer) { }
 
-	void loadOBJModel(std::string fileName);
+	void loadOBJModel(std::string fileName, std::string modelName);
 	void draw();
 	void drawDemo();
 	
@@ -107,13 +128,17 @@ public:
 	Light* getActiveLight() noexcept { return lights[activeLight]; }
 	Camera* getActiveCamera() noexcept { return cameras[activeCamera]; }
 
+	std::vector<MeshModel*>* getModels() noexcept { return &models; }
+	std::vector<Light*>* getLights() noexcept { return &lights; }
+	std::vector<Camera*>* getCameras() noexcept { return &cameras; }
+
 	int AddCamera(const Camera& camera);
+	void AddLight(Light* light);
+	void UpdateActiveLight(Light* params);
 
 	void AddCuboid(vec3 p, vec3 dim);
 	void AddPyramid(vec3 p, GLfloat height, GLfloat base_radius, int base_sides);
 	void AddPrism(vec3 p, GLfloat height, GLfloat base_radius, int base_sides);
 	void AddSphere(vec3 p, GLfloat radius, int subdivisions);
 	void focus();
-
-	// might just make the vectors public lol
 };

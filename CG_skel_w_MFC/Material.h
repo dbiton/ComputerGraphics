@@ -26,8 +26,7 @@ public:
         return res;
     }
 
-    static Material* DefaultMaterial()
-    {
+    static Material* DefaultMaterial() {
         return new Material(Color(0.5), Color(0), 0.5, 0.5, 0.5);
     }
 };
@@ -46,12 +45,12 @@ inline Material AverageMaterial(std::vector<Material> mats) {
 }
 
 struct FullSatSpectrumMaterial : public Material {
-    FullSatSpectrumMaterial(Color base, Color emissive, float ambient_reflect, float roughness, float shininess)
-        : Material(base, emissive, ambient_reflect, roughness, shininess) { }
+    FullSatSpectrumMaterial(float ambient_reflect, float roughness, float shininess)
+        : Material(Color(), Color(), ambient_reflect, roughness, shininess) { } // no base color or any emissive color!
 protected:
     Material ComputeAt(const vec3 v, const vec3 min, const vec3 max) {
-        float angle = (v.x - min.x) / (max.x - min.x);
-        Color color(max(0, abs(3 * angle - 1.5) - 0.5), max(0, 1 - abs(3 * angle - 1)), max(0, 1 - abs(3 * angle - 2)));
-        return Material{ color, Color(0), ambient_reflect, roughness, shininess };
+        const float angle = (v.x - min.x) / (max.x - min.x);
+        const Color color(max(0, abs(3 * angle - 1.5) - 0.5), max(0, 1 - abs(3 * angle - 1)), max(0, 1 - abs(3 * angle - 2)));
+        return Material{ color, Color(), ambient_reflect, roughness, shininess };
     }
 };

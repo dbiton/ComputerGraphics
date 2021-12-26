@@ -27,17 +27,17 @@ class Renderer
 	int m_width, m_height;
 	float m_firstWidth, m_firstHeight;
 
-	bool m_isSuperSample;
+	bool m_isSuperSample = false;
 	int m_factorSuperSample;
 	float* m_outBufferSuperSample; // 3*width*height
 	float* m_zbufferSuperSample; // width*height
 
-	bool m_isFog;
+	bool m_isFog = false;
 	Color m_fogColor;
 	float m_fogMaxDistance;
 	float m_fogMinDistance;
 
-	bool m_isBloom;
+	bool m_isBloom = false;
 	float* m_bloomBuffer;
 	float* m_weightsBloom;
 	float m_threshBloom;
@@ -56,7 +56,7 @@ class Renderer
 public:
 	Renderer();
 	Renderer(int width, int height);
-	~Renderer(void);
+	~Renderer();
 
 	// triangles are in object space
 	void DrawTriangles(MeshModel* model, bool isActiveModel, int shading);
@@ -64,6 +64,7 @@ public:
 	void DrawBox(MeshModel* model);
 	void DrawAxes();
 	void DrawCamera(const mat4& transform);
+	void DrawLight(Light* light, bool isActiveLight);
 
 	void SetCameraTransform(const mat4& cTransform);
 	void SetProjection(const mat4& projection);

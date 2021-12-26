@@ -13,6 +13,7 @@ PrimMeshModel PrimMeshModel::Cuboid(vec3 p, vec3 dim)
     std::vector<vec3> verts; 
     std::vector<Face> faces;
     PrimMeshModel cuboid;
+    cuboid.name = "Cuboid";
     /*
         verts:
         0: (-1,-1,-1)
@@ -63,6 +64,7 @@ PrimMeshModel PrimMeshModel::Pyramid(vec3 p, GLfloat height, GLfloat base_radius
     std::vector<vec3> verts;
     std::vector<Face> faces;
     PrimMeshModel pyramid;
+    pyramid.name = "Pyramid";
     /*
         verts:
         0: base 0
@@ -101,6 +103,7 @@ PrimMeshModel PrimMeshModel::Prism(vec3 p, GLfloat height, GLfloat base_radius, 
     std::vector<vec3> verts;
     std::vector<Face> faces;
     PrimMeshModel prism;
+    prism.name = "Prism";
     /*
         verts:
         0: base 0 vert 0
@@ -145,6 +148,7 @@ PrimMeshModel PrimMeshModel::Prism(vec3 p, GLfloat height, GLfloat base_radius, 
 PrimMeshModel PrimMeshModel::Sphere(vec3 p, GLfloat radius, int subdivisions)
 {
     PrimMeshModel sphere;
+    sphere.name = "Sphere";
 
     std::vector<vec3> verts;
     std::vector<Face> faces;

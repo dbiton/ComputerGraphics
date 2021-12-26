@@ -14,6 +14,7 @@ protected:
 	std::vector<Vertex> vertices;
 	vec3 bounding_box_min;
 	vec3 bounding_box_max;
+	std::string name;
 
 	MeshModel() noexcept;
 
@@ -27,7 +28,7 @@ public:
 	bool draw_bounding_box = false;
 	bool draw_wireframe = false;
 
-	MeshModel(std::string fileName);
+	MeshModel(std::string fileName, std::string modelName);
 	~MeshModel();
 
 	void loadFile(std::string fileName);
@@ -35,6 +36,7 @@ public:
 	vec3 getBoundingBoxMin() { return bounding_box_min; }
 	vec3 getBoundingBoxMax() { return bounding_box_max; }
 	std::vector<Vertex>* getVertices() { return &vertices; }
+	std::string getName() { return name; }
 
 	void Recenter();
 };

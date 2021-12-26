@@ -8,26 +8,18 @@
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
-Renderer::Renderer() :
-    m_isFog(false),
-    m_isSuperSample(false),
-    m_isBloom(false)
+Renderer::Renderer()
 {
     InitOpenGLRendering();
     CreateBuffers(512, 512, true);
 }
-Renderer::Renderer(int width, int height) : 
-    m_isFog(false),
-    m_isSuperSample(false),
-    m_isBloom(false)
+Renderer::Renderer(int width, int height)
 {
     InitOpenGLRendering();
     CreateBuffers(width, height, true);
 }
 
-Renderer::~Renderer(void)
-{
-}
+Renderer::~Renderer() { }
 
 GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) {
     return (length(p1 - p2) + length(p1 - p3) + length(p2 - p3)) / 3;
@@ -175,6 +167,23 @@ void Renderer::DrawCamera(const mat4& transform) {
     DrawLine(pos2, forward2, Color(1, 1, 0));
 }
 
+void Renderer::DrawLight(Light* light, bool isActiveLight) {
+    switch (light->getType()) {
+    case LIGHT_AMBIENT: {
+        // TODO either nothing or some sort of indicator in the corner
+    } break;
+    case LIGHT_POINT: {
+        // TODO probably some kind of X where the light is, in the camera's frame
+    } break;
+    case LIGHT_PARALLEL: {
+        // TODO probably a few parallel lines representing the light's direction
+    } break;
+    default:
+        printf("LightType unimplemented!");
+        exit(1);
+    }
+}
+
 void Renderer::SetCameraTransform(const mat4& cTransform)
 {
     transform_camera_inverse = InverseTransform(cTransform);
@@ -228,9 +237,7 @@ vec2 Renderer::clipToScreen(const vec3& clip_pos)
     return vec2((clip_pos.x + 1) / 2 * m_width, (clip_pos.y + 1) / 2 * m_height);
 }
 
-void Renderer::CreateLocalBuffer()
-{
-}
+void Renderer::CreateLocalBuffer() { }
 
 void Renderer::SetDemoBuffer()
 {
@@ -377,15 +384,15 @@ void Renderer::DrawLine(vec2 p0, vec2 p1, const Color& c)
     }
 
     const int x0 = std::round(p0.x),
-        y0 = std::round(p0.y),
-        x1 = std::round(p1.x),
-        y1 = std::round(p1.y), // that's it! no more floats! only ints from here on out!
-        dx = x1 - x0,
-        dy = y1 - y0,
-        dy2 = 2 * abs(dy),
-        dx2 = 2 * abs(dx),
-        x_step = sign(dx),
-        y_step = sign(dy);
+              y0 = std::round(p0.y),
+              x1 = std::round(p1.x),
+              y1 = std::round(p1.y), // that's it! no more floats! only ints from here on out!
+              dx = x1 - x0,
+              dy = y1 - y0,
+              dy2 = 2 * abs(dy),
+              dx2 = 2 * abs(dx),
+              x_step = sign(dx),
+              y_step = sign(dy);
     int d = 0,
         x = x0,
         y = y0;
@@ -588,7 +595,7 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
 }
 
 void Renderer::applyEffects() {
-    if (m_isBloom) {
+    if (m_isBloom) { // TODO what if bloom and supersampling?
         memset(m_bloomBuffer, 0, sizeof(float) * 3 * m_width * m_height);
         // horizontal pass
         for (int x = 0; x < m_width; x++) {
@@ -631,7 +638,7 @@ void Renderer::applyEffects() {
             for (int y = 0; y < m_height * m_factorSuperSample; y++) {
                 int i = x / m_factorSuperSample;
                 int j = y / m_factorSuperSample;
-                for (int c = 0; c < 3; c++) {
+                for (int c = 0; c < 3; c++) { // TODO is this right? maybe it should be += instead of =
                     m_outBuffer[INDEX(m_width, i, j, c)] = m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, c)] * factorPixel;
                 }
             }

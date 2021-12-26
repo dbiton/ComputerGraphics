@@ -24,19 +24,38 @@
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
 enum {
-    MAIN_DEMO,
-    MAIN_ABOUT,
-    MAIN_HELP,
-    MAIN_FOCUS,
+    NEW_OBJ,
+    NEW_CUBOID,
+    NEW_PYRAMID,
+    NEW_PRISM,
+    NEW_SPHERE
+};
+
+enum {
+    MATERIAL_UNIFORM,
+    MATERIAL_FULLSATSPECTRUM
+};
+
+enum {
+    NEW_CAMERA_DUPLICATE,
+    NEW_CAMERA_PARAMS
+};
+
+enum {
+    NEW_LIGHT_AMBIENT,
+    NEW_LIGHT_POINT,
+    NEW_LIGHT_PARALLEL
 };
 
 enum {
     TOGGLE_FACE_NORMALS,
     TOGGLE_VERTEX_NORMALS,
     TOGGLE_BOUNDING_BOX,
+    TOGGLE_WIREFRAME,
+    TOGGLE_CAMERAS,
+    TOGGLE_LIGHTS,
     TOGGLE_INACTIVES_DIMMING,
     TOGGLE_AXES,
-    TOGGLE_CAMERAS
 };
 
 enum {
@@ -51,23 +70,10 @@ enum {
     CONTROL_ALL // for reset all
 };
 
-enum { // used for intuitive mode
-    CONTROL_CONTEXT_NONE, // for resetting
-    CONTROL_CONTEXT_MOVE,
-    CONTROL_CONTEXT_SCALE,
-    CONTROL_CONTEXT_ROTATE
-};
-
 enum {
-    NEW_OBJ,
-    NEW_CUBOID,
-    NEW_PYRAMID,
-    NEW_PRISM,
-    NEW_SPHERE
-};
-
-enum {
-    NEW_CAMERA = -1
+    PROJ_FRUSTUM,
+    PROJ_ORTHO,
+    PROJ_PERSPECTIVE
 };
 
 enum {
@@ -77,9 +83,24 @@ enum {
 };
 
 enum {
-    PROJ_FRUSTUM,
-    PROJ_ORTHO,
-    PROJ_PERSPECTIVE
+    ADVANCED_ENABLE,
+    ADVANCED_DISABLE
+};
+
+enum {
+    MAIN_DEMO,
+    MAIN_ABOUT,
+    MAIN_HELP,
+    MAIN_FOCUS,
+};
+
+
+
+enum { // used for intuitive mode
+    CONTROL_CONTEXT_NONE, // for resetting
+    CONTROL_CONTEXT_MOVE,
+    CONTROL_CONTEXT_SCALE,
+    CONTROL_CONTEXT_ROTATE
 };
 
 constexpr bool ALLOW_DEMO = false;
@@ -90,7 +111,7 @@ Renderer* renderer;
 int last_x, last_y;
 bool lb_down, rb_down, mb_down;
 int controlMode = CONTROL_CAMERA_IN_WORLD;
-int menuModels, menuCameras;
+int menuMain, menuModels = -1, menuCameras = -1, menuLights = -1;
 float move_coe = 1, scale_coe = 1, rotation_coe = 1;
 
 //----------------------------------------------------------------------------
@@ -106,47 +127,57 @@ void display(void)
 
 void reshape(int width, int height)
 {
-    // TODO set correct aspect ratio so the scene doesn't stretch out
     if (height < 1) height = 1; // if height is too small, OpenGL freaks out
     renderer->CreateBuffers(width, height); // at least it seems like we don't need to re-init the whole OpenGL rendering...
 }
 
 inline void message(CString message) { AfxMessageBox(message); }
 
-void toggleFaceNormals() {
+void toggleFaceNormals() noexcept {
     if (scene->activeModel != -1) {
         MeshModel* model = scene->getActiveModel();
         model->draw_normals_per_face = !model->draw_normals_per_face;
     }
 }
 
-void toggleVertexNormals() {
+void toggleVertexNormals() noexcept {
     if (scene->activeModel != -1) {
         MeshModel* model = scene->getActiveModel();
         model->draw_normals_per_vert = !model->draw_normals_per_vert;
     }
 }
 
-void toggleBoundingBox() {
+void toggleBoundingBox() noexcept {
     if (scene->activeModel != -1) {
         MeshModel* model = scene->getActiveModel();
         model->draw_bounding_box = !model->draw_bounding_box;
     }
 }
 
-void toggleInactivesDimming() noexcept {
-    scene->dimInactiveModels = !scene->dimInactiveModels;
-}
-
-void toggleAxes() noexcept {
-    scene->drawAxes = !scene->drawAxes;
+void toggleWireframe() noexcept {
+    if (scene->activeModel != -1) {
+        MeshModel* model = scene->getActiveModel();
+        model->draw_wireframe = !model->draw_wireframe;
+    }
 }
 
 void toggleCameras() noexcept {
     scene->drawCameras = !scene->drawCameras;
 }
 
-mat4& controlled(int context, int control_mode) {
+void toggleLights() noexcept {
+    scene->drawLights = !scene->drawLights;
+}
+
+void toggleInactivesDimming() noexcept {
+    scene->dimInactives = !scene->dimInactives;
+}
+
+void toggleAxes() noexcept {
+    scene->drawAxes = !scene->drawAxes;
+}
+
+mat4& controlled(int context, int control_mode) noexcept {
     switch (control_mode) {
     case CONTROL_CAMERA_IN_VIEW: return scene->getActiveCamera()->self;
     case CONTROL_CAMERA_IN_WORLD: return scene->getActiveCamera()->world;
@@ -174,15 +205,16 @@ void focus() {
     }
 }
 
-void resetFrame(mat4& frame, int controlMode) {
+void resetFrame(mat4& frame, int control_mode) {
     reset(frame);
-    if (controlMode == CONTROL_MODEL_IN_MODEL || controlMode == CONTROL_MODEL_INTUITIVE) scene->getActiveModel()->Recenter();
+    if (control_mode == CONTROL_MODEL_IN_MODEL || control_mode == CONTROL_MODEL_INTUITIVE) scene->getActiveModel()->Recenter();
 }
 
-void resetFrame(mat4& frame) { resetFrame(frame, controlMode); }
+void resetFrame(mat4& frame) {
+    resetFrame(frame, controlMode);
+}
 
-void keyboard(unsigned char key, int x, int y)
-{
+void keyboard(unsigned char key, int x, int y) {
     if (key == 33) exit(EXIT_SUCCESS); // escape
     if (scene->activeCamera == -1) return;
 
@@ -198,20 +230,22 @@ void keyboard(unsigned char key, int x, int y)
     case 'f': toggleFaceNormals(); break;
     case 'v': toggleVertexNormals(); break;
     case 'b': toggleBoundingBox(); break;
+    case 'o': toggleWireframe(); break;
+    case 'm': toggleCameras(); break;
+    case 'l': toggleLights(); break;
     case 'i': toggleInactivesDimming(); break;
     case 'x': toggleAxes(); break;
-    case 'm': toggleCameras(); break;
 
     case 'r': resetFrame(controlled(CONTROL_CONTEXT_NONE)); break;
 
     case '=': focus(); break;
 
+    default: break; // don't care about buttons we haven't registered
     }
     display();
 }
 
-void mouse(int button, int state, int x, int y)
-{
+void mouse(int button, int state, int x, int y) {
     //button = {GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, GLUT_RIGHT_BUTTON}
     //state = {GLUT_DOWN,GLUT_UP}
 
@@ -238,6 +272,7 @@ void mouse(int button, int state, int x, int y)
             scaleBy(controlled(CONTROL_CONTEXT_SCALE), 1 - (0.1 * scale_coe));
         }
         break;
+    default: break; // don't care about mouse actions we haven't registered
     }
     display();
 }
@@ -245,8 +280,8 @@ void mouse(int button, int state, int x, int y)
 void motion(int x, int y)
 {
     // calc difference in mouse movement
-    int dx = x - last_x;
-    int dy = y - last_y;
+    const int dx = x - last_x,
+              dy = y - last_y;
     // update last x,y
     last_x = x;
     last_y = y;
@@ -263,10 +298,6 @@ void motion(int x, int y)
     display();
 }
 
-void controlMenu(int id) {
-    controlMode = id;
-}
-
 void resetMenu(int id, bool redisplay) {
     if (id == CONTROL_ALL) {
         resetMenu(CONTROL_MODEL_IN_MODEL, false); // no need to redisplay between consecutive resets...
@@ -276,169 +307,6 @@ void resetMenu(int id, bool redisplay) {
     }
     else resetFrame(controlled(CONTROL_CONTEXT_NONE, id), id);
     if (redisplay) display();
-}
-
-void resetMenu(int id) { resetMenu(id, true); }
-
-void projectionMenu(int id) {
-    if (scene->activeCamera == -1) return; // nothing to do!
-    Camera* camera = scene->getActiveCamera();
-    switch (id) {
-    case PROJ_ORTHO: {
-        CProjectionDialog dialog(_T("Orthographic Projection Parameters"), camera->lastBottom, camera->lastTop,
-            camera->lastLeft, camera->lastRight,
-            camera->lastNear, camera->lastFar);
-        if (dialog.DoModal() == IDOK) {
-            camera->projection = camera->Ortho(dialog.getLeft(), dialog.getRight(),
-                dialog.getBottom(), dialog.getTop(),
-                dialog.getNear(), dialog.getFar());
-            display();
-        }
-    } break;
-    case PROJ_FRUSTUM: {
-        CProjectionDialog dialog(_T("Frustum Projection Parameters"), camera->lastBottom, camera->lastTop,
-            camera->lastLeft, camera->lastRight,
-            camera->lastNear, camera->lastFar);
-        if (dialog.DoModal() == IDOK) {
-            camera->projection = camera->Frustum(dialog.getLeft(), dialog.getRight(),
-                dialog.getBottom(), dialog.getTop(),
-                dialog.getNear(), dialog.getFar());
-            display();
-        }
-    } break;
-    case PROJ_PERSPECTIVE: {
-        float fovy, aspect;
-        camera->getPerspectiveParameters(fovy, aspect);
-        
-        CPrespectiveProjectionDialog dialog(_T("Prespective Projection Parameters"),
-            fovy, aspect,
-            camera->lastNear, camera->lastFar);
-        if (dialog.DoModal() == IDOK) {
-            camera->projection = camera->Perspective(dialog.getFovY(), dialog.getAspect(),
-                dialog.getNear(), dialog.getFar());
-            display();
-        }
-    } break;
-    }
-}
-
-void sensitivityMenu(int id) {
-    switch (id) {
-    case SENSITIVITY_MOVEMENT: {
-        CSingleFloatDialog dialog(_T("Movement Sensitivity"), move_coe);
-        if (dialog.DoModal() == IDOK) move_coe = std::abs(dialog.getValue());
-        if (move_coe == 0) move_coe = 1;
-    } break;
-    case SENSITIVITY_SCALING: {
-        CSingleFloatDialog dialog(_T("Scaling Sensitivity"), scale_coe);
-        if (dialog.DoModal() == IDOK) scale_coe = std::abs(dialog.getValue());
-        if (scale_coe == 0) scale_coe = 1;
-    } break;
-    case SENSITIVITY_ROTATION: {
-        CSingleFloatDialog dialog(_T("Rotation Sensitivity"), rotation_coe);
-        if (dialog.DoModal() == IDOK) rotation_coe = std::abs(dialog.getValue());
-        if (rotation_coe == 0) rotation_coe = 1;
-    } break;
-    }
-}
-
-void newModelMenu(int id) {
-    if (scene->activeModel == -1) {
-        glutSetMenu(menuCameras);
-        glutAddMenuEntry("(0) Camera", 0);
-    }
-
-    std::string name;
-    switch (id) { // all new models will be automatically placed at the camera's LookingAt position
-    case NEW_OBJ: {
-        CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.obj|*.*"));
-        if (dlg.DoModal() == IDOK)
-        {
-            name = CT2CA(dlg.GetFileName());
-            scene->loadOBJModel(CT2CA(dlg.GetPathName()).m_psz);
-        }
-        else return; // gonna add a model to the models menu, unless this failed
-    } break;
-    case NEW_CUBOID: { // TODO add dialogs for choosing dimensions and whatnot
-        vec3 dim(1, 1, 1);
-        CXyzDialog dlg(_T("Cuboid Dimensions Parameters"), 1, 1, 1);
-        dlg.setText("Width", "Height", "Length");
-        if (dlg.DoModal() != IDOK) return;
-        dim = dlg.GetXYZ();
-        scene->AddCuboid(vec3(0, 0, 0), dim);
-        name = "Cuboid";
-        break;
-    }
-    case NEW_PYRAMID: {
-        vec3 param;
-        CXyzDialog dlg(_T("Pyramid Parameters"), 1, 2, 4);
-        dlg.setText("Height", "Radius", "Sides");
-        if (dlg.DoModal() != IDOK) return;
-        param = dlg.GetXYZ();
-        scene->AddPyramid(vec3(0, 0, 0), param.x, param.y, param.z);
-        name = "Pyramid";
-        break;
-    }
-    case NEW_PRISM: {
-        vec3 param;
-        CXyzDialog dlg(_T("Prisim Parameters"), 1, 2, 8);
-        dlg.setText("Height", "Radius", "Sides");
-        if (dlg.DoModal() != IDOK) return;
-        param = dlg.GetXYZ();
-        scene->AddPrism(vec3(0, 0, 0), param.x, param.y, param.z);
-        name = "Prism";
-        break;
-    }
-    case NEW_SPHERE: {
-        int subdivisions = 1;
-        CSingleFloatDialog dialog(_T("Sphere Resolution"), subdivisions);
-        if (dialog.DoModal() != IDOK) return;
-        subdivisions = std::floor(dialog.getValue());
-        if (subdivisions < 1) subdivisions = 1;
-        scene->AddSphere(vec3(0, 0, 0), 1, subdivisions);
-        name = "Sphere";
-        break;
-    }
-    }
-    glutSetMenu(menuModels);
-    char newEntry[50];
-    sprintf(newEntry, "(%d) %s", scene->activeModel, name.c_str());
-    glutAddMenuEntry(newEntry, scene->activeModel);
-}
-
-void cameraMenu(int id) {
-    if (id == NEW_CAMERA) {
-        if (scene->activeModel != -1) {
-            int camera_num = scene->AddCamera(*scene->getActiveCamera());
-            char s[50];
-            sprintf(s, "(%d) Camera", camera_num);
-            glutAddMenuEntry(s, camera_num);
-        }
-        else {
-            message(_T("A model must be presenet before adding a camera."));
-        }
-    }
-    else {
-        scene->activeCamera = id;
-    }
-    display();
-}
-
-void modelsMenu(int id) {
-    scene->activeModel = id;
-    display();
-}
-
-void togglesMenu(int id) {
-    switch (id) {
-    case TOGGLE_FACE_NORMALS: toggleFaceNormals(); break;
-    case TOGGLE_VERTEX_NORMALS: toggleVertexNormals(); break;
-    case TOGGLE_BOUNDING_BOX: toggleBoundingBox(); break;
-    case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
-    case TOGGLE_AXES: toggleAxes(); break;
-    case TOGGLE_CAMERAS: toggleCameras(); break;
-    }
-    display();
 }
 
 void showHelp() {
@@ -483,6 +351,9 @@ void showHelp() {
         + _T("* Help: You're here!"));
 }
 
+//----------------------------------------------------------------------------
+// Menus
+
 void mainMenu(int id)
 {
     switch (id)
@@ -496,65 +367,452 @@ void mainMenu(int id)
     case MAIN_ABOUT:
         message(_T("Computer Graphics Part 1 - Wireframes\nby Itay Beit Halachmi and Dvir David Biton"));
         break;
-    case MAIN_HELP: showHelp(); break;
+    case MAIN_HELP:
+        showHelp();
+        break;
+    default: message(_T("Unimplemented mainMenu option!")); // shouldn't happen!
     }
+}
+
+void modelsMenu(int id) {
+    if (id == -1) {
+        /*if (scene->getModels()->size() > 1) {*/
+        scene->getModels()->erase(scene->getModels()->begin() + scene->activeModel);
+        if (scene->activeModel >= scene->getModels()->size())
+            scene->activeModel = scene->getModels()->size() - 1;
+        /*}
+        else {
+            message(_T("Can't delete the last model!"));
+            return;
+        }
+        */ // TODO see if we can handle having no models at all
+    }
+    else scene->activeModel = id;
+    makeModelsSubMenu();
+    display();
+}
+
+void newModelMenu(int id) {
+    if (scene->activeModel == -1) { // the active camera and light will be set later once the model's added
+        glutSetMenu(menuCameras);
+        glutAddMenuEntry("(0) Camera", 0);
+        glutSetMenu(menuLights);
+        glutAddMenuEntry("(0) Ambient", 0);
+        glutAddMenuEntry("(1) Point", 1);
+    }
+
+    switch (id) { // all new models will be automatically placed at the camera's LookingAt position
+    case NEW_OBJ: {
+        CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.obj|*.*"));
+        if (dlg.DoModal() == IDOK)
+            scene->loadOBJModel(CT2CA(dlg.GetPathName()).m_psz, CT2CA(dlg.GetFileName()).m_psz);
+        else return; // gonna add a model to the models menu, unless this failed
+    } break;
+    case NEW_CUBOID: {
+        vec3 dim(1, 1, 1);
+        CXyzDialog dlg(_T("Cuboid Dimensions Parameters"), 1, 1, 1);
+        dlg.setText("Width", "Height", "Length");
+        if (dlg.DoModal() != IDOK) return;
+        dim = dlg.GetXYZ();
+        scene->AddCuboid(vec3(), dim);
+    } break;
+    case NEW_PYRAMID: {
+        vec3 param;
+        CXyzDialog dlg(_T("Pyramid Parameters"), 1, 2, 4);
+        dlg.setText("Height", "Radius", "Sides");
+        if (dlg.DoModal() != IDOK) return;
+        param = dlg.GetXYZ();
+        scene->AddPyramid(vec3(), param.x, param.y, param.z);
+    } break;
+    case NEW_PRISM: {
+        vec3 param;
+        CXyzDialog dlg(_T("Prism Parameters"), 1, 2, 8);
+        dlg.setText("Height", "Radius", "Sides");
+        if (dlg.DoModal() != IDOK) return;
+        param = dlg.GetXYZ();
+        scene->AddPrism(vec3(), param.x, param.y, param.z);
+    } break;
+    case NEW_SPHERE: {
+        int subdivisions = 1;
+        CSingleFloatDialog dialog(_T("Sphere Resolution"), subdivisions);
+        if (dialog.DoModal() != IDOK) return;
+        subdivisions = std::floor(dialog.getValue());
+        if (subdivisions < 1) subdivisions = 1;
+        scene->AddSphere(vec3(), 1, subdivisions);
+    } break;
+    default: message(_T("Unimplemented newModelMenu option!")); // shouldn't happen!
+    }
+    char newEntry[50];
+    sprintf(newEntry, "(%d) %s", scene->activeModel, scene->getActiveModel()->getName().c_str());
+    glutSetMenu(menuModels);
+    glutAddMenuEntry(newEntry, scene->activeModel);
+}
+
+void materialMenu(int id) {
+    switch (id) {
+    case MATERIAL_UNIFORM: {
+        // TODO UniformMaterialDialog
+    } break;
+    case MATERIAL_FULLSATSPECTRUM: {
+        // TODO FullSatSpectrumMaterialDialog
+    } break;
+    default: message(_T("Unimplemented materialMenu option!")); // shouldn't happen!
+    }
+    display();
+}
+
+void camerasMenu(int id) {
+    if (id == -1) {
+        if (scene->getCameras()->size() > 1) {
+            scene->getCameras()->erase(scene->getCameras()->begin() + scene->activeCamera);
+            if (scene->activeCamera >= scene->getCameras()->size())
+                scene->activeCamera = scene->getCameras()->size() - 1;
+        }
+        else {
+            message(_T("Can't delete the last camera!"));
+            return;
+        }
+    }
+    else scene->activeCamera = id;
+    makeCamerasSubMenu();
+    display();
+}
+
+void newCameraMenu(int id) {
+    switch (id) {
+    case NEW_CAMERA_DUPLICATE: {
+        if (scene->activeModel != -1) {
+            const int camera_num = scene->AddCamera(*scene->getActiveCamera());
+            char s[50];
+            sprintf(s, "(%d) Camera", camera_num);
+            glutAddMenuEntry(s, camera_num);
+        }
+        else message(_T("A model must be presenet before adding a camera."));
+    } break;
+    case NEW_CAMERA_PARAMS: {
+        // TODO NewCameraDialog
+    } break;
+    default: message(_T("Unimplemented newCameraMenu option!")); // shouldn't happen!
+    }
+}
+
+void shadingMenu(int id) {
+    if (scene->activeCamera != -1) scene->getActiveCamera()->shading = id;
+}
+
+Light* getLight(int type, Light* defaults = NULL) {
+    switch (type) {
+    case NEW_LIGHT_AMBIENT: {
+        // TODO AmbientLightDialog
+        return NULL;
+    } break;
+    case NEW_LIGHT_POINT: {
+        // TODO PointLightDialog
+        return NULL;
+    } break;
+    case NEW_LIGHT_PARALLEL: {
+        // TODO ParallelLightDialog
+        return NULL;
+    } break;
+    default: message(_T("Unimplemented newLightMenu option!")); // shouldn't happen!
+    }
+}
+
+void lightsMenu(int id) {
+    if (id == -2) {
+        Light* activeLight = scene->getActiveLight();
+        scene->UpdateActiveLight(getLight(activeLight->getType(), activeLight));
+    }
+    else if (id == -1) {
+        scene->getLights()->erase(scene->getLights()->begin() + scene->activeLight);
+        if (scene->activeLight >= scene->getLights()->size())
+            scene->activeLight = scene->getLights()->size() - 1;
+    }
+    else scene->activeLight = id;
+    makeLightsSubMenu();
+    display();
+}
+
+void newLightMenu(int id) {
+    scene->AddLight(getLight(id));
+}
+
+void togglesMenu(int id) {
+    switch (id) {
+    case TOGGLE_FACE_NORMALS: toggleFaceNormals(); break;
+    case TOGGLE_VERTEX_NORMALS: toggleVertexNormals(); break;
+    case TOGGLE_BOUNDING_BOX: toggleBoundingBox(); break;
+    case TOGGLE_WIREFRAME: toggleWireframe(); break;
+    case TOGGLE_CAMERAS: toggleCameras(); break;
+    case TOGGLE_LIGHTS: toggleLights(); break;
+    case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
+    case TOGGLE_AXES: toggleAxes(); break;
+    default: message(_T("Unimplemented togglesMenu option!")); // shouldn't happen!
+    }
+    display();
+}
+
+void controlMenu(int id) {
+    controlMode = id;
+}
+
+void resetMenu(int id) {
+    resetMenu(id, true);
+}
+
+void projectionMenu(int id) {
+    if (scene->activeCamera == -1) return; // nothing to do!
+    Camera* camera = scene->getActiveCamera();
+    switch (id) {
+    case PROJ_ORTHO: {
+        CProjectionDialog dialog(_T("Orthographic Projection Parameters"), camera->lastBottom, camera->lastTop,
+            camera->lastLeft, camera->lastRight,
+            camera->lastNear, camera->lastFar);
+        if (dialog.DoModal() == IDOK) {
+            camera->projection = camera->Ortho(dialog.getLeft(), dialog.getRight(),
+                dialog.getBottom(), dialog.getTop(),
+                dialog.getNear(), dialog.getFar());
+            display();
+        }
+    } break;
+    case PROJ_FRUSTUM: {
+        CProjectionDialog dialog(_T("Frustum Projection Parameters"), camera->lastBottom, camera->lastTop,
+            camera->lastLeft, camera->lastRight,
+            camera->lastNear, camera->lastFar);
+        if (dialog.DoModal() == IDOK) {
+            camera->projection = camera->Frustum(dialog.getLeft(), dialog.getRight(),
+                dialog.getBottom(), dialog.getTop(),
+                dialog.getNear(), dialog.getFar());
+            display();
+        }
+    } break;
+    case PROJ_PERSPECTIVE: {
+        float fovy, aspect;
+        camera->getPerspectiveParameters(fovy, aspect);
+
+        CPrespectiveProjectionDialog dialog(_T("Prespective Projection Parameters"),
+            fovy, aspect,
+            camera->lastNear, camera->lastFar);
+        if (dialog.DoModal() == IDOK) {
+            camera->projection = camera->Perspective(dialog.getFovY(), dialog.getAspect(),
+                dialog.getNear(), dialog.getFar());
+            display();
+        }
+    } break;
+    default: message(_T("Unimplemented projectionMenu option!")); // shouldn't happen!
+    }
+}
+
+void sensitivityMenu(int id) {
+    switch (id) {
+    case SENSITIVITY_MOVEMENT: {
+        CSingleFloatDialog dialog(_T("Movement Sensitivity"), move_coe);
+        if (dialog.DoModal() == IDOK) move_coe = std::abs(dialog.getValue());
+        if (move_coe == 0) move_coe = 1;
+    } break;
+    case SENSITIVITY_SCALING: {
+        CSingleFloatDialog dialog(_T("Scaling Sensitivity"), scale_coe);
+        if (dialog.DoModal() == IDOK) scale_coe = std::abs(dialog.getValue());
+        if (scale_coe == 0) scale_coe = 1;
+    } break;
+    case SENSITIVITY_ROTATION: {
+        CSingleFloatDialog dialog(_T("Rotation Sensitivity"), rotation_coe);
+        if (dialog.DoModal() == IDOK) rotation_coe = std::abs(dialog.getValue());
+        if (rotation_coe == 0) rotation_coe = 1;
+    } break;
+    default: message(_T("Unimplemented sensitivityMenu option!")); // shouldn't happen!
+    }
+}
+
+void advancedMenu(int id) {
+    // Nothing currently...
+}
+
+void supersamplingMenu(int id) {
+    switch (id) {
+    case ADVANCED_ENABLE: {
+        // TODO SupersamplingDialog
+    } break;
+    case ADVANCED_DISABLE: renderer->setSupersampling(false);
+    default: message(_T("Unimplemented supersamplingMenu option!")); // shouldn't happen!
+    }
+}
+
+void fogMenu(int id) {
+    switch (id) {
+    case ADVANCED_ENABLE: {
+        // TODO FogDialog
+    } break;
+    case ADVANCED_DISABLE: renderer->setFog(false);
+    default: message(_T("Unimplemented fogMenu option!")); // shouldn't happen!
+    }
+}
+
+void bloomMenu(int id) {
+    switch (id) {
+    case ADVANCED_ENABLE: {
+        // TODO BloomDialog
+    } break;
+    case ADVANCED_DISABLE: renderer->setBloom(false);
+    default: message(_T("Unimplemented bloomMenu option!")); // shouldn't happen!
+    }
+}
+
+void makeModelsSubMenu() {
+    // sadly pointwise deleting the models is more of a pain than just completely remaking the menu
+    if (menuModels != -1) glutDestroyMenu(menuModels);
+    menuModels = glutCreateMenu(modelsMenu);
+    const int menuNewModel = glutCreateMenu(newModelMenu),
+              menuMaterial = glutCreateMenu(materialMenu);
+
+    // intentional indents to visualize the structure of the menu
+    glutSetMenu(menuMain);
+    glutAddSubMenu("Models", menuModels); glutSetMenu(menuModels);
+    /**/glutAddSubMenu("New...", menuNewModel); glutSetMenu(menuNewModel);
+    /*    */glutAddMenuEntry("From OBJ", NEW_OBJ);
+    /*    */glutAddMenuEntry("Primitive: Cuboid", NEW_CUBOID);
+    /*    */glutAddMenuEntry("Primitive: Pyramid", NEW_PYRAMID);
+    /*    */glutAddMenuEntry("Primitive: Prism", NEW_PRISM);
+    /*    */glutAddMenuEntry("Primitive: Sphere", NEW_SPHERE);
+    /**/glutSetMenu(menuModels);
+    /**/glutAddSubMenu("Set Material", menuMaterial); glutSetMenu(menuMaterial);
+    /*    */glutAddMenuEntry("Uniform...", MATERIAL_UNIFORM);
+    /*    */glutAddMenuEntry("Full Saturation Spectrum", MATERIAL_FULLSATSPECTRUM);
+    /**/glutSetMenu(menuModels);
+    /**/glutAddMenuEntry("Delete active model", -1);
+    /**/for (int i = 0; i < scene->getModels()->size(); i++) {
+        /**/char newEntry[50];
+        /**/sprintf(newEntry, "(%d) %s", i, (*scene->getModels())[i]->getName().c_str());
+        /**/glutAddMenuEntry(newEntry, i);
+        }
+    glutSetMenu(menuMain);
+}
+
+void makeCamerasSubMenu() {
+    if (menuCameras != -1) glutDestroyMenu(menuCameras);
+    menuCameras = glutCreateMenu(camerasMenu);
+    const int menuNewCamera = glutCreateMenu(newCameraMenu),
+              menuShading = glutCreateMenu(shadingMenu);
+
+    // intentional indents to visualize the structure of the menu
+    glutSetMenu(menuMain);
+    glutAddSubMenu("Cameras", menuCameras); glutSetMenu(menuCameras);
+    /**/glutAddSubMenu("New...", menuNewCamera); glutSetMenu(menuNewCamera);
+    /*    */glutAddMenuEntry("Duplicate...", NEW_CAMERA_DUPLICATE);
+    /*    */glutAddMenuEntry("With parameters...", NEW_CAMERA_PARAMS);
+    /**/glutSetMenu(menuCameras);
+    /**/glutAddSubMenu("Set Shading", menuShading); glutSetMenu(menuShading);
+    /*    */glutAddMenuEntry("None", SHADE_NONE);
+    /*    */glutAddMenuEntry("Flat", SHADE_FLAT);
+    /*    */glutAddMenuEntry("Gouraud", SHADE_GOURAUD);
+    /*    */glutAddMenuEntry("Phong", SHADE_PHONG);
+    /**/glutSetMenu(menuModels);
+    /**/glutAddMenuEntry("Delete active camera", -1);
+    /**/for (int i = 0; i < scene->getCameras()->size(); i++) {
+        /**/char newEntry[50];
+        /**/sprintf(newEntry, "(%d) Camera", i);
+        /**/glutAddMenuEntry(newEntry, i);
+        }
+    glutSetMenu(menuMain);
+}
+
+void makeLightsSubMenu() {
+    if (menuLights != -1) glutDestroyMenu(menuLights);
+    menuLights = glutCreateMenu(lightsMenu);
+    const int menuNewLight = glutCreateMenu(newLightMenu);
+
+    // intentional indents to visualize the structure of the menu
+    glutSetMenu(menuMain);
+    glutAddSubMenu("Lights", menuLights); glutSetMenu(menuLights);
+    /**/glutAddSubMenu("New...", menuNewLight); glutSetMenu(menuNewLight);
+    /*    */glutAddMenuEntry("Ambient...", NEW_LIGHT_AMBIENT);
+    /*    */glutAddMenuEntry("Point...", NEW_LIGHT_POINT);
+    /*    */glutAddMenuEntry("Parallel...", NEW_LIGHT_PARALLEL);
+    /**/glutSetMenu(menuLights);
+    /**/glutAddMenuEntry("Modify active light", -2);
+    /**/glutAddMenuEntry("Delete active light", -1);
+    /**/for (int i = 0; i < scene->getLights()->size(); i++) {
+        /**/char newEntry[50];
+        /**/sprintf(newEntry, "(%d) %s", i, (*scene->getLights())[i]->getNameOfType());
+        /**/glutAddMenuEntry(newEntry, i);
+        }
+    glutSetMenu(menuMain);
 }
 
 void initMenu()
 {
-    const int menuNewModel = glutCreateMenu(newModelMenu);
-    glutAddMenuEntry("From OBJ", NEW_OBJ);
-    glutAddMenuEntry("Primitive: Cuboid", NEW_CUBOID);
-    glutAddMenuEntry("Primitive: Pyramid", NEW_PYRAMID);
-    glutAddMenuEntry("Primitive: Prism", NEW_PRISM);
-    glutAddMenuEntry("Primitive: Sphere", NEW_SPHERE);
-    menuModels = glutCreateMenu(modelsMenu);
-    glutAddSubMenu("New...", menuNewModel);
+    // create all the submenus first, then construct everything visually.
+    // maybe this is more inefficient, but it's easier to work with
+    int menuToggles, menuControl, menuReset, menuProjection,
+        menuSensitivity, menuAdvanced, menuSupersampling, menuFog, menuBloom;
 
-    menuCameras = glutCreateMenu(cameraMenu);
-    glutAddMenuEntry("New...", NEW_CAMERA);
+    // intentional indents to visualize the structure of the menu
+    menuMain = glutCreateMenu(mainMenu);
+    /**/// models menu
+    /**/// cameras menu
+    /**/// lights menu
+    /**/menuToggles = glutCreateMenu(togglesMenu);
+    /**/menuControl = glutCreateMenu(controlMenu);
+    /**/menuReset = glutCreateMenu(resetMenu);
+    /**/menuProjection = glutCreateMenu(projectionMenu);
+    /**/menuSensitivity = glutCreateMenu(sensitivityMenu);
+    /**/menuAdvanced = glutCreateMenu(advancedMenu);
+    /*    */menuSupersampling = glutCreateMenu(supersamplingMenu);
+    /*    */menuFog = glutCreateMenu(fogMenu);
+    /*    */menuBloom = glutCreateMenu(bloomMenu);
 
-    const int menuToggles = glutCreateMenu(togglesMenu);
-    glutAddMenuEntry("Face Normals", TOGGLE_FACE_NORMALS);
-    glutAddMenuEntry("Vertex Normals", TOGGLE_VERTEX_NORMALS);
-    glutAddMenuEntry("Bounding Box", TOGGLE_BOUNDING_BOX);
-    glutAddMenuEntry("Camera Indicators", TOGGLE_CAMERAS);
-    glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING);
-    glutAddMenuEntry("Axes", TOGGLE_AXES);
-
-    const int menuControl = glutCreateMenu(controlMenu);
-    glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);
-    glutAddMenuEntry("Model (world frame)", CONTROL_MODEL_IN_WORLD);
-    glutAddMenuEntry("Camera (view frame)", CONTROL_CAMERA_IN_VIEW);
-    glutAddMenuEntry("Camera (world frame)", CONTROL_CAMERA_IN_WORLD);
-    glutAddMenuEntry("Model (intuitive mode)", CONTROL_MODEL_INTUITIVE);
-    glutAddMenuEntry("Camera (intuitive mode)", CONTROL_CAMERA_INTUITIVE);
-
-    const int menuReset = glutCreateMenu(resetMenu);
-    glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);
-    glutAddMenuEntry("Model (world frame)", CONTROL_MODEL_IN_WORLD);
-    glutAddMenuEntry("Camera (view frame)", CONTROL_CAMERA_IN_VIEW);
-    glutAddMenuEntry("Camera (world frame)", CONTROL_CAMERA_IN_WORLD);
-    glutAddMenuEntry("All active frames", CONTROL_ALL);
-
-    const int menuProjection = glutCreateMenu(projectionMenu);
-    glutAddMenuEntry("Orthographic", PROJ_ORTHO);
-    glutAddMenuEntry("Frustum", PROJ_FRUSTUM);
-    glutAddMenuEntry("Perspective", PROJ_PERSPECTIVE);
-
-    const int menuSensitivity = glutCreateMenu(sensitivityMenu);
-    glutAddMenuEntry("Movement", SENSITIVITY_MOVEMENT);
-    glutAddMenuEntry("Scaling", SENSITIVITY_SCALING);
-    glutAddMenuEntry("Rotation", SENSITIVITY_ROTATION);
-
-    glutCreateMenu(mainMenu);
-    glutAddSubMenu("Models", menuModels);
-    glutAddSubMenu("Cameras", menuCameras);
-    glutAddSubMenu("Toggle", menuToggles);
-    glutAddSubMenu("Control Mode", menuControl);
-    glutAddSubMenu("Reset Frame", menuReset);
-    glutAddSubMenu("Change Projection", menuProjection);
-    glutAddSubMenu("Sensitivity", menuSensitivity);
+    glutSetMenu(menuMain);
+    makeModelsSubMenu();
+    makeCamerasSubMenu();
+    makeLightsSubMenu();
+    glutAddSubMenu("Toggle", menuToggles); glutSetMenu(menuToggles);
+    /**/glutAddMenuEntry("Face Normals", TOGGLE_FACE_NORMALS);
+    /**/glutAddMenuEntry("Vertex Normals", TOGGLE_VERTEX_NORMALS);
+    /**/glutAddMenuEntry("Bounding Box", TOGGLE_BOUNDING_BOX);
+    /**/glutAddMenuEntry("Wireframe", TOGGLE_WIREFRAME);
+    /**/glutAddMenuEntry("Camera Indicators", TOGGLE_CAMERAS);
+    /**/glutAddMenuEntry("Light Indicators", TOGGLE_LIGHTS);
+    /**/glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING);
+    /**/glutAddMenuEntry("Axes", TOGGLE_AXES);
+    glutSetMenu(menuMain);
+    glutAddSubMenu("Control Mode", menuControl); glutSetMenu(menuControl);
+    /**/glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);
+    /**/glutAddMenuEntry("Model (world frame)", CONTROL_MODEL_IN_WORLD);
+    /**/glutAddMenuEntry("Camera (view frame)", CONTROL_CAMERA_IN_VIEW);
+    /**/glutAddMenuEntry("Camera (world frame)", CONTROL_CAMERA_IN_WORLD);
+    /**/glutAddMenuEntry("Model (intuitive mode)", CONTROL_MODEL_INTUITIVE);
+    /**/glutAddMenuEntry("Camera (intuitive mode)", CONTROL_CAMERA_INTUITIVE);
+    glutSetMenu(menuMain);
+    glutAddSubMenu("Reset Frame", menuReset); glutSetMenu(menuReset);
+    /**/glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);
+    /**/glutAddMenuEntry("Model (world frame)", CONTROL_MODEL_IN_WORLD);
+    /**/glutAddMenuEntry("Camera (view frame)", CONTROL_CAMERA_IN_VIEW);
+    /**/glutAddMenuEntry("Camera (world frame)", CONTROL_CAMERA_IN_WORLD);
+    /**/glutAddMenuEntry("All active frames", CONTROL_ALL);
+    glutSetMenu(menuMain);
+    glutAddSubMenu("Change Projection", menuProjection); glutSetMenu(menuProjection);
+    /**/glutAddMenuEntry("Orthographic", PROJ_ORTHO);
+    /**/glutAddMenuEntry("Frustum", PROJ_FRUSTUM);
+    /**/glutAddMenuEntry("Perspective", PROJ_PERSPECTIVE);
+    glutSetMenu(menuMain);
+    glutAddSubMenu("Sensitivity", menuSensitivity); glutSetMenu(menuSensitivity);
+    /**/glutAddMenuEntry("Movement", SENSITIVITY_MOVEMENT);
+    /**/glutAddMenuEntry("Scaling", SENSITIVITY_SCALING);
+    /**/glutAddMenuEntry("Rotation", SENSITIVITY_ROTATION);
+    glutAddSubMenu("Advanced", menuAdvanced); glutSetMenu(menuAdvanced);
+    /**/glutAddSubMenu("Supersampling", menuSupersampling); glutSetMenu(menuSupersampling);
+    /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
+    /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
+    /**/glutSetMenu(menuAdvanced);
+    /**/glutAddSubMenu("Fog", menuFog); glutSetMenu(menuFog);
+    /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
+    /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
+    /**/glutSetMenu(menuAdvanced);
+    /**/glutAddSubMenu("Bloom", menuBloom); glutSetMenu(menuBloom);
+    /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
+    /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
+    /**/glutSetMenu(menuAdvanced);
+    glutSetMenu(menuMain);
     glutAddMenuEntry("Focus", MAIN_FOCUS);
     if (ALLOW_DEMO) glutAddMenuEntry("Demo", MAIN_DEMO);
     glutAddMenuEntry("About", MAIN_ABOUT);
@@ -614,7 +872,6 @@ int main(int argc, char** argv)
     // initialize MFC and print and error on failure
     if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))
     {
-        // TODO: change error code to suit your needs
         _tprintf(_T("Fatal Error: MFC initialization failed\n"));
         nRetCode = 1;
     }

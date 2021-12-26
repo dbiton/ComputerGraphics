@@ -21,24 +21,17 @@ void Scene::AddModel(MeshModel* model) {
         activeCamera->self = transform;
         activeCamera->shading = SHADE_PHONG;
 
-        AmbientLight* amb = new AmbientLight();
-        amb->setColor(Color(1));
-        amb->setBrightness(0.5);
-        lights.push_back(amb);
-
-        PointLight* p = new PointLight();
-        p->setColor(Color(1));
-        p->setBrightness(2);
-        p->setPosition(vec3(100));
-        lights.push_back(p);
+        lights.push_back(new AmbientLight(Color(1), 0.5));
+        lights.push_back(new PointLight(Color(1), 2, 1.1 * model->getBoundingBoxMax()));
+        activeLight = 1;
     }
     moveBy(model->world, getActiveCamera()->getLookingAt()); // spawn the model where the camera's looking
     draw();
 }
 
-void Scene::loadOBJModel(string fileName)
+void Scene::loadOBJModel(string fileName, string modelName)
 {
-    AddModel(new MeshModel(fileName));
+    AddModel(new MeshModel(fileName, modelName));
 }
 
 mat4 Scene::Projection() {
@@ -68,11 +61,16 @@ void Scene::draw()
             }
         }
     }
+    if (drawLights) {
+        for (int i = 0; i < lights.size(); i++) {
+            renderer->DrawLight(lights[i], !dimInactives || i == activeLight);
+        }
+    }
     for (int i = 0; i < models.size(); i++)
     {
         renderer->setLights(lights);
         renderer->SetObjectTransform(models[i]->getTransform());
-        renderer->DrawTriangles(models[i], !dimInactiveModels || i == activeModel, getActiveCamera()->shading);
+        renderer->DrawTriangles(models[i], !dimInactives || i == activeModel, getActiveCamera()->shading);
         if (models[i]->draw_bounding_box) renderer->DrawBox(models[i]);
     }
     renderer->SwapBuffers();
@@ -88,6 +86,18 @@ int Scene::AddCamera(const Camera& camera) {
     activeCamera = cameras.size();
     cameras.push_back(new Camera(camera));
     return activeCamera;
+}
+
+void Scene::AddLight(Light* light) {
+    activeLight = lights.size();
+    lights.push_back(light);
+}
+
+void Scene::UpdateActiveLight(Light* params) {
+    lights[activeLight]->setBrightness(params->getBrightness());
+    lights[activeLight]->setColor(params->getColor());
+    if (params->getType() == LIGHT_POINT) ((PointLight*)lights[activeLight])->setPosition(((PointLight*)params)->getPosition());
+    else if (params->getType() == LIGHT_PARALLEL) ((ParallelLight*)lights[activeLight])->setDirection(((ParallelLight*)params)->getDirection());
 }
 
 void Scene::AddCuboid(vec3 p, vec3 dim) {
@@ -109,8 +119,6 @@ void Scene::AddSphere(vec3 p, GLfloat radius, int subdivisions) {
 void Scene::focus() {
     getActiveCamera()->LookAt(getPosition(getActiveCamera()->getTransform()), getPosition(getActiveModel()->getTransform()), getActiveCamera()->getUpDirection());
 }
-
-// TODO check that all of these are the right order!
 
 void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up)
 { // TODO for some reason this math is not idempotent...
@@ -198,6 +206,19 @@ float Light::getBrightness() const
     return brightness;
 }
 
+int Light::getType() const {
+    return type;
+}
+
+std::string Light::getNameOfType() const {
+    switch (type) {
+    case LIGHT_AMBIENT: return "Ambient";
+    case LIGHT_POINT: return "Point";
+    case LIGHT_PARALLEL: return "Parallel";
+    default: return "UNKNOWN LIGHT TYPE";
+    }
+}
+
 void PointLight::setPosition(vec3 _position)
 {
     position = _position;
@@ -222,6 +243,6 @@ vec3 ParallelLight::dirToSource(const vec3& p, const mat4& object2clip) const
 
 vec3 AmbientLight::dirToSource(const vec3& p, const mat4& object2clip) const
 {
-    // this returns (0,0,0)
+    // ambient light is by definition directionless, so...
     return vec3();
 }

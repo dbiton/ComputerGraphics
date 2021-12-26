@@ -52,8 +52,9 @@ vec2 vec2fFromStream(std::istream & aStream)
 
 MeshModel::MeshModel() noexcept { }
 
-MeshModel::MeshModel(string fileName)
+MeshModel::MeshModel(string fileName, string modelName)
 {
+	name = modelName;
 	loadFile(fileName);
 	fitBoundingBox();
 }
