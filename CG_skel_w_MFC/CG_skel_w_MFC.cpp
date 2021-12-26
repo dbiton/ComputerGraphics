@@ -446,12 +446,28 @@ void newModelMenu(int id) {
 }
 
 void materialMenu(int id) {
+    if (scene->activeModel == -1) {
+        message(_T("No active model selected!"));
+        return;
+    }
+    const Material* material = scene->getActiveModel()->material;
     switch (id) {
     case MATERIAL_UNIFORM: {
-        // TODO UniformMaterialDialog
+        CUniformMaterialDialog dialog(_T("Uniform Material Parameters"),
+            material->base.x, material->base.y, material->base.z,
+            material->emissive.x, material->emissive.y, material->emissive.z,
+            material->ambient_reflect, material->roughness, material->shininess);
+        if (dialog.DoModal() != IDOK) return;
+        delete scene->getActiveModel()->material;
+        scene->getActiveModel()->material = new Material(Color(dialog.getBaseRed(), dialog.getBaseGreen(), dialog.getBaseBlue()),
+            Color(dialog.getEmissiveRed(), dialog.getEmissiveGreen(), dialog.getEmissiveBlue()),
+            dialog.getAmbientReflect(), dialog.getRoughness(), dialog.getShininess());
     } break;
     case MATERIAL_FULLSATSPECTRUM: {
-        // TODO FullSatSpectrumMaterialDialog
+        CRainbowMaterialDialog dialog(_T("Uniform Material Parameters"), material->ambient_reflect, material->roughness, material->shininess);
+        if (dialog.DoModal() != IDOK) return;
+        delete scene->getActiveModel()->material;
+        scene->getActiveModel()->material = new FullSatSpectrumMaterial(dialog.getAmbientReflect(), dialog.getRoughness(), dialog.getShininess());
     } break;
     default: message(_T("Unimplemented materialMenu option!")); // shouldn't happen!
     }
@@ -488,7 +504,7 @@ void newCameraMenu(int id) {
             sprintf(s, "(%d) Camera", camera_num);
             glutAddMenuEntry(s, camera_num);
         }
-        else message(_T("A model must be presenet before adding a camera."));
+        else message(_T("A model must be present before adding a camera."));
     } break;
     case NEW_CAMERA_PARAMS: {
         // TODO NewCameraDialog

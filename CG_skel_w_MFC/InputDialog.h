@@ -183,3 +183,63 @@ protected:
     afx_msg void OnPaint();
     DECLARE_MESSAGE_MAP()
 };
+
+class CUniformMaterialDialog : public CInputDialog
+{
+public:
+    CUniformMaterialDialog(CString title) : CInputDialog(title) { }
+    CUniformMaterialDialog(CString title, float baseRed, float baseGreen, float baseBlue,
+        float emissiveRed, float emissiveGreen, float emissiveBlue,
+        float ambientReflect, float roughness, float shininess)
+        : CInputDialog(title), baseRed(baseRed), baseGreen(baseGreen), baseBlue(baseBlue),
+        emissiveRed(emissiveRed), emissiveGreen(emissiveGreen), emissiveBlue(emissiveBlue),
+        ambientReflect(ambientReflect), roughness(roughness), shininess(shininess) { }
+    virtual ~CUniformMaterialDialog() { }
+
+    float getBaseRed() noexcept { return baseRed; }
+    float getBaseGreen() noexcept { return baseGreen; }
+    float getBaseBlue() noexcept { return baseBlue; }
+    float getEmissiveRed() noexcept { return emissiveRed; }
+    float getEmissiveGreen() noexcept { return emissiveGreen; }
+    float getEmissiveBlue() noexcept { return emissiveBlue; }
+    float getAmbientReflect() noexcept { return ambientReflect; }
+    float getRoughness() noexcept { return roughness; }
+    float getShininess() noexcept { return shininess; }
+
+protected:
+    float baseRed = 0, baseGreen = 0, baseBlue = 0,
+        emissiveRed = 0, emissiveGreen = 0, emissiveBlue = 0,
+        ambientReflect = 0, roughness = 0, shininess = 0;
+    CEdit baseRedEdit, baseGreenEdit, baseBlueEdit,
+        emissiveRedEdit, emissiveGreenEdit, emissiveBlueEdit,
+        ambientReflectEdit, roughnessEdit, shininessEdit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};
+
+class CRainbowMaterialDialog : public CInputDialog
+{
+public:
+    CRainbowMaterialDialog(CString title) : CInputDialog(title) { }
+    CRainbowMaterialDialog(CString title, float ambientReflect, float roughness, float shininess)
+        : CInputDialog(title), ambientReflect(ambientReflect), roughness(roughness), shininess(shininess) { }
+    virtual ~CRainbowMaterialDialog() { }
+
+    float getAmbientReflect() noexcept { return ambientReflect; }
+    float getRoughness() noexcept { return roughness; }
+    float getShininess() noexcept { return shininess; }
+
+protected:
+    float ambientReflect = 0, roughness = 0, shininess = 0;
+    CEdit ambientReflectEdit, roughnessEdit, shininessEdit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};

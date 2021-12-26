@@ -295,10 +295,10 @@ void CProjectionDialog::OnPaint()
     CRect bottomRect(10, 10, 200, 30);
     dc.DrawText(CString("Bottom:"), -1, &bottomRect, DT_SINGLELINE);
 
-    CRect leftRect(10, 50, 400, 70);
+    CRect leftRect(10, 50, 200, 70);
     dc.DrawText(CString("Left:"), -1, &leftRect, DT_SINGLELINE);
 
-    CRect zNearRec(10, 90, 600, 110);
+    CRect zNearRec(10, 90, 200, 110);
     dc.DrawText(CString("Near:"), -1, &zNearRec, DT_SINGLELINE);
 
     CRect topRect(220, 10, 400, 30);
@@ -316,13 +316,9 @@ void CProjectionDialog::OnPaint()
 // -------------------------
 //    Class CPerspectiveProjectionDialog
 // -------------------------
-// time for some custom dialogs pog
-// most of this is just copypaste stuff... the only stuff that matters
-// is the enum, and the rectangles that define where the text+textboxes go.
-// honestly most of the headache is just figuring out the rectangles... 
 
 enum {
-    PER_ASPECT_EDIT = 210, // don't know if there's a reason to start here, i'm just roughly following the convention of the defines above
+    PER_ASPECT_EDIT = 210,
     PER_FOVY_EDIT,
     PER_ZNEAR_EDIT,
     PER_ZFAR_EDIT
@@ -330,8 +326,6 @@ enum {
 
 void CPrespectiveProjectionDialog::DoDataExchange(CDataExchange* pDX)
 {
-    // no idea how any of this works, but apparently this automatically verifies that the input is a float,
-    // and also makes it so the fields get their value when the dialog closes, so that's cool
     CInputDialog::DoDataExchange(pDX);
     DDX_Text(pDX, PER_ASPECT_EDIT, aspect);
     DDX_Text(pDX, PER_FOVY_EDIT, fovy);
@@ -346,7 +340,7 @@ BEGIN_MESSAGE_MAP(CPrespectiveProjectionDialog, CInputDialog)
 END_MESSAGE_MAP()
 
 int CPrespectiveProjectionDialog::OnCreate(LPCREATESTRUCT lpcs)
-{ // this creates the textboxes
+{
     fovyEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
         CRect(65, 10, 200, 30), this, PER_FOVY_EDIT);
 
@@ -363,7 +357,7 @@ int CPrespectiveProjectionDialog::OnCreate(LPCREATESTRUCT lpcs)
 }
 
 void CPrespectiveProjectionDialog::OnPaint()
-{ // this creates extra text around the textboxes. this extra text is always rendered below the textboxes.
+{
     CPaintDC dc(this);
     dc.SetBkMode(TRANSPARENT);
 
@@ -413,3 +407,160 @@ void CSingleFloatDialog::OnPaint()
 
     valueEdit.SetFocus();
 }
+
+// -------------------------
+//    Class CUniformMaterialDialog
+// -------------------------
+
+enum {
+    BASE_RED_EDIT = 210,
+    BASE_GREEN_EDIT,
+    BASE_BLUE_EDIT,
+    EMISSIVE_RED_EDIT,
+    EMISSIVE_GREEN_EDIT,
+    EMISSIVE_BLUE_EDIT,
+    AMBIENT_REFLECT_EDIT,
+    ROUGHNESS_EDIT,
+    SHININESS_EDIT
+};
+
+void CUniformMaterialDialog::DoDataExchange(CDataExchange* pDX)
+{
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, BASE_RED_EDIT, baseRed);
+    DDX_Text(pDX, BASE_GREEN_EDIT, baseGreen);
+    DDX_Text(pDX, BASE_BLUE_EDIT, baseBlue);
+    DDX_Text(pDX, EMISSIVE_RED_EDIT, emissiveRed);
+    DDX_Text(pDX, EMISSIVE_GREEN_EDIT, emissiveGreen);
+    DDX_Text(pDX, EMISSIVE_BLUE_EDIT, emissiveBlue);
+    DDX_Text(pDX, AMBIENT_REFLECT_EDIT, ambientReflect);
+    DDX_Text(pDX, ROUGHNESS_EDIT, roughness);
+    DDX_Text(pDX, SHININESS_EDIT, shininess);
+}
+
+// CUniformMaterialDialog message handlers
+BEGIN_MESSAGE_MAP(CUniformMaterialDialog, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CUniformMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
+{
+    baseRedEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(100, 10, 200, 30), this, BASE_RED_EDIT);
+
+    baseGreenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(100, 50, 200, 70), this, BASE_GREEN_EDIT);
+
+    baseBlueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(100, 90, 200, 110), this, BASE_BLUE_EDIT);
+
+    emissiveRedEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 10, 400, 30), this, EMISSIVE_RED_EDIT);
+
+    emissiveGreenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 50, 400, 70), this, EMISSIVE_GREEN_EDIT);
+
+    emissiveBlueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 90, 400, 110), this, EMISSIVE_BLUE_EDIT);
+
+    ambientReflectEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 130, 300, 150), this, AMBIENT_REFLECT_EDIT);
+
+    roughnessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 170, 300, 190), this, ROUGHNESS_EDIT);
+
+    shininessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 210, 300, 230), this, SHININESS_EDIT);
+
+    return 0;
+}
+
+void CUniformMaterialDialog::OnPaint()
+{
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    CRect baseRedRect(10, 10, 200, 30);
+    dc.DrawText(CString("Base Red:"), -1, &baseRedRect, DT_SINGLELINE);
+
+    CRect baseGreenRect(10, 50, 200, 70);
+    dc.DrawText(CString("Base Green:"), -1, &baseGreenRect, DT_SINGLELINE);
+
+    CRect baseBlueRec(10, 90, 200, 110);
+    dc.DrawText(CString("Base Blue:"), -1, &baseBlueRec, DT_SINGLELINE);
+
+    CRect emissiveRedRect(220, 10, 400, 30);
+    dc.DrawText(CString("Emissive Red:"), -1, &emissiveRedRect, DT_SINGLELINE);
+
+    CRect emissiveGreenRect(220, 50, 400, 70);
+    dc.DrawText(CString("Emissive Green:"), -1, &emissiveGreenRect, DT_SINGLELINE);
+
+    CRect emissiveBlueRect(220, 90, 400, 110);
+    dc.DrawText(CString("Emissive Blue:"), -1, &emissiveBlueRect, DT_SINGLELINE);
+
+    CRect ambientReflectRect(120, 130, 300, 150);
+    dc.DrawText(CString("Ambient Reflect:"), -1, &ambientReflectRect, DT_SINGLELINE);
+
+    CRect roughnessRect(120, 170, 300, 190);
+    dc.DrawText(CString("Roughness:"), -1, &roughnessRect, DT_SINGLELINE);
+
+    CRect shininessRect(120, 210, 300, 230);
+    dc.DrawText(CString("Shininess:"), -1, &shininessRect, DT_SINGLELINE);
+
+    baseRedEdit.SetFocus();
+}
+
+// -------------------------
+//    Class CRainbowMaterialDialog
+// -------------------------
+
+void CRainbowMaterialDialog::DoDataExchange(CDataExchange* pDX)
+{
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, AMBIENT_REFLECT_EDIT, ambientReflect); // reusing the enums from CUniformMaterialDialog lmao
+    DDX_Text(pDX, ROUGHNESS_EDIT, roughness);
+    DDX_Text(pDX, SHININESS_EDIT, shininess);
+}
+
+// CUniformMaterialDialog message handlers
+BEGIN_MESSAGE_MAP(CRainbowMaterialDialog, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CRainbowMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
+{
+    ambientReflectEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 130, 300, 150), this, AMBIENT_REFLECT_EDIT);
+
+    roughnessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 170, 300, 190), this, ROUGHNESS_EDIT);
+
+    shininessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 210, 300, 230), this, SHININESS_EDIT);
+
+    return 0;
+}
+
+void CRainbowMaterialDialog::OnPaint()
+{
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    CRect secretRect(90, 70, 400, 90);
+    dc.DrawText(CString("You have unlocked RAINBOW MODE!!!"), -1, &secretRect, DT_SINGLELINE);
+
+    CRect ambientReflectRect(120, 130, 300, 150);
+    dc.DrawText(CString("Ambient Reflect:"), -1, &ambientReflectRect, DT_SINGLELINE);
+
+    CRect roughnessRect(120, 170, 300, 190);
+    dc.DrawText(CString("Roughness:"), -1, &roughnessRect, DT_SINGLELINE);
+
+    CRect shininessRect(120, 210, 300, 230);
+    dc.DrawText(CString("Shininess:"), -1, &shininessRect, DT_SINGLELINE);
+
+    ambientReflectEdit.SetFocus();
+}
+
+
