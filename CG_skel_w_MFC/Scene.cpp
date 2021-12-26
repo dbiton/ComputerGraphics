@@ -94,10 +94,8 @@ void Scene::AddLight(Light* light) {
 }
 
 void Scene::UpdateActiveLight(Light* params) {
-    lights[activeLight]->setBrightness(params->getBrightness());
-    lights[activeLight]->setColor(params->getColor());
-    if (params->getType() == LIGHT_POINT) ((PointLight*)lights[activeLight])->setPosition(((PointLight*)params)->getPosition());
-    else if (params->getType() == LIGHT_PARALLEL) ((ParallelLight*)lights[activeLight])->setDirection(((ParallelLight*)params)->getDirection());
+    delete lights[activeLight];
+    lights[activeLight] = params;
 }
 
 void Scene::AddCuboid(vec3 p, vec3 dim) {

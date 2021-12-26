@@ -540,14 +540,14 @@ Light* getLight(int type, Light* defaults = NULL) {
             "Brightness:", brightness);
         if (dialog.DoModal() != IDOK) return NULL;
         return new PointLight(Color(dialog.getF11(), dialog.getF12(), dialog.getF13()), dialog.getF3(),
-            vec3((dialog.getF21(), dialog.getF22(), dialog.getF23())));
+            vec3(dialog.getF21(), dialog.getF22(), dialog.getF23()));
     } break;
     case NEW_LIGHT_PARALLEL: {
         CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
             "Direction X:", vec.x, "Direction Y:", vec.y, "Direction Z:", vec.z,
             "Brightness:", brightness);
         if (dialog.DoModal() != IDOK) return NULL;
-        vec3 direction((dialog.getF21(), dialog.getF22(), dialog.getF23()));
+        vec3 direction(dialog.getF21(), dialog.getF22(), dialog.getF23());
         if (length(direction) < FLT_EPSILON) {
             message(_T("Can't use zero vectors as direction!"));
             return NULL;
@@ -559,16 +559,7 @@ Light* getLight(int type, Light* defaults = NULL) {
 }
 
 void lightsMenu(int id) {
-    if (id == -2) {
-        if (scene->activeLight == -1) {
-            message(_T("No active light selected!"));
-            return;
-        }
-        Light* activeLight = scene->getActiveLight();
-        Light* newLight = getLight(activeLight->getType(), activeLight);
-        if (newLight != NULL) scene->UpdateActiveLight(newLight);
-    }
-    else if (id == -1) {
+    if (id == -1) {
         if (scene->activeLight == -1) {
             message(_T("No active light selected!"));
             return;
@@ -586,6 +577,19 @@ void newLightMenu(int id) {
     Light* newLight = getLight(id);
     if (newLight != NULL) {
         scene->AddLight(newLight);
+        display();
+    }
+}
+
+void changeLightMenu(int id) {
+    if (scene->activeLight == -1) {
+        message(_T("No active light selected!"));
+        return;
+    }
+    Light* activeLight = scene->getActiveLight();
+    Light* newLight = getLight(id, activeLight);
+    if (newLight != NULL) {
+        scene->UpdateActiveLight(newLight);
         display();
     }
 }
@@ -798,7 +802,8 @@ void makeLightsSubMenu() {
         glutSetMenu(menuMain);
         glutAddSubMenu("Lights", menuLights);
     }
-    const int menuNewLight = glutCreateMenu(newLightMenu);
+    const int menuNewLight = glutCreateMenu(newLightMenu),
+              menuChangeLight = glutCreateMenu(changeLightMenu);
 
     // intentional indents to visualize the structure of the menu
     glutSetMenu(menuLights);
@@ -807,7 +812,11 @@ void makeLightsSubMenu() {
     /*    */glutAddMenuEntry("Point...", NEW_LIGHT_POINT);
     /*    */glutAddMenuEntry("Parallel...", NEW_LIGHT_PARALLEL);
     /**/glutSetMenu(menuLights);
-    /**/glutAddMenuEntry("Modify active light", -2);
+    /**/glutAddSubMenu("Change active light", menuChangeLight); glutSetMenu(menuChangeLight);
+    /*    */glutAddMenuEntry("Ambient...", NEW_LIGHT_AMBIENT);
+    /*    */glutAddMenuEntry("Point...", NEW_LIGHT_POINT);
+    /*    */glutAddMenuEntry("Parallel...", NEW_LIGHT_PARALLEL);
+    /**/glutSetMenu(menuLights);
     /**/glutAddMenuEntry("Delete active light", -1);
     /**/for (int i = 0; i < scene->getLights()->size(); i++) {
         /**/char newEntry[50];
@@ -877,6 +886,7 @@ void initMenu()
     /**/glutAddMenuEntry("Movement", SENSITIVITY_MOVEMENT);
     /**/glutAddMenuEntry("Scaling", SENSITIVITY_SCALING);
     /**/glutAddMenuEntry("Rotation", SENSITIVITY_ROTATION);
+    glutSetMenu(menuMain);
     glutAddSubMenu("Advanced", menuAdvanced); glutSetMenu(menuAdvanced);
     /**/glutAddSubMenu("Supersampling", menuSupersampling); glutSetMenu(menuSupersampling);
     /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
