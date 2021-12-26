@@ -50,6 +50,8 @@ class Renderer
 	mat4 transform_object;
 	mat4 transform_camera_inverse;
 
+	mat4 object2clip;
+
 	std::vector<Light*> lights;
 public:
 	Renderer();

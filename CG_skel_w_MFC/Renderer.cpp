@@ -46,7 +46,7 @@ void Renderer::DrawTriangles(MeshModel* model, bool isActiveModel, int shading) 
     GLfloat fn_len = 0.25;
     GLfloat vn_len = 0.5;
 
-    mat4 object2clip = projection * transform_camera_inverse * transform_object;
+    object2clip = projection * transform_camera_inverse * transform_object;
     for (int i = 0; i < model->getVertices()->size(); i += 3) {
         vec3 v[3];
         vec3 vn[3];
@@ -443,7 +443,7 @@ Color Renderer::CalcColor(const Material& material, const vec3& surface_position
 {
     Color color = material.emissive;
     for (const auto& light : lights) {
-        const vec3 l = light->dirToSource(surface_position);
+        const vec3 l = light->dirToSource(surface_position, object2clip);
 
         // this is an ambient light source
         if (length(l) == 0) {
