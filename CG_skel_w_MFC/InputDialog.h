@@ -243,3 +243,59 @@ protected:
     afx_msg void OnPaint();
     DECLARE_MESSAGE_MAP()
 };
+
+class CAmbientLightDialog : public CInputDialog
+{
+public:
+    CAmbientLightDialog(CString title) : CInputDialog(title) { }
+    CAmbientLightDialog(CString title, float red, float green, float blue, float brightness)
+        : CInputDialog(title), red(red), green(green), blue(blue), brightness(brightness) { }
+    virtual ~CAmbientLightDialog() { }
+
+    float getRed() noexcept { return red; }
+    float getGreen() noexcept { return green; }
+    float getBlue() noexcept { return blue; }
+    float getBrightness() noexcept { return brightness; }
+
+protected:
+    float red = 0, green = 0, blue = 0, brightness = 0;
+    CEdit redEdit, greenEdit, blueEdit, brightnessEdit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};
+
+class CFloatsDialog_2x3plus1 : public CInputDialog
+{
+public:
+    CFloatsDialog_2x3plus1(CString title) : CInputDialog(title) { }
+    CFloatsDialog_2x3plus1(CString title, std::string f11Name, float f11, std::string f12Name, float f12, std::string f13Name, float f13,
+        std::string f21Name, float f21, std::string f22Name, float f22, std::string f23Name, float f23,
+        std::string f3Name, float f3)
+        : CInputDialog(title), f11Name(f11Name), f11(f11), f12Name(f12Name), f12(f12), f13Name(f13Name), f13(f13),
+        f21Name(f21Name), f21(f21), f22Name(f22Name), f22(f22), f23Name(f23Name), f23(f23),
+        f3Name(f3Name), f3(f3) { }
+    virtual ~CFloatsDialog_2x3plus1() { }
+
+    float getF11() noexcept { return f11; }
+    float getF12() noexcept { return f12; }
+    float getF13() noexcept { return f13; }
+    float getF21() noexcept { return f21; }
+    float getF22() noexcept { return f22; }
+    float getF23() noexcept { return f23; }
+    float getF3() noexcept { return f3; }
+
+protected:
+    float f11 = 0, f12 = 0, f13 = 0, f21 = 0, f22 = 0, f23 = 0, f3 = 0;
+    std::string f11Name, f12Name, f13Name, f21Name, f22Name, f23Name, f3Name;
+    CEdit f11Edit, f12Edit, f13Edit, f21Edit, f22Edit, f23Edit, f3Edit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};

@@ -342,10 +342,10 @@ END_MESSAGE_MAP()
 int CPrespectiveProjectionDialog::OnCreate(LPCREATESTRUCT lpcs)
 {
     fovyEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(65, 10, 200, 30), this, PER_FOVY_EDIT);
+        CRect(165, 10, 300, 30), this, PER_FOVY_EDIT);
 
     aspectEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(65, 50, 200, 70), this, PER_ASPECT_EDIT);
+        CRect(165, 50, 300, 70), this, PER_ASPECT_EDIT);
 
     zNearEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
         CRect(65, 90, 200, 110), this, PER_ZNEAR_EDIT);
@@ -361,13 +361,13 @@ void CPrespectiveProjectionDialog::OnPaint()
     CPaintDC dc(this);
     dc.SetBkMode(TRANSPARENT);
 
-    CRect bottomRect(10, 10, 200, 30);
+    CRect bottomRect(110, 10, 300, 30);
     dc.DrawText(CString("fov:"), -1, &bottomRect, DT_SINGLELINE);
 
-    CRect leftRect(10, 50, 400, 70);
+    CRect leftRect(110, 50, 300, 70);
     dc.DrawText(CString("aspect:"), -1, &leftRect, DT_SINGLELINE);
 
-    CRect zNearRec(10, 90, 600, 110);
+    CRect zNearRec(10, 90, 200, 110);
     dc.DrawText(CString("Near:"), -1, &zNearRec, DT_SINGLELINE);
 
     CRect zFarRec(220, 90, 400, 110);
@@ -563,4 +563,155 @@ void CRainbowMaterialDialog::OnPaint()
     ambientReflectEdit.SetFocus();
 }
 
+// -------------------------
+//    Class CAmbientLightDialog
+// -------------------------
 
+enum {
+    RED_EDIT = 210,
+    GREEN_EDIT,
+    BLUE_EDIT,
+    BRIGHTNESS_EDIT,
+    LIGHT_X_EDIT,
+    LIGHT_Y_EDIT,
+    LIGHT_Z_EDIT
+};
+
+void CAmbientLightDialog::DoDataExchange(CDataExchange* pDX)
+{
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, RED_EDIT, red);
+    DDX_Text(pDX, GREEN_EDIT, green);
+    DDX_Text(pDX, BLUE_EDIT, blue);
+    DDX_Text(pDX, BRIGHTNESS_EDIT, brightness);
+}
+
+// CAmbientLightDialog message handlers
+BEGIN_MESSAGE_MAP(CAmbientLightDialog, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CAmbientLightDialog::OnCreate(LPCREATESTRUCT lpcs)
+{
+    redEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 10, 200, 30), this, PER_FOVY_EDIT);
+
+    greenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 50, 200, 70), this, PER_ASPECT_EDIT);
+
+    blueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 90, 200, 110), this, PER_ZNEAR_EDIT);
+
+    brightnessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(300, 50, 400, 70), this, PER_ZFAR_EDIT);
+
+    return 0;
+}
+
+void CAmbientLightDialog::OnPaint()
+{
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    CRect redRect(10, 10, 200, 30);
+    dc.DrawText(CString("Red:"), -1, &redRect, DT_SINGLELINE);
+
+    CRect greenRect(10, 50, 200, 70);
+    dc.DrawText(CString("Green:"), -1, &greenRect, DT_SINGLELINE);
+
+    CRect blueRec(10, 90, 200, 110);
+    dc.DrawText(CString("Blue:"), -1, &blueRec, DT_SINGLELINE);
+
+    CRect brightnessRec(220, 50, 400, 70);
+    dc.DrawText(CString("Brightness:"), -1, &brightnessRec, DT_SINGLELINE);
+
+    redEdit.SetFocus();
+}
+
+// -------------------------
+//    Class CFloatsDialog_2x3plus1
+// -------------------------
+
+enum {
+    F11_EDIT = 210,
+    F12_EDIT,
+    F13_EDIT,
+    F21_EDIT,
+    F22_EDIT,
+    F23_EDIT,
+    F3_EDIT
+};
+
+void CFloatsDialog_2x3plus1::DoDataExchange(CDataExchange* pDX)
+{
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, F11_EDIT, f11);
+    DDX_Text(pDX, F12_EDIT, f12);
+    DDX_Text(pDX, F13_EDIT, f13);
+    DDX_Text(pDX, F21_EDIT, f21);
+    DDX_Text(pDX, F22_EDIT, f22);
+    DDX_Text(pDX, F23_EDIT, f23);
+    DDX_Text(pDX, F3_EDIT, f3);
+}
+
+// CFloatsDialog_2x3plus1 message handlers
+BEGIN_MESSAGE_MAP(CFloatsDialog_2x3plus1, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CFloatsDialog_2x3plus1::OnCreate(LPCREATESTRUCT lpcs)
+{
+    f11Edit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(100, 10, 200, 30), this, F11_EDIT);
+
+    f12Edit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(100, 50, 200, 70), this, F12_EDIT);
+
+    f13Edit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(100, 90, 200, 110), this, F13_EDIT);
+
+    f21Edit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 10, 400, 30), this, F21_EDIT);
+
+    f22Edit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 50, 400, 70), this, F22_EDIT);
+
+    f23Edit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 90, 400, 110), this, F23_EDIT);
+
+    f3Edit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 130, 300, 150), this, F3_EDIT);
+
+    return 0;
+}
+
+void CFloatsDialog_2x3plus1::OnPaint()
+{
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    CRect f11Rect(10, 10, 200, 30);
+    dc.DrawText(CString(f11Name.c_str()), -1, &f11Rect, DT_SINGLELINE);
+
+    CRect f12Rect(10, 50, 200, 70);
+    dc.DrawText(CString(f12Name.c_str()), -1, &f12Rect, DT_SINGLELINE);
+
+    CRect f13Rec(10, 90, 200, 110);
+    dc.DrawText(CString(f13Name.c_str()), -1, &f13Rec, DT_SINGLELINE);
+
+    CRect f21Rect(220, 10, 400, 30);
+    dc.DrawText(CString(f21Name.c_str()), -1, &f21Rect, DT_SINGLELINE);
+
+    CRect f22Rect(220, 50, 400, 70);
+    dc.DrawText(CString(f22Name.c_str()), -1, &f22Rect, DT_SINGLELINE);
+
+    CRect f23Rect(220, 90, 400, 110);
+    dc.DrawText(CString(f23Name.c_str()), -1, &f23Rect, DT_SINGLELINE);
+
+    CRect f3Rect(120, 130, 300, 150);
+    dc.DrawText(CString(f3Name.c_str()), -1, &f3Rect, DT_SINGLELINE);
+
+    f11Edit.SetFocus();
+}

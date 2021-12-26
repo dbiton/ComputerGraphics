@@ -518,18 +518,41 @@ void shadingMenu(int id) {
 }
 
 Light* getLight(int type, Light* defaults = NULL) {
+    float red = 0, green = 0, blue = 0, brightness = 0;
+    vec3 vec(1, 0, 0);
+    if (defaults != NULL) {
+        red = defaults->getColor().x;
+        green = defaults->getColor().y;
+        blue = defaults->getColor().z;
+        brightness = defaults->getBrightness();
+        if (type == LIGHT_POINT) vec = ((PointLight*)defaults)->getPosition();
+        else if (type == LIGHT_PARALLEL) vec = ((ParallelLight*)defaults)->getDirection();
+    }
     switch (type) {
     case NEW_LIGHT_AMBIENT: {
-        // TODO AmbientLightDialog
-        return NULL;
+        CAmbientLightDialog dialog(_T("Ambient Light Parameters"), red, green, blue, brightness);
+        if (dialog.DoModal() != IDOK) return NULL;
+        return new AmbientLight(Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()), dialog.getBrightness());
     } break;
     case NEW_LIGHT_POINT: {
-        // TODO PointLightDialog
-        return NULL;
+        CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
+            "Origin X:", vec.x, "Origin Y:", vec.y, "Origin Z:", vec.z,
+            "Brightness:", brightness);
+        if (dialog.DoModal() != IDOK) return NULL;
+        return new PointLight(Color(dialog.getF11(), dialog.getF12(), dialog.getF13()), dialog.getF3(),
+            vec3((dialog.getF21(), dialog.getF22(), dialog.getF23())));
     } break;
     case NEW_LIGHT_PARALLEL: {
-        // TODO ParallelLightDialog
-        return NULL;
+        CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
+            "Direction X:", vec.x, "Direction Y:", vec.y, "Direction Z:", vec.z,
+            "Brightness:", brightness);
+        if (dialog.DoModal() != IDOK) return NULL;
+        vec3 direction((dialog.getF21(), dialog.getF22(), dialog.getF23()));
+        if (length(direction) < FLT_EPSILON) {
+            message(_T("Can't use zero vectors as direction!"));
+            return NULL;
+        }
+        return new ParallelLight(Color(dialog.getF11(), dialog.getF12(), dialog.getF13()), dialog.getF3(), normalize(direction));
     } break;
     default: message(_T("Unimplemented newLightMenu option!")); return NULL; // shouldn't happen!
     }
@@ -542,7 +565,8 @@ void lightsMenu(int id) {
             return;
         }
         Light* activeLight = scene->getActiveLight();
-        scene->UpdateActiveLight(getLight(activeLight->getType(), activeLight));
+        Light* newLight = getLight(activeLight->getType(), activeLight);
+        if (newLight != NULL) scene->UpdateActiveLight(newLight);
     }
     else if (id == -1) {
         if (scene->activeLight == -1) {
@@ -559,7 +583,11 @@ void lightsMenu(int id) {
 }
 
 void newLightMenu(int id) {
-    scene->AddLight(getLight(id));
+    Light* newLight = getLight(id);
+    if (newLight != NULL) {
+        scene->AddLight(newLight);
+        display();
+    }
 }
 
 void togglesMenu(int id) {
@@ -614,10 +642,8 @@ void projectionMenu(int id) {
     case PROJ_PERSPECTIVE: {
         float fovy, aspect;
         camera->getPerspectiveParameters(fovy, aspect);
-
         CPrespectiveProjectionDialog dialog(_T("Prespective Projection Parameters"),
-            fovy, aspect,
-            camera->lastNear, camera->lastFar);
+            fovy, aspect, camera->lastNear, camera->lastFar);
         if (dialog.DoModal() == IDOK) {
             camera->projection = camera->Perspective(dialog.getFovY(), dialog.getAspect(),
                 dialog.getNear(), dialog.getFar());
