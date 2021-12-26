@@ -271,11 +271,11 @@ float Area(vec2 p0, vec2 p1, vec2 p2) noexcept
     return 0.5f * std::abs(p1_p0.x * p2_p0.y - p2_p0.x * p1_p0.y);
 }
 
-void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Material> mats, int shading){
+void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Material> mats, int shading) {
     const vec3 fm = (v[0] + v[1] + v[2]) / 3;
     const vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1]));
     const vec3 camera_dir(0, 0, 1);
-    
+
     // backface culling
     if (dot(fn, camera_dir) < 0) return;
 
@@ -290,85 +290,78 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
 
     const float A = Area(v2d[0], v2d[1], v2d[2]);
     if (A < FLT_EPSILON) return; // triangle is a line
-    
+
     // precalculate colors if need be
     vec3 color_face;
     vec3 color_vert[3];
     if (shading == SHADE_FLAT)
         color_face = CalcColor(AverageMaterial(mats), (v[0] + v[1] + v[2]) / 3, fn);
-    
+
     else if (shading == SHADE_GOURAUD)
         for (int i = 0; i < 3; i++) color_vert[i] = CalcColor(mats[i], v[i], vn[i]);
-    
-    std::set<int> visited_pixels;
-    std::vector<vec2> pixels;
-    vec2 v2d_mid = (v2d[0] + v2d[1] + v2d[2]) / 3;
-    v2d_mid.x = std::round(v2d_mid.x);
-    v2d_mid.y = std::round(v2d_mid.y);
-    pixels.push_back(v2d_mid);
-    while (pixels.size() > 0) {
-        const vec2 p = pixels.back();
-        pixels.pop_back();
-        visited_pixels.insert(p.x + p.y * width);
-        // out of frame
 
-        const float a0 = Area(p, v2d[1], v2d[2]) / A,
-                    a1 = Area(p, v2d[2], v2d[0]) / A,
-                    a2 = Area(p, v2d[0], v2d[1]) / A;
-        
-        if (std::abs(a0 + a1 + a2 - 1) > FLT_EPSILON) continue; // If out of the triangle
-        
-        const int x = p.x,
-                  y = p.y; // minimize float operations...
-        if (x > width || x < 0 || y > height || y < 0) continue;
+    int x_min = width - 1, x_max = 0, y_min = height - 1, y_max = 0;
+    for (int i = 0; i < 3; i++) {
+        x_min = min(x_min, v2d[i].x);
+        y_min = min(y_min, v2d[i].y);
+        x_max = max(x_max, v2d[i].x);
+        y_max = max(y_max, v2d[i].y);
+    }
+    x_min = max(0, x_min);
+    x_max = min(width - 1, x_max);
+    y_min = max(0, y_min);
+    y_max = min(height - 1, y_max);
 
-        const float depth = a0 * v[0].z + a1 * v[1].z + a2 * v[2].z;
-        
-        bool depth_updated = false;
-        if (m_isSuperSample && depth > m_zbufferSuperSample[x+y*width]) {
-            m_zbufferSuperSample[x + y * width] = depth;
-            depth_updated = true;
-        }
-        else if (depth > m_zbuffer[x + y * width]) {
-            m_zbuffer[x + y * width] = depth;
-            depth_updated = true;
-        }
-        
-        if (depth_updated) {
-            Color color;
-            switch (shading) {
-            case SHADE_FLAT:
-                color = color_face;
-                break;
-            case SHADE_GOURAUD:
-                color = a0 * color_vert[0] + a1 * color_vert[1] + a2 * color_vert[2];
-                break;
-            case SHADE_PHONG:
-                color = CalcColor(InterpolateMaterial(mats, a0, a1, a2), a0 * v[0] + a1 * v[1] + a2 * v[2], a0 * vn[0] + a1 * vn[1] + a2 * vn[2]);
-                break;
-            default:
-                printf("ShadeType unimplemented!");
-                exit(1);
+    for (int x = x_min; x <= x_max; x++) {
+        for (int y = y_min; y <= y_max; y++) {
+            const vec2 p(x, y);
+            // out of frame
+
+            const float a0 = Area(p, v2d[1], v2d[2]) / A,
+                a1 = Area(p, v2d[2], v2d[0]) / A,
+                a2 = Area(p, v2d[0], v2d[1]) / A;
+
+            if (std::abs(a0 + a1 + a2 - 1) > 16*FLT_EPSILON) continue; // If out of the triangle
+
+            const float depth = a0 * v[0].z + a1 * v[1].z + a2 * v[2].z;
+
+            bool depth_updated = false;
+            if (m_isSuperSample && depth > m_zbufferSuperSample[x + y * width]) {
+                m_zbufferSuperSample[x + y * width] = depth;
+                depth_updated = true;
             }
-            if (m_isFog) {
-                float fogFactor = (m_fogMaxDistance - depth) / (m_fogMaxDistance - m_fogMinDistance);
-                fogFactor = max(0.f, min(1.f, fogFactor)); // clamp
-                color = fogFactor * m_fogColor + (1 - fogFactor) * color;
+            else if (depth > m_zbuffer[x + y * width]) {
+                m_zbuffer[x + y * width] = depth;
+                depth_updated = true;
             }
-            if (m_isSuperSample) {
-                DrawPixelSuperSampled(p.x, p.y, color);
-            }
-            else {
-                DrawPixel(p.x, p.y, color);
-            }
-           }
-        vec2 p_next[4] = { p + vec2(1,  0), p + vec2(-1,  0), p + vec2(0,  1), p + vec2(0, -1) };
-        for (int i = 0; i < 4; i++) {
-            const int x = p_next[i].x,
-                      y = p_next[i].y;
-            if (visited_pixels.count(x + y * width) == 0) {
-                visited_pixels.insert(x + y * width);
-                pixels.push_back(p_next[i]);
+
+            if (depth_updated) {
+                Color color;
+                switch (shading) {
+                case SHADE_FLAT:
+                    color = color_face;
+                    break;
+                case SHADE_GOURAUD:
+                    color = a0 * color_vert[0] + a1 * color_vert[1] + a2 * color_vert[2];
+                    break;
+                case SHADE_PHONG:
+                    color = CalcColor(InterpolateMaterial(mats, a0, a1, a2), a0 * v[0] + a1 * v[1] + a2 * v[2], a0 * vn[0] + a1 * vn[1] + a2 * vn[2]);
+                    break;
+                default:
+                    printf("ShadeType unimplemented!");
+                    exit(1);
+                }
+                if (m_isFog) {
+                    float fogFactor = (m_fogMaxDistance - depth) / (m_fogMaxDistance - m_fogMinDistance);
+                    fogFactor = max(0.f, min(1.f, fogFactor)); // clamp
+                    color = fogFactor * m_fogColor + (1 - fogFactor) * color;
+                }
+                if (m_isSuperSample) {
+                    DrawPixelSuperSampled(p.x, p.y, color);
+                }
+                else {
+                    DrawPixel(p.x, p.y, color);
+                }
             }
         }
     }
