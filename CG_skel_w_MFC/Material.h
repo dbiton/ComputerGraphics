@@ -1,7 +1,8 @@
 #pragma once
 
-#include "vec.h"
+#include <vector>
 #include "PrimTypes.h"
+#include "vec.h"
 
 struct Material {
     Color base;

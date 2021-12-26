@@ -1,11 +1,11 @@
 #pragma once
-#include "PrimTypes.h"
-#include "Entity.h"
-#include "scene.h"
-#include "Material.h"
-#include "vec.h"
-#include "mat.h"
 #include <string>
+#include <vector>
+#include "Entity.h"
+#include "mat.h"
+#include "Material.h"
+#include "PrimTypes.h"
+#include "vec.h"
 
 class MeshModel : public Entity
 {

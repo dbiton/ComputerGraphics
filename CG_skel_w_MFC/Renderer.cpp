@@ -1,10 +1,12 @@
-#include "StdAfx.h"
-#include "Renderer.h"
-#include "Scene.h"
-#include "CG_skel_w_MFC.h"
-#include "InitShader.h"
-#include "GL\freeglut.h"
+#include "stdafx.h"
+
 #include <set>
+#include "GL\glew.h"
+#include "GL\freeglut.h"
+#include "InitShader.h"
+#include "Renderer.h"
+#include "Resource.h"
+#include "Scene.h"
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 

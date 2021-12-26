@@ -1,4 +1,5 @@
 #include "stdafx.h"
+
 #include "PrimMeshModel.h"
 
 PrimMeshModel::PrimMeshModel() : MeshModel() { }

@@ -2,9 +2,8 @@
 #pragma once
 
 #include <string>
-using std::string;
-
 #include "vec.h"
+using std::string;
 
 // ------------------------
 //    Class CInputDialog
@@ -168,13 +167,18 @@ class CSingleFloatDialog : public CInputDialog
 {
 public:
     CSingleFloatDialog(CString title) : CInputDialog(title) { }
-    CSingleFloatDialog(CString title, float _value) : CInputDialog(title), value(_value) { }
+    CSingleFloatDialog(CString title, float value, bool isInt = false) : CInputDialog(title), isInt(isInt) {
+        if (isInt) iValue = value;
+        else fValue = value;
+    }
     virtual ~CSingleFloatDialog() { }
 
-    float getValue() noexcept { return value; }
+    float getValue() noexcept { return isInt ? iValue : fValue; }
 
 protected:
-    float value = 0;
+    bool isInt;
+    float fValue = 0;
+    int iValue = 0;
     CEdit valueEdit;
 
     virtual void DoDataExchange(CDataExchange* pDX);
@@ -292,6 +296,53 @@ protected:
     float f11 = 0, f12 = 0, f13 = 0, f21 = 0, f22 = 0, f23 = 0, f3 = 0;
     std::string f11Name, f12Name, f13Name, f21Name, f22Name, f23Name, f3Name;
     CEdit f11Edit, f12Edit, f13Edit, f21Edit, f22Edit, f23Edit, f3Edit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};
+
+class CBloomDialog : public CInputDialog
+{
+public:
+    CBloomDialog(CString title) : CInputDialog(title) { }
+    CBloomDialog(CString title, float thresh, int spread) : CInputDialog(title), thresh(thresh), spread(spread) { }
+    virtual ~CBloomDialog() { }
+
+    float getThresh() noexcept { return thresh; }
+    int getSpread() noexcept { return spread; }
+
+protected:
+    float thresh = 0;
+    int spread = 0;
+    CEdit threshEdit, spreadEdit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};
+
+class CFogDialog : public CInputDialog
+{
+public:
+    CFogDialog(CString title) : CInputDialog(title) { }
+    CFogDialog(CString title, float red, float green, float blue, float minDist, float maxDist)
+        : CInputDialog(title), red(red), green(green), blue(blue), minDist(minDist), maxDist(maxDist) { }
+    virtual ~CFogDialog() { }
+
+    float getRed() noexcept { return red; }
+    float getGreen() noexcept { return green; }
+    float getBlue() noexcept { return blue; }
+    float getMinDistance() noexcept { return minDist; }
+    float getMaxDistance() noexcept { return maxDist; }
+
+protected:
+    float red = 0, green = 0, blue = 0, minDist = 0, maxDist = 0;
+    CEdit redEdit, greenEdit, blueEdit, minDistEdit, maxDistEdit;
 
     virtual void DoDataExchange(CDataExchange* pDX);
 

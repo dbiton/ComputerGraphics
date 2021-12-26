@@ -1,25 +1,23 @@
+#include "stdafx.h"
+
 // CG_skel_w_MFC.cpp : Defines the entry point for the console application.
 //
-
-#include "stdafx.h"
-#include "CG_skel_w_MFC.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-// The one and only application object
-
+#include <string>
+#include "CG_skel_w_MFC.h"
 #include "GL/glew.h"
 #include "GL/freeglut.h"
 #include "GL/freeglut_ext.h"
-#include "vec.h"
-#include "mat.h"
 #include "InitShader.h"
-#include "Scene.h"
-#include "Renderer.h"
 #include "InputDialog.h"
-#include <string>
+#include "mat.h"
+#include "Renderer.h"
+#include "Scene.h"
+#include "vec.h"
 
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
@@ -38,7 +36,7 @@ enum {
 
 enum {
     NEW_CAMERA_DUPLICATE,
-    NEW_CAMERA_PARAMS
+    NEW_CAMERA_AT_POS
 };
 
 enum {
@@ -496,21 +494,33 @@ void camerasMenu(int id) {
 }
 
 void newCameraMenu(int id) {
+    if (scene->activeModel == -1) {
+        message(_T("A model must be present before adding a camera."));
+        return;
+    }
     switch (id) {
     case NEW_CAMERA_DUPLICATE: {
-        if (scene->activeModel != -1) {
-            const int camera_num = scene->AddCamera(*scene->getActiveCamera());
-            char s[50];
-            sprintf(s, "(%d) Camera", camera_num);
-            glutAddMenuEntry(s, camera_num);
-        }
-        else message(_T("A model must be present before adding a camera."));
+        scene->AddCamera(*scene->getActiveCamera());
     } break;
-    case NEW_CAMERA_PARAMS: {
-        // TODO NewCameraDialog
+    case NEW_CAMERA_AT_POS: {
+        vec3 newPos;
+        Camera* newCamera;
+        if (scene->activeCamera != -1) {
+            newCamera = scene->getActiveCamera();
+            newPos = getPosition(newCamera->getTransform());
+        }
+        else
+            newCamera = Camera::DefaultCamera(scene->getActiveModel()->getBoundingBoxMin(), scene->getActiveModel()->getBoundingBoxMax());
+        
+        CXyzDialog dialog(_T("New Camera Position"), newPos.x, newPos.y, newPos.z);
+        dialog.setText("X:", "Y:", "Z:");
+        if (dialog.DoModal() != IDOK) return;
+        setPosition(newCamera->self, dialog.GetXYZ());
+        scene->AddCamera(*newCamera);
     } break;
     default: message(_T("Unimplemented newCameraMenu option!")); // shouldn't happen!
     }
+    display();
 }
 
 void shadingMenu(int id) {
@@ -554,7 +564,7 @@ Light* getLight(int type, Light* defaults = NULL) {
         }
         return new ParallelLight(Color(dialog.getF11(), dialog.getF12(), dialog.getF13()), dialog.getF3(), normalize(direction));
     } break;
-    default: message(_T("Unimplemented newLightMenu option!")); return NULL; // shouldn't happen!
+    default: message(_T("Unknown light type!")); return NULL; // shouldn't happen!
     }
 }
 
@@ -686,7 +696,8 @@ void advancedMenu(int id) {
 void supersamplingMenu(int id) {
     switch (id) {
     case ADVANCED_ENABLE: {
-        // TODO SupersamplingDialog
+        CSingleFloatDialog dialog(_T("Supersampling factor"), renderer->getSupersamplingFactor(), true);
+        if (dialog.DoModal() == IDOK) renderer->setSupersampling(true, dialog.getValue());
     } break;
     case ADVANCED_DISABLE: renderer->setSupersampling(false);
     default: message(_T("Unimplemented supersamplingMenu option!")); // shouldn't happen!
@@ -696,7 +707,11 @@ void supersamplingMenu(int id) {
 void fogMenu(int id) {
     switch (id) {
     case ADVANCED_ENABLE: {
-        // TODO FogDialog
+        CFogDialog dialog(_T("Bloom Parameters"), renderer->getFogColor().x, renderer->getFogColor().y, renderer->getFogColor().z,
+            renderer->getFogMinDistance(), renderer->getFogMaxDistance());
+        if (dialog.DoModal() == IDOK)
+            renderer->setFog(true, Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()),
+                dialog.getMinDistance(), dialog.getMaxDistance());
     } break;
     case ADVANCED_DISABLE: renderer->setFog(false);
     default: message(_T("Unimplemented fogMenu option!")); // shouldn't happen!
@@ -706,7 +721,8 @@ void fogMenu(int id) {
 void bloomMenu(int id) {
     switch (id) {
     case ADVANCED_ENABLE: {
-        // TODO BloomDialog
+        CBloomDialog dialog(_T("Bloom Parameters"), renderer->getThreshBloom(), renderer->getSpreadBloom());
+        if (dialog.DoModal() == IDOK) renderer->setBloom(true, dialog.getThresh(), dialog.getSpread());
     } break;
     case ADVANCED_DISABLE: renderer->setBloom(false);
     default: message(_T("Unimplemented bloomMenu option!")); // shouldn't happen!
@@ -772,7 +788,7 @@ void makeCamerasSubMenu() {
     glutSetMenu(menuCameras);
     /**/glutAddSubMenu("New...", menuNewCamera); glutSetMenu(menuNewCamera);
     /*    */glutAddMenuEntry("Duplicate...", NEW_CAMERA_DUPLICATE);
-    /*    */glutAddMenuEntry("With parameters...", NEW_CAMERA_PARAMS);
+    /*    */glutAddMenuEntry("At position...", NEW_CAMERA_AT_POS);
     /**/glutSetMenu(menuCameras);
     /**/glutAddSubMenu("Set Shading", menuShading); glutSetMenu(menuShading);
     /*    */glutAddMenuEntry("None", SHADE_NONE);

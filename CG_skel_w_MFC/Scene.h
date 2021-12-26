@@ -1,13 +1,10 @@
 #pragma once
 
-#include "gl/glew.h"
-#include <vector>
 #include <string>
+#include <vector>
+#include "GL/glew.h"
 #include "MeshModel.h"
 #include "Renderer.h"
-
-class MeshModel;
-class Renderer;
 
 enum {
 	LIGHT_AMBIENT,
@@ -97,6 +94,16 @@ public:
 	const vec4& getLookingAt() const noexcept { return lookingAt; }
 	const vec4& getUpDirection() const noexcept { return upDirection; }
 	void getPerspectiveParameters(float& fovy, float& aspect);
+
+	static Camera* DefaultCamera(vec3 boxMin, vec3 boxMax) {
+		Camera* res = new Camera();
+		res->Perspective(90, 1, 1, 8);
+		mat4 transform = res->getTransform();
+		setPosition(transform, vec3(0, 0, boxMin.z - 2));
+		res->self = transform;
+		res->shading = SHADE_PHONG;
+		return res;
+	}
 };
 
 class Scene {

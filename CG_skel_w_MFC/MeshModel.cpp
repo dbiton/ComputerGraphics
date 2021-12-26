@@ -1,13 +1,14 @@
-#include "StdAfx.h"
-#include "MeshModel.h"
-#include "PrimMeshModel.h"
-#include "vec.h"
-#include "mat.h"
+#include "stdafx.h"
+
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <limits>
+#include "mat.h"
+#include "MeshModel.h"
+#include "PrimMeshModel.h"
+#include "vec.h"
 
 using namespace std;
 

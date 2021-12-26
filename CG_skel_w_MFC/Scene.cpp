@@ -1,10 +1,11 @@
 #include "stdafx.h"
-#include "Scene.h"
-#include "MeshModel.h"
-#include "PrimMeshModel.h"
+
 #include <string>
 #include <cmath>
 #include <cassert>
+#include "MeshModel.h"
+#include "PrimMeshModel.h"
+#include "Scene.h"
 
 using namespace std;
 
@@ -12,14 +13,8 @@ void Scene::AddModel(MeshModel* model) {
     models.push_back(model);
     activeModel = models.size() - 1;
     if (activeCamera == -1) { // happens if this is the first model we're loading. so we set up a default scene for it
-        cameras.push_back(new Camera());
+        cameras.push_back(Camera::DefaultCamera(model->getBoundingBoxMin(), model->getBoundingBoxMax()));
         activeCamera = 0;
-        Camera* activeCamera = getActiveCamera();
-        activeCamera->Perspective(90, 1, 1, 8);
-        mat4 transform = activeCamera ->getTransform();
-        setPosition(transform, vec3(0, 0, getActiveModel()->getBoundingBoxMin().z - 2));
-        activeCamera->self = transform;
-        activeCamera->shading = SHADE_PHONG;
 
         lights.push_back(new AmbientLight(Color(1), 0.5));
         lights.push_back(new PointLight(Color(1), 2, 1.1 * model->getBoundingBoxMax()));

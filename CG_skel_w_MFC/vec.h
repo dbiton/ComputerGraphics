@@ -9,8 +9,8 @@
 //  vec2.h - 2D vector
 //
 #pragma once
-#include <iostream>
 #include <cmath>
+#include <iostream>
 #include "GL/glew.h"
 #define M_PI 3.14159265358979323846264338327
 struct vec2 {

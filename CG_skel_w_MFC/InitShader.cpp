@@ -1,9 +1,10 @@
 #include "stdafx.h"
+
+#include <iostream>
 #include "GL/glew.h"
 #include "GL/freeglut.h"
 #include "GL/freeglut_ext.h"
 #include "InitShader.h"
-#include <iostream>
 // Create a NULL-terminated string by reading the provided file
 static char*
 readShaderSource(const char* shaderFile)

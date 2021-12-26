@@ -1,19 +1,19 @@
 #pragma once
 #include <vector>
-#include "PrimTypes.h"
+#include "GL/glew.h"
+#include "mat.h"
 #include "Material.h"
 #include "MeshModel.h"
-#include "CG_skel_w_MFC.h"
+#include "PrimTypes.h"
+#include "Resource.h"
 #include "vec.h"
-#include "mat.h"
-#include "GL/glew.h"
 
 // ObjectCoord stored in ModelMesh and does not get used
 
 class Light;
 class MeshModel;
 
-enum {
+enum ShadeType {
 	SHADE_NONE,
 	SHADE_FLAT,
 	SHADE_GOURAUD,
@@ -28,20 +28,20 @@ class Renderer
 	float m_firstWidth, m_firstHeight;
 
 	bool m_isSuperSample = false;
-	int m_factorSuperSample;
+	int m_factorSuperSample = 3;
 	float* m_outBufferSuperSample; // 3*width*height
 	float* m_zbufferSuperSample; // width*height
 
 	bool m_isFog = false;
-	Color m_fogColor;
-	float m_fogMaxDistance;
-	float m_fogMinDistance;
+	Color m_fogColor = Color();
+	float m_fogMaxDistance = 0;
+	float m_fogMinDistance = 0;
 
 	bool m_isBloom = false;
 	float* m_bloomBuffer;
 	float* m_weightsBloom;
-	float m_threshBloom;
-	int m_spreadBloom;
+	float m_threshBloom = 1;
+	int m_spreadBloom = 0;
 
 	GLuint gScreenTex;
 	GLuint gScreenVtc;
@@ -75,14 +75,20 @@ public:
 	void ClearDepthBuffer();
 	void SetDemoBuffer();
 	void CreateBuffers(int width, int height, bool first = false);
-	float GetHeightMultiplier() { return m_height / m_firstHeight; }
-	float GetWidthMultiplier() { return m_width / m_firstWidth; }
+	float GetHeightMultiplier() noexcept { return m_height / m_firstHeight; }
+	float GetWidthMultiplier() noexcept { return m_width / m_firstWidth; }
 
 	void setLights(const std::vector<Light*> _lights);
 
 	void setSupersampling(bool isSuperSample, int factorSuperSample = 3);
-	void setBloom(bool isBloom, float threshBloom = 1.f, int spreadBloom = 0);
 	void setFog(bool isFog, Color fogColor = vec3(), float fogMinDistance = 0, float fogMaxDistance = 0);
+	void setBloom(bool isBloom, float threshBloom = 1.f, int spreadBloom = 0);
+	int getSupersamplingFactor() noexcept { return m_factorSuperSample; }
+	Color getFogColor() noexcept { return m_fogColor; }
+	float getFogMaxDistance() noexcept { return m_fogMaxDistance; }
+	float getFogMinDistance() noexcept { return m_fogMinDistance; }
+	float getThreshBloom() noexcept { return m_threshBloom; }
+	int getSpreadBloom() noexcept { return m_spreadBloom; }
 
 	void applyEffects();
 private:

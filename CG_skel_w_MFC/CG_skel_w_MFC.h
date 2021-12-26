@@ -1,6 +1,6 @@
 #pragma once
 
-#include "resource.h"
+#include "Resource.h"
 
 void display(void);
 void reshape(int width, int height);

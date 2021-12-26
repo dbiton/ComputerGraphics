@@ -1,5 +1,5 @@
-
 #include "stdafx.h"
+
 #include "CG_skel_w_MFC.h"
 #include "InputDialog.h"
 
@@ -383,7 +383,8 @@ void CPrespectiveProjectionDialog::OnPaint()
 void CSingleFloatDialog::DoDataExchange(CDataExchange* pDX)
 {
     CInputDialog::DoDataExchange(pDX);
-    DDX_Text(pDX, IDC_CMD_EDIT, value);
+    if (isInt) DDX_Text(pDX, IDC_CMD_EDIT, iValue);
+    else DDX_Text(pDX, IDC_CMD_EDIT, fValue);
 }
 
 // CSingleFloatDialog message handlers
@@ -714,4 +715,122 @@ void CFloatsDialog_2x3plus1::OnPaint()
     dc.DrawText(CString(f3Name.c_str()), -1, &f3Rect, DT_SINGLELINE);
 
     f11Edit.SetFocus();
+}
+
+// -------------------------
+//    Class CBloomDialog
+// -------------------------
+
+enum {
+    THRESH_EDIT = 210,
+    SPREAD_EDIT,
+};
+
+void CBloomDialog::DoDataExchange(CDataExchange* pDX)
+{
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, THRESH_EDIT, thresh);
+    DDX_Text(pDX, SPREAD_EDIT, spread);
+}
+
+// CBloomDialog message handlers
+BEGIN_MESSAGE_MAP(CBloomDialog, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CBloomDialog::OnCreate(LPCREATESTRUCT lpcs)
+{
+    threshEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 10, 200, 30), this, THRESH_EDIT);
+
+    spreadEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(265, 10, 400, 30), this, SPREAD_EDIT);
+
+    return 0;
+}
+
+void CBloomDialog::OnPaint()
+{
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    CRect threshRect(10, 10, 200, 30);
+    dc.DrawText(CString("Thresh:"), -1, &threshRect, DT_SINGLELINE);
+
+    CRect spreadRect(220, 10, 400, 30);
+    dc.DrawText(CString("Spread:"), -1, &spreadRect, DT_SINGLELINE);
+
+    threshEdit.SetFocus();
+}
+
+// -------------------------
+//    Class CFogDialog
+// -------------------------
+
+enum {
+    FOG_RED_EDIT = 210,
+    FOG_GREEN_EDIT,
+    FOG_BLUE_EDIT,
+    FOG_MIN_EDIT,
+    FOG_MAX_EDIT
+};
+
+void CFogDialog::DoDataExchange(CDataExchange* pDX)
+{
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, FOG_RED_EDIT, red);
+    DDX_Text(pDX, FOG_GREEN_EDIT, green);
+    DDX_Text(pDX, FOG_BLUE_EDIT, blue);
+    DDX_Text(pDX, FOG_MIN_EDIT, minDist);
+    DDX_Text(pDX, FOG_MAX_EDIT, maxDist);
+}
+
+// CFogDialog message handlers
+BEGIN_MESSAGE_MAP(CFogDialog, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CFogDialog::OnCreate(LPCREATESTRUCT lpcs)
+{
+    redEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 10, 200, 30), this, FOG_RED_EDIT);
+
+    greenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 50, 200, 70), this, FOG_GREEN_EDIT);
+
+    blueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(65, 90, 200, 110), this, FOG_BLUE_EDIT);
+
+    minDistEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(350, 30, 425, 50), this, FOG_MIN_EDIT);
+
+    maxDistEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(350, 70, 425, 90), this, FOG_MAX_EDIT);
+
+    return 0;
+}
+
+void CFogDialog::OnPaint()
+{
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    CRect redRect(10, 10, 200, 30);
+    dc.DrawText(CString("Red:"), -1, &redRect, DT_SINGLELINE);
+
+    CRect greenRect(10, 50, 200, 70);
+    dc.DrawText(CString("Green:"), -1, &greenRect, DT_SINGLELINE);
+
+    CRect blueRec(10, 90, 200, 110);
+    dc.DrawText(CString("Blue:"), -1, &blueRec, DT_SINGLELINE);
+
+    CRect minRect(220, 30, 400, 50);
+    dc.DrawText(CString("Minimum Distance:"), -1, &minRect, DT_SINGLELINE);
+
+    CRect maxRect(220, 70, 400, 90);
+    dc.DrawText(CString("Maximum Distance:"), -1, &maxRect, DT_SINGLELINE);
+
+    redEdit.SetFocus();
 }
