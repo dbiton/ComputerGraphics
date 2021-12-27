@@ -363,7 +363,7 @@ void mainMenu(int id)
         focus();
         break;
     case MAIN_ABOUT:
-        message(_T("Computer Graphics Part 1 - Wireframes\nby Itay Beit Halachmi and Dvir David Biton"));
+        message(_T("Computer Graphics Part 2 - Simple Renderer\nby Itay Beit Halachmi and Dvir David Biton"));
         break;
     case MAIN_HELP:
         showHelp();
@@ -525,7 +525,10 @@ void newCameraMenu(int id) {
 }
 
 void shadingMenu(int id) {
-    if (scene->activeCamera != -1) scene->getActiveCamera()->shading = id;
+    if (scene->activeCamera != -1) {
+        scene->getActiveCamera()->shading = id;
+        display();
+    }
 }
 
 Light* getLight(int type, Light* defaults = NULL) {
@@ -703,6 +706,7 @@ void supersamplingMenu(int id) {
     case ADVANCED_DISABLE: renderer->setSupersampling(false);
     default: message(_T("Unimplemented supersamplingMenu option!")); // shouldn't happen!
     }
+    display();
 }
 
 void fogMenu(int id) {
@@ -717,6 +721,7 @@ void fogMenu(int id) {
     case ADVANCED_DISABLE: renderer->setFog(false);
     default: message(_T("Unimplemented fogMenu option!")); // shouldn't happen!
     }
+    display();
 }
 
 void bloomMenu(int id) {
@@ -728,6 +733,7 @@ void bloomMenu(int id) {
     case ADVANCED_DISABLE: renderer->setBloom(false);
     default: message(_T("Unimplemented bloomMenu option!")); // shouldn't happen!
     }
+    display();
 }
 
 void makeModelsSubMenu() {
@@ -921,7 +927,7 @@ void initMenu()
     glutAddMenuEntry("Focus", MAIN_FOCUS);
     if (ALLOW_DEMO) glutAddMenuEntry("Demo", MAIN_DEMO);
     glutAddMenuEntry("About", MAIN_ABOUT);
-    glutAddMenuEntry("Help", MAIN_HELP);
+    //glutAddMenuEntry("Help", MAIN_HELP); // no way jose, this'd become way too big if i tried updating it
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 //----------------------------------------------------------------------------

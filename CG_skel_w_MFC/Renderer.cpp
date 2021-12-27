@@ -136,20 +136,6 @@ void Renderer::DrawAxes() {
     DrawLine(zminus, zplus, Color(0, 0, 1));
 }
 
-mat4& InverseTransform(const mat4& transform) {
-    // step 1: isolate translation transform;
-    const mat4 translate = Translate(-transform[0][3], -transform[1][3], -transform[2][3]);
-
-    // step 2: find (uniform) scaling factor of the remaining 3x3
-    const mat4 scale = Scale(1.0 / std::cbrt(Determinant(transform)));
-
-    // step 3: transpose remaining matrix
-    const mat4 rotation = transpose(scale * translate * transform);
-
-    return rotation * scale * translate; // final product
-}
-
-
 void Renderer::DrawCamera(const mat4& transform) {
     const mat4 object2clip = projection * transform_camera_inverse * transform;
 
@@ -317,13 +303,17 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
             const float depth = a0 * v[0].z + a1 * v[1].z + a2 * v[2].z;
 
             bool depth_updated = false;
-            if (m_isSuperSample && depth > m_zbufferSuperSample[x + y * width]) {
-                m_zbufferSuperSample[x + y * width] = depth;
-                depth_updated = true;
+            if (m_isSuperSample) {
+                if (depth > m_zbufferSuperSample[x + y * width]) {
+                    m_zbufferSuperSample[x + y * width] = depth;
+                    depth_updated = true;
+                }
             }
-            else if (depth > m_zbuffer[x + y * width]) {
-                m_zbuffer[x + y * width] = depth;
-                depth_updated = true;
+            else if (!m_isSuperSample) {
+                if (depth > m_zbuffer[x + y * width]) {
+                    m_zbuffer[x + y * width] = depth;
+                    depth_updated = true;
+                }
             }
 
             if (depth_updated) {
@@ -343,7 +333,7 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
                     exit(1);
                 }
                 if (m_isFog) {
-                    float fogFactor = (m_fogMaxDistance-depth) / (m_fogMaxDistance - m_fogMinDistance);
+                    float fogFactor = (m_fogMaxDistance - depth) / (m_fogMaxDistance - m_fogMinDistance);
                     fogFactor = max(0.f, min(1.f, fogFactor)); // clamp
                     color = fogFactor * m_fogColor + (1 - fogFactor) * color;
                 }
@@ -545,8 +535,8 @@ void Renderer::setSupersampling(bool isSupersampling, int factorSuperSample) {
     m_factorSuperSample = factorSuperSample;
     if (m_outBufferSuperSample) delete m_outBufferSuperSample;
     if (m_zbufferSuperSample) delete m_zbufferSuperSample;
-    m_outBufferSuperSample = new float[m_factorSuperSample * 3 * m_width * m_height];
-    m_zbufferSuperSample = new float[m_factorSuperSample * m_width * m_height];
+    m_outBufferSuperSample = new float[m_factorSuperSample * m_factorSuperSample * 3 * m_width * m_height];
+    m_zbufferSuperSample = new float[m_factorSuperSample * m_factorSuperSample * m_width * m_height];
     ClearColorBuffer();
     ClearDepthBuffer();
 }
@@ -559,7 +549,7 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
     m_weightsBloom = new float[spreadBloom * 2 + 1];
     float sum = 0;
     for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
-        float d = i - (m_spreadBloom + 1);
+        float d = i - (m_spreadBloom + 1); // casting to float because we don't want integer division
         m_weightsBloom[i] = exp(d * d / (2 * m_spreadBloom * m_spreadBloom));
         sum += m_weightsBloom[i];
     }
@@ -614,7 +604,6 @@ void Renderer::applyEffects() {
                 int j = y / m_factorSuperSample;
                 for (int c = 0; c < 3; c++) { // TODO is this right? maybe it should be += instead of =
                     m_outBuffer[INDEX(m_width, i, j, c)] = m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, c)] * factorPixel;
-                    printf("%d\n", m_outBuffer[INDEX(m_width, i, j, c)]);
                 }
             }
         }
