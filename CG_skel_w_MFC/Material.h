@@ -28,7 +28,7 @@ public:
     }
 
     static Material* DefaultMaterial() {
-        return new Material(Color(0.5), Color(0), 0.5, 0.5, 0.5);
+        return new Material(Color(1), Color(0), 1, 0.5, 0.5);
     }
 };
 

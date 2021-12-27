@@ -24,8 +24,7 @@ void Scene::AddModel(MeshModel* model) {
     draw();
 }
 
-void Scene::loadOBJModel(string fileName, string modelName)
-{
+void Scene::loadOBJModel(string fileName, string modelName) {
     AddModel(new MeshModel(fileName, modelName));
 }
 
@@ -43,8 +42,7 @@ mat4 Scene::Projection() {
     }
 }
 
-void Scene::draw()
-{
+void Scene::draw() {
     renderer->SetCameraTransform(getActiveCamera()->getTransform());
     renderer->SetProjection(Projection());
 
@@ -71,8 +69,7 @@ void Scene::draw()
     renderer->SwapBuffers();
 }
 
-void Scene::drawDemo()
-{
+void Scene::drawDemo() {
     renderer->SetDemoBuffer();
     renderer->SwapBuffers();
 }
@@ -113,8 +110,7 @@ void Scene::focus() {
     getActiveCamera()->LookAt(getPosition(getActiveCamera()->getTransform()), getPosition(getActiveModel()->getTransform()), getActiveCamera()->getUpDirection());
 }
 
-void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up)
-{ // TODO for some reason this math is not idempotent...
+void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up) { // TODO for some reason this math is not idempotent...
     const vec4 n = normalize(eye - at),
                u = normalize(cross(up, n)),
                v = normalize(cross(n, u)),
@@ -136,15 +132,13 @@ void Camera::UpdateLastParameters(const float left, const float right, const flo
     lastType = type;
 }
 
-mat4 Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember)
-{
+mat4 Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember) {
     if (remember) UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_ORTHO);
     return Scale(2.0 / (right - left), 2.0 / (top - bottom), 2.0 / (zNear - zFar))
            * Translate(-0.5 * (right + left), -0.5 * (top + bottom), 0.5 * (zNear + zFar));
 }
 
-mat4 Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember)
-{
+mat4 Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember) {
     if (remember) UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_FRUSTUM);
     mat4 H = mat4();
     H[2][0] = (left + right) / (2.0 * zNear);
@@ -161,8 +155,7 @@ mat4 Camera::Frustum(const float left, const float right, const float bottom, co
     return N * S * H;
 }
 
-mat4 Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar, bool remember)
-{
+mat4 Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar, bool remember) {
     float fovy_rad = fovy * 180 / M_PI;
     float left, right, bottom, top;
     top = zNear * std::tan(fovy_rad / 2);
@@ -179,23 +172,19 @@ void Camera::getPerspectiveParameters(float& fovy, float& aspect) {
     aspect = (lastTop - lastBottom) / (lastRight - lastLeft);
 }
 
-void Light::setColor(Color _color)
-{
+void Light::setColor(Color _color) {
     color = _color;
 }
 
-void Light::setBrightness(float _brightness)
-{
+void Light::setBrightness(float _brightness) {
     brightness = _brightness;
 }
 
-Color Light::getColor() const
-{
+Color Light::getColor() const {
     return color;
 }
 
-float Light::getBrightness() const
-{
+float Light::getBrightness() const {
     return brightness;
 }
 
@@ -212,30 +201,25 @@ std::string Light::getNameOfType() const {
     }
 }
 
-void PointLight::setPosition(vec3 _position)
-{
+void PointLight::setPosition(vec3 _position) {
     position = _position;
 }
 
-vec3 PointLight::dirToSource(const vec3& p, const mat4& object2clip) const
-{
-    return normalize(applyTransformToPoint(object2clip, position) - p);
+vec3 PointLight::dirToSource(const vec3& p, const mat4& object2clip) const {
+    return normalize(applyTransformToPoint(object2clip, position - p));
 }
 
-void ParallelLight::setDirection(vec3 _direction)
-{
+void ParallelLight::setDirection(vec3 _direction) {
     // check that _direction is normalized (or close enough to it)
     assert(std::abs(length(_direction) - 1) < FLT_EPSILON);
     direction = _direction;
 }
 
-vec3 ParallelLight::dirToSource(const vec3& p, const mat4& object2clip) const
-{
+vec3 ParallelLight::dirToSource(const vec3& p, const mat4& object2clip) const {
     return applyTransformToNormal(object2clip, direction);
 }
 
-vec3 AmbientLight::dirToSource(const vec3& p, const mat4& object2clip) const
-{
+vec3 AmbientLight::dirToSource(const vec3& p, const mat4& object2clip) const {
     // ambient light is by definition directionless, so...
     return vec3();
 }

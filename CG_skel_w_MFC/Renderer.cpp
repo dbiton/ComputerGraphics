@@ -10,13 +10,12 @@
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
-Renderer::Renderer()
-{
+Renderer::Renderer() {
     InitOpenGLRendering();
     CreateBuffers(512, 512, true);
 }
-Renderer::Renderer(int width, int height)
-{
+
+Renderer::Renderer(int width, int height) {
     InitOpenGLRendering();
     CreateBuffers(width, height, true);
 }
@@ -54,7 +53,7 @@ void Renderer::DrawTriangles(MeshModel* model, bool isActiveModel, int shading) 
             v[j] = (*model->getVertices())[i + j].position;
             vn[j] = (*model->getVertices())[i + j].normal;
             v_clip[j] = applyTransformToPoint(object2clip, v[j]);
-            vn_clip[j] = applyTransformToPoint(object2clip, vn[j]);
+            vn_clip[j] = normalize(applyTransformToPoint(object2clip, vn[j])); // TODO the normalize here might be nothing more than a bandaid...
         }
 
         GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
@@ -186,23 +185,19 @@ void Renderer::DrawLight(Light* light, bool isActiveLight) {
     }
 }
 
-void Renderer::SetCameraTransform(const mat4& cTransform)
-{
+void Renderer::SetCameraTransform(const mat4& cTransform) {
     transform_camera_inverse = InverseTransform(cTransform);
 }
 
-void Renderer::SetProjection(const mat4& _projection)
-{
+void Renderer::SetProjection(const mat4& _projection) {
     projection = _projection;
 }
 
-void Renderer::SetObjectTransform(const mat4& oTransform)
-{
+void Renderer::SetObjectTransform(const mat4& oTransform) {
     transform_object = oTransform;
 }
 
-void Renderer::CreateBuffers(int width, int height, bool first)
-{
+void Renderer::CreateBuffers(int width, int height, bool first) {
     m_width = width;
     m_height = height;
     if (first) {
@@ -224,26 +219,21 @@ void Renderer::CreateBuffers(int width, int height, bool first)
     m_bloomBuffer = new float[3 * m_width * m_height];
 }
 
-vec2 Renderer::clipToScreen(const vec4& clip_pos)
-{
+vec2 Renderer::clipToScreen(const vec4& clip_pos) {
     return clipToScreen(vec3(clip_pos.x / clip_pos.w, clip_pos.y / clip_pos.w, clip_pos.z / clip_pos.w));
 }
 
-
-void Renderer::setLights(const std::vector<Light*> _lights)
-{
+void Renderer::setLights(const std::vector<Light*> _lights) {
     lights = _lights;
 }
 
-vec2 Renderer::clipToScreen(const vec3& clip_pos)
-{
+vec2 Renderer::clipToScreen(const vec3& clip_pos) {
     return vec2((clip_pos.x + 1) / 2 * m_width, (clip_pos.y + 1) / 2 * m_height);
 }
 
 void Renderer::CreateLocalBuffer() { }
 
-void Renderer::SetDemoBuffer()
-{
+void Renderer::SetDemoBuffer() {
     const int halfWidth = m_width / 2,
               halfHeight = m_height / 2;
     DrawLine(vec2(halfWidth, 0), vec2(halfWidth, m_height), Color(1, 0, 0));
@@ -252,8 +242,7 @@ void Renderer::SetDemoBuffer()
     if (TEST_RAYS) {
         constexpr int rays = 2000;
         constexpr float fraction = (2.0 / rays) * M_PI;
-        for (int i = 0; i <= rays; i++)
-        {
+        for (int i = 0; i <= rays; i++) {
             DrawLine(vec2(halfWidth, halfHeight), vec2(halfWidth + 200 * cos(fraction * i), halfHeight + 200 * sin(fraction * i)), Color(1, 1, 1));
         }
     }
@@ -267,8 +256,7 @@ bool bad(float f) noexcept {
     return !_finite(f) || std::abs(f) > EPSILON_INVERSE;
 }
 
-float Area(vec2 p0, vec2 p1, vec2 p2) noexcept
-{
+float Area(vec2 p0, vec2 p1, vec2 p2) noexcept {
     const vec2 p1_p0 = p1 - p0,
                p2_p0 = p2 - p0;
     return 0.5f * std::abs(p1_p0.x * p2_p0.y - p2_p0.x * p1_p0.y);
@@ -370,8 +358,7 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
     }
 }
 
-void Renderer::DrawLine(vec2 p0, vec2 p1, const Color& c)
-{
+void Renderer::DrawLine(vec2 p0, vec2 p1, const Color& c) {
     if (bad(p0.x) || bad(p0.y) || bad(p1.x) || bad(p1.y)) return; // do nothing!
 
     if (m_isSuperSample) {
@@ -426,26 +413,23 @@ void Renderer::DrawLine(vec2 p0, vec2 p1, const Color& c)
     }
 }
 
-void Renderer::DrawPixel(int x, int y, const Color& c)
-{
+void Renderer::DrawPixel(int x, int y, const Color& c) {
     if (x < 0 || y < 0 || x >= m_width || y >= m_height) return;
     m_outBuffer[INDEX(m_width, x, y, 0)] = c[0];
     m_outBuffer[INDEX(m_width, x, y, 1)] = c[1];
     m_outBuffer[INDEX(m_width, x, y, 2)] = c[2];
 }
 
-void Renderer::DrawPixelSuperSampled(int x, int y, const Color& c)
-{
+void Renderer::DrawPixelSuperSampled(int x, int y, const Color& c) {
     if (x < 0 || y < 0 || x >= m_width * m_factorSuperSample || y >= m_height * m_factorSuperSample) return;
     m_outBufferSuperSample[INDEX(m_width, x, y, 0)] = c[0];
     m_outBufferSuperSample[INDEX(m_width, x, y, 1)] = c[1];
     m_outBufferSuperSample[INDEX(m_width, x, y, 2)] = c[2];
 }
 
-Color Renderer::CalcColor(const Material& material, const vec3& surface_position, const vec3& surface_normal)
-{
+Color Renderer::CalcColor(const Material& material, const vec3& surface_position, const vec3& surface_normal) {
     Color color = material.emissive;
-    for (const auto& light : lights) {
+    for (const auto& light : lights) { // TODO investigate sharp changes in color, dolphin.obj has this fairly reliably
         const vec3 l = light->dirToSource(surface_position, object2clip);
 
         // this is an ambient light source
@@ -456,7 +440,7 @@ Color Renderer::CalcColor(const Material& material, const vec3& surface_position
         }
         else {
             const vec3 v = normalize(getPosition(transform_camera_inverse) - surface_position);
-            const vec3 r = l - 2 * cross(dot(l, surface_normal), surface_normal);
+            const vec3 r = l - 2 * dot(l, surface_normal) * surface_normal;
 
             // diffuse
             const vec3 dlc = material.roughness * dot(l, surface_normal) * light->getBrightness() * light->getColor();
@@ -476,8 +460,7 @@ Color Renderer::CalcColor(const Material& material, const vec3& surface_position
 /////////////////////////////////////////////////////
 //OpenGL stuff. Don't touch.
 
-void Renderer::InitOpenGLRendering()
-{
+void Renderer::InitOpenGLRendering() {
     int a = glGetError();
     a = glGetError();
     glGenTextures(1, &gScreenTex);
@@ -522,17 +505,14 @@ void Renderer::InitOpenGLRendering()
     a = glGetError();
 }
 
-void Renderer::CreateOpenGLBuffer()
-{
+void Renderer::CreateOpenGLBuffer() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gScreenTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, NULL);
     glViewport(0, 0, m_width, m_height);
 }
 
-void Renderer::SwapBuffers()
-{
-
+void Renderer::SwapBuffers() {
     int a = glGetError();
     glActiveTexture(GL_TEXTURE0);
     a = glGetError();
@@ -550,14 +530,12 @@ void Renderer::SwapBuffers()
     a = glGetError();
 }
 
-void Renderer::ClearColorBuffer()
-{
+void Renderer::ClearColorBuffer() {
     if (m_outBuffer) memset(m_outBuffer, 0, sizeof(float) * 3 * m_width * m_height);
     if (m_outBufferSuperSample) memset(m_outBufferSuperSample, 0, sizeof(float) * m_factorSuperSample * 3 * m_width * m_height);
 }
 
-void Renderer::ClearDepthBuffer()
-{
+void Renderer::ClearDepthBuffer() {
     if (m_zbuffer) memset(m_zbuffer, FLT_MAX, sizeof(float) * m_width * m_height);
     if (m_zbufferSuperSample) memset(m_zbufferSuperSample, 0, sizeof(float) * m_factorSuperSample * m_width * m_height);
 }

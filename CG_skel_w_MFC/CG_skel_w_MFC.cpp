@@ -506,7 +506,7 @@ void newCameraMenu(int id) {
         vec3 newPos;
         Camera* newCamera;
         if (scene->activeCamera != -1) {
-            newCamera = scene->getActiveCamera();
+            newCamera = new Camera(*scene->getActiveCamera());
             newPos = getPosition(newCamera->getTransform());
         }
         else
@@ -520,6 +520,7 @@ void newCameraMenu(int id) {
     } break;
     default: message(_T("Unimplemented newCameraMenu option!")); // shouldn't happen!
     }
+    makeCamerasSubMenu();
     display();
 }
 
