@@ -206,6 +206,7 @@ void Renderer::CreateBuffers(int width, int height, bool first)
     m_width = width;
     m_height = height;
     if (first) {
+        m_weightsBloom = nullptr;
         m_outBufferSuperSample = nullptr;
         m_bloomBuffer = nullptr;
         m_outBuffer = nullptr;
@@ -220,7 +221,7 @@ void Renderer::CreateBuffers(int width, int height, bool first)
     if (m_zbuffer) delete m_zbuffer;
     m_zbuffer = new float[m_width * m_height];
     if (m_bloomBuffer) delete m_bloomBuffer;
-    m_bloomBuffer = new float[m_width * m_height];
+    m_bloomBuffer = new float[3 * m_width * m_height];
 }
 
 vec2 Renderer::clipToScreen(const vec4& clip_pos)
@@ -354,7 +355,7 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
                     exit(1);
                 }
                 if (m_isFog) {
-                    float fogFactor = (m_fogMaxDistance - depth) / (m_fogMaxDistance - m_fogMinDistance);
+                    float fogFactor = (m_fogMaxDistance-depth) / (m_fogMaxDistance - m_fogMinDistance);
                     fogFactor = max(0.f, min(1.f, fogFactor)); // clamp
                     color = fogFactor * m_fogColor + (1 - fogFactor) * color;
                 }
@@ -580,7 +581,7 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
     m_weightsBloom = new float[spreadBloom * 2 + 1];
     float sum = 0;
     for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
-        int d = i - (m_spreadBloom + 1);
+        float d = i - (m_spreadBloom + 1);
         m_weightsBloom[i] = exp(d * d / (2 * m_spreadBloom * m_spreadBloom));
         sum += m_weightsBloom[i];
     }
@@ -635,6 +636,7 @@ void Renderer::applyEffects() {
                 int j = y / m_factorSuperSample;
                 for (int c = 0; c < 3; c++) { // TODO is this right? maybe it should be += instead of =
                     m_outBuffer[INDEX(m_width, i, j, c)] = m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, c)] * factorPixel;
+                    printf("%d\n", m_outBuffer[INDEX(m_width, i, j, c)]);
                 }
             }
         }
