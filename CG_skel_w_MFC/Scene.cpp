@@ -209,7 +209,7 @@ void PointLight::setPosition(vec3 _position) {
 }
 
 vec3 PointLight::dirToSource(const vec3& p, const mat4& object2clip) const {
-    return normalize(applyTransformToPoint(object2clip, position - p));
+    return normalize(applyTransformToPoint(object2clip, position) - p);
 }
 
 void ParallelLight::setDirection(vec3 _direction) {

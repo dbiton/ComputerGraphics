@@ -19,7 +19,7 @@ protected:
 	MeshModel() noexcept;
 
 	void fitBoundingBox();
-	void processRawVerts(const std::vector<vec3>& verts, const std::vector<Face>& faces);
+	void processRawVerts(const std::vector<vec3>& verts, const std::vector<vec3>& normals, const std::vector<Face>& faces);
 public:
 
 	Material* material = Material::DefaultMaterial();

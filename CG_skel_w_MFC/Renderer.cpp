@@ -31,13 +31,13 @@ void Renderer::DrawTriangles(MeshModel* model, bool isActiveModel, int shading) 
     Color color_face_normal(0, 1, 0);
     Color color_vert_normal(0, 0.5, 1);
     if (!isActiveModel) {
-        const float fade = 0.5;
+        constexpr float fade = 0.5;
         color_mesh *= fade;
         color_face_normal *= fade;
         color_vert_normal *= fade;
     }
-    GLfloat fn_len = 0.25;
-    GLfloat vn_len = 0.5;
+    constexpr GLfloat fn_len = 0.25,
+                      vn_len = 0.5;
 
     object2clip = projection * transform_camera_inverse * transform_object;
     for (int i = 0; i < model->getVertices()->size(); i += 3) {
@@ -45,24 +45,22 @@ void Renderer::DrawTriangles(MeshModel* model, bool isActiveModel, int shading) 
         vec3 vn[3];
         vec3 v_clip[3];
         vec3 vn_clip[3];
-        vec3 bb_max;
-        vec3 bb_min;
 
         // load vertices
         for (int j = 0; j < 3; j++) {
             v[j] = (*model->getVertices())[i + j].position;
             vn[j] = (*model->getVertices())[i + j].normal;
             v_clip[j] = applyTransformToPoint(object2clip, v[j]);
-            vn_clip[j] = normalize(applyTransformToPoint(object2clip, vn[j])); // TODO the normalize here might be nothing more than a bandaid...
+            vn_clip[j] = normalize(applyTransformToNormal(object2clip, vn[j])); // TODO the normalize here might be nothing more than a bandaid...
         }
 
-        GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
-        vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len;; // face normal
-        vec3 fm = (v[0] + v[1] + v[2]) / 3; // face mid
+        const GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
+        const vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len, // face normal
+                   fm = (v[0] + v[1] + v[2]) / 3; // face mid
 
         // draw color (shade)
         if (shading != SHADE_NONE) {
-            ShadeTriangle(v_clip, vn_clip, model->material->ComputeAt(v, model->getBoundingBoxMin(), model->getBoundingBoxMax()), shading);
+            ShadeTriangle(v, vn, model->material->ComputeAt(v, model->getBoundingBoxMin(), model->getBoundingBoxMax()), shading);
         }
 
         // draw wireframe mesh
@@ -249,14 +247,15 @@ float Area(vec2 p0, vec2 p1, vec2 p2) noexcept {
 }
 
 void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Material> mats, int shading) {
-    const vec3 fm = (v[0] + v[1] + v[2]) / 3;
-    const vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1]));
-    const vec3 camera_dir(0, 0, 1);
+    vec3 v_clip[3] = { applyTransformToPoint(object2clip, v[0]), applyTransformToPoint(object2clip, v[1]), applyTransformToPoint(object2clip, v[2]) };
+    const vec3 fm = (v_clip[0] + v_clip[1] + v_clip[2]) / 3,
+               fn = normalize(cross(v_clip[1] - v_clip[0], v_clip[2] - v_clip[1])),
+               camera_dir(0, 0, 1);
 
     // backface culling
     if (dot(fn, camera_dir) < 0) return;
 
-    vec2 v2d[3] = { clipToScreen(v[0]), clipToScreen(v[1]), clipToScreen(v[2]) };
+    vec2 v2d[3] = { clipToScreen(v_clip[0]), clipToScreen(v_clip[1]), clipToScreen(v_clip[2]) };
     int width = m_width;
     int height = m_height;
     if (m_isSuperSample) {
@@ -298,9 +297,9 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
                 a1 = Area(p, v2d[2], v2d[0]) / A,
                 a2 = Area(p, v2d[0], v2d[1]) / A;
 
-            if (std::abs(a0 + a1 + a2 - 1) > 16*FLT_EPSILON) continue; // If out of the triangle
+            if (std::abs(a0 + a1 + a2 - 1) > 16 * FLT_EPSILON) continue; // If out of the triangle
 
-            const float depth = a0 * v[0].z + a1 * v[1].z + a2 * v[2].z;
+            const float depth = a0 * v_clip[0].z + a1 * v_clip[1].z + a2 * v_clip[2].z;
 
             bool depth_updated = false;
             if (m_isSuperSample) {
@@ -431,6 +430,7 @@ Color Renderer::CalcColor(const Material& material, const vec3& surface_position
         else {
             const vec3 v = normalize(getPosition(transform_camera_inverse) - surface_position);
             const vec3 r = l - 2 * dot(l, surface_normal) * surface_normal;
+            // TODO figure out what to do when light isn't reflected, and instead passes through the surface as indicated by the normal
 
             // diffuse
             const vec3 dlc = material.roughness * dot(l, surface_normal) * light->getBrightness() * light->getColor();

@@ -64,7 +64,7 @@ MeshModel::~MeshModel() { }
 
 void MeshModel::loadFile(string fileName)
 {
-	std::vector<vec3> verts;
+	std::vector<vec3> verts, normals;
 	std::vector<Face> faces;
 
 	ifstream ifile(fileName.c_str());
@@ -82,21 +82,24 @@ void MeshModel::loadFile(string fileName)
 		issLine >> std::ws >> lineType;
 
 		// based on the type parse data
-		if (lineType == "v" || lineType == "vn" || lineType == "vt")
+		if (lineType == "v")
 			verts.push_back(vec3fFromStream(issLine));
+		else if (lineType == "vn")
+			normals.push_back(vec3fFromStream(issLine));
 		else if (lineType == "f")
 			faces.push_back(faceFromStream(issLine));
-		else if (lineType == "#" || lineType == "")
-		{
+		else if (lineType == "vt") {
+			// not processing vertex textures...
+		}
+		else if (lineType == "#" || lineType == "") {
 			// comment / empty line
 		}
-		else
-		{
+		else {
 			cout << "Found unknown line type \"" << lineType << "\"" << endl;
 		}
 	}
 
-	processRawVerts(verts, faces);
+	processRawVerts(verts, normals, faces);
 }
 
 void MeshModel::fitBoundingBox()
@@ -120,7 +123,7 @@ void MeshModel::Recenter() {
 	setPosition(self, -(bounding_box_min + bounding_box_max) / 2); // center it in its own axis system!
 }
 
-void MeshModel::processRawVerts(const std::vector<vec3>& verts, const std::vector<Face>& faces)
+void MeshModel::processRawVerts(const std::vector<vec3>& verts, const std::vector<vec3>& normals, const std::vector<Face>& faces)
 {
 	vertices.clear();
 	for (const auto& face : faces) {
@@ -130,9 +133,9 @@ void MeshModel::processRawVerts(const std::vector<vec3>& verts, const std::vecto
 		v1.position = verts[face.v[1] - 1];
 		v2.position = verts[face.v[2] - 1];
 
-		v0.normal = verts[face.vn[0] - 1];
-		v1.normal = verts[face.vn[1] - 1];
-		v2.normal = verts[face.vn[2] - 1];
+		v0.normal = normals[face.vn[0] - 1];
+		v1.normal = normals[face.vn[1] - 1];
+		v2.normal = normals[face.vn[2] - 1];
 
 		vertices.push_back(v0);
 		vertices.push_back(v1);

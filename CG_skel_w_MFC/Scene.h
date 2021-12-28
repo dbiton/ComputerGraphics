@@ -99,7 +99,7 @@ public:
 		Camera* res = new Camera();
 		res->Perspective(90, 1, 1, 8);
 		mat4 transform = res->getTransform();
-		setPosition(transform, boxMin + 1.1 * (boxMax - boxMin));
+		setPosition(transform, boxMin + 2 * (boxMax - boxMin));
 		res->self = transform;
 		res->shading = SHADE_PHONG;
 		return res;
