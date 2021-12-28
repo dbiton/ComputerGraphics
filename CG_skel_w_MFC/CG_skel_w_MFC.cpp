@@ -120,7 +120,6 @@ void display(void)
     renderer->ClearColorBuffer();
     renderer->ClearDepthBuffer();
     if (scene->activeCamera != -1) scene->draw();
-    renderer->applyEffects();
 }
 
 void reshape(int width, int height)

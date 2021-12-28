@@ -570,34 +570,38 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
 
 void Renderer::applyEffects() {
     if (m_isBloom) { // TODO what if bloom and supersampling?
+        // extract bright pixels
         memset(m_bloomBuffer, 0, sizeof(float) * 3 * m_width * m_height);
-        // horizontal pass
         for (int x = 0; x < m_width; x++) {
             for (int y = 0; y < m_height; y++) {
                 for (int c = 0; c < 3; c++) {
                     if (m_outBuffer[INDEX(m_width, x, y, c)] > m_threshBloom) {
-                        for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
-                            int x_curr = x + i - m_spreadBloom;
-                            if (x_curr > 0 && x_curr < m_width) {
-                                m_bloomBuffer[INDEX(m_width, x_curr, y, c)] = m_outBuffer[INDEX(m_width, x, y, c)] * m_weightsBloom[i];
-                            }
+                        m_bloomBuffer[INDEX(m_width, x, y, c)] = m_outBuffer[INDEX(m_width, x, y, c)];
+                    }
+                }
+            }
+        }
+        // horizontal pass
+        for (int x = 0; x < m_width; x++) {
+            for (int y = 0; y < m_height; y++) {
+                for (int c = 0; c < 3; c++) {
+                    for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
+                        int x_curr = x + i - m_spreadBloom;
+                        if (x_curr > 0 && x_curr < m_width) {
+                            m_bloomBuffer[INDEX(m_width, x, y, c)] = m_bloomBuffer[INDEX(m_width, x_curr, y, c)] * m_weightsBloom[i];
                         }
                     }
                 }
             }
         }
-        blendBloomBuffer();
-        memset(m_bloomBuffer, 0, sizeof(float) * 3 * m_width * m_height);
         // vertical pass
         for (int x = 0; x < m_width; x++) {
             for (int y = 0; y < m_height; y++) {
                 for (int c = 0; c < 3; c++) {
-                    if (m_outBuffer[INDEX(m_width, x, y, c)] > m_threshBloom) {
-                        for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
-                            int y_curr = y + i - m_spreadBloom;
-                            if (y_curr > 0 && y_curr < m_height) {
-                                m_bloomBuffer[INDEX(m_width, x, y_curr, c)] = m_outBuffer[INDEX(m_width, x, y, c)] * m_weightsBloom[i];
-                            }
+                    for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
+                        int y_curr = y + i - m_spreadBloom;
+                        if (y_curr > 0 && y_curr < m_height) {
+                            m_bloomBuffer[INDEX(m_width, x, y, c)] = m_bloomBuffer[INDEX(m_width, x, y_curr, c)] * m_weightsBloom[i];
                         }
                     }
                 }

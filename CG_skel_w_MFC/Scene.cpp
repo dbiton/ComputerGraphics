@@ -66,6 +66,7 @@ void Scene::draw() {
         renderer->DrawTriangles(models[i], !dimInactives || i == activeModel, getActiveCamera()->shading);
         if (models[i]->draw_bounding_box) renderer->DrawBox(models[i]);
     }
+    renderer->applyEffects();
     renderer->SwapBuffers();
 }
 
