@@ -16,7 +16,8 @@ void Scene::AddModel(MeshModel* model) {
         cameras.push_back(Camera::DefaultCamera(model->getBoundingBoxMin(), model->getBoundingBoxMax()));
         activeCamera = 0;
         cameras[0]->LookAt(getPosition(cameras[0]->getTransform()), vec4(), vec4(0, 0, 1, 0));
-
+    }
+    if (activeLight == -1) {
         lights.push_back(new AmbientLight(Color(1), 0.5));
         lights.push_back(new PointLight(Color(1), 2, 1.1 * model->getBoundingBoxMax()));
         activeLight = 1;

@@ -248,12 +248,9 @@ float Area(vec2 p0, vec2 p1, vec2 p2) noexcept {
 
 void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Material> mats, int shading) {
     vec3 v_clip[3] = { applyTransformToPoint(object2clip, v[0]), applyTransformToPoint(object2clip, v[1]), applyTransformToPoint(object2clip, v[2]) };
-    const vec3 fm = (v_clip[0] + v_clip[1] + v_clip[2]) / 3,
-               fn = normalize(cross(v_clip[1] - v_clip[0], v_clip[2] - v_clip[1])),
-               camera_dir(0, 0, 1);
 
     // backface culling
-    if (dot(fn, camera_dir) < 0) return;
+    if (dot(cross(v_clip[1] - v_clip[0], v_clip[2] - v_clip[1]), vec3(0, 0, -1)) < 0) return;
 
     vec2 v2d[3] = { clipToScreen(v_clip[0]), clipToScreen(v_clip[1]), clipToScreen(v_clip[2]) };
     int width = m_width;
@@ -271,7 +268,7 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
     vec3 color_face;
     vec3 color_vert[3];
     if (shading == SHADE_FLAT)
-        color_face = CalcColor(AverageMaterial(mats), (v[0] + v[1] + v[2]) / 3, fn);
+        color_face = CalcColor(AverageMaterial(mats), (v[0] + v[1] + v[2]) / 3, normalize(cross(v[1] - v[0], v[2] - v[1])));
 
     else if (shading == SHADE_GOURAUD)
         for (int i = 0; i < 3; i++) color_vert[i] = CalcColor(mats[i], v[i], vn[i]);
@@ -294,8 +291,8 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
             // out of frame
 
             const float a0 = Area(p, v2d[1], v2d[2]) / A,
-                a1 = Area(p, v2d[2], v2d[0]) / A,
-                a2 = Area(p, v2d[0], v2d[1]) / A;
+                        a1 = Area(p, v2d[2], v2d[0]) / A,
+                        a2 = Area(p, v2d[0], v2d[1]) / A;
 
             if (std::abs(a0 + a1 + a2 - 1) > 16 * FLT_EPSILON) continue; // If out of the triangle
 
@@ -303,16 +300,14 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
 
             bool depth_updated = false;
             if (m_isSuperSample) {
-                if (depth > m_zbufferSuperSample[x + y * width]) {
+                if (m_zbufferSuperSample[x + y * width] == 0 || depth < m_zbufferSuperSample[x + y * width]) {
                     m_zbufferSuperSample[x + y * width] = depth;
                     depth_updated = true;
                 }
             }
-            else if (!m_isSuperSample) {
-                if (depth > m_zbuffer[x + y * width]) {
-                    m_zbuffer[x + y * width] = depth;
-                    depth_updated = true;
-                }
+            else if (m_zbuffer[x + y * width] == 0 || depth < m_zbuffer[x + y * width]) {
+                m_zbuffer[x + y * width] = depth;
+                depth_updated = true;
             }
 
             if (depth_updated) {
@@ -428,9 +423,9 @@ Color Renderer::CalcColor(const Material& material, const vec3& surface_position
             color += alc * material.base;
         }
         else {
+            if (dot(l, surface_normal) < 0 && !drawBackshadow) continue;
             const vec3 v = normalize(getPosition(transform_camera_inverse) - surface_position);
             const vec3 r = l - 2 * dot(l, surface_normal) * surface_normal;
-            // TODO figure out what to do when light isn't reflected, and instead passes through the surface as indicated by the normal
 
             // diffuse
             const vec3 dlc = material.roughness * dot(l, surface_normal) * light->getBrightness() * light->getColor();

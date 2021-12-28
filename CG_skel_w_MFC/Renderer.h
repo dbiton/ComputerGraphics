@@ -54,6 +54,8 @@ class Renderer
 
 	std::vector<Light*> lights;
 public:
+	bool drawBackshadow = true;
+
 	Renderer();
 	Renderer(int width, int height);
 	~Renderer();

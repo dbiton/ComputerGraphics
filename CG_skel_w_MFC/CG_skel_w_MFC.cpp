@@ -54,6 +54,7 @@ enum {
     TOGGLE_LIGHTS,
     TOGGLE_INACTIVES_DIMMING,
     TOGGLE_AXES,
+    TOGGLE_BACKSHADOW
 };
 
 enum {
@@ -175,6 +176,10 @@ void toggleAxes() noexcept {
     scene->drawAxes = !scene->drawAxes;
 }
 
+void toggleBackshadow() noexcept {
+    renderer->drawBackshadow = !renderer->drawBackshadow;
+}
+
 mat4& controlled(int context, int control_mode) noexcept {
     switch (control_mode) {
     case CONTROL_CAMERA_IN_VIEW: return scene->getActiveCamera()->self;
@@ -233,6 +238,7 @@ void keyboard(unsigned char key, int x, int y) {
     case 'l': toggleLights(); break;
     case 'i': toggleInactivesDimming(); break;
     case 'x': toggleAxes(); break;
+    case 'k': toggleBackshadow(); break;
 
     case 'r': resetFrame(controlled(CONTROL_CONTEXT_NONE)); break;
 
@@ -388,9 +394,11 @@ void modelsMenu(int id) {
 }
 
 void newModelMenu(int id) {
-    if (scene->activeModel == -1) { // the active camera and light will be set later once the model's added
+    if (scene->activeCamera == -1) { // the active camera and light will be set later once the model's added
         glutSetMenu(menuCameras);
         glutAddMenuEntry("(0) Camera", 0);
+    }
+    if (scene->activeLight == -1) {
         glutSetMenu(menuLights);
         glutAddMenuEntry("(0) Ambient", 0);
         glutAddMenuEntry("(1) Point", 1);
@@ -618,6 +626,7 @@ void togglesMenu(int id) {
     case TOGGLE_LIGHTS: toggleLights(); break;
     case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
     case TOGGLE_AXES: toggleAxes(); break;
+    case TOGGLE_BACKSHADOW: toggleBackshadow(); break;
     default: message(_T("Unimplemented togglesMenu option!")); // shouldn't happen!
     }
     display();
@@ -884,6 +893,7 @@ void initMenu()
     /**/glutAddMenuEntry("Light Indicators", TOGGLE_LIGHTS);
     /**/glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING);
     /**/glutAddMenuEntry("Axes", TOGGLE_AXES);
+    /**/glutAddMenuEntry("Backshadows", TOGGLE_BACKSHADOW);
     glutSetMenu(menuMain);
     glutAddSubMenu("Control Mode", menuControl); glutSetMenu(menuControl);
     /**/glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);
