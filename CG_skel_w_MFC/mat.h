@@ -523,25 +523,6 @@ inline mat4 transpose(const mat4& A) { // turns out this should've been the othe
 #define Error( str ) do { std::cerr << "[" __FILE__ ":" << __LINE__ << "] " \
 				    << str << std::endl; } while(0)
 
-inline vec4 mvmult(const mat4& a, const vec4& b) noexcept {
-    return a * b;
-    // ok but what was the point of the code here
-}
-
-inline vec3 applyTransformToPoint(const mat4& transform, const vec3& point) noexcept {
-    const vec4 res = mvmult(transform, vec4(point.x, point.y, point.z, 1.0));
-    return vec3(res.x / res.w, res.y / res.w, res.z / res.w);
-}
-
-inline vec3 applyTransformToNormal(const mat4& transform, const vec3& normal) noexcept {
-    const vec4 res = mvmult(transform, vec4(normal.x, normal.y, normal.z, 0.0));
-    return vec3(res.x, res.y, res.z);
-}
-
-inline vec3 applyTransform(const mat4& transform, const vec4& point) noexcept {
-    return applyTransformToPoint(transform, vec3(point.x / point.w, point.y / point.w, point.z / point.w));
-}
-
 //----------------------------------------------------------------------------
 //
 //  Rotation matrix generators
@@ -632,3 +613,35 @@ inline float Determinant(const mat4& mat) { // this code assumes the matrix is i
 }
 
 //----------------------------------------------------------------------------
+
+inline mat4& InverseTransform(const mat4& transform) {
+    // step 1: isolate translation transform;
+    const mat4 translate = Translate(-transform[0][3], -transform[1][3], -transform[2][3]);
+
+    // step 2: find (uniform) scaling factor of the remaining 3x3
+    const mat4 scale = Scale(1.0 / std::sqrt(transform[0][0] * transform[0][0] + transform[0][1] * transform[0][1] + transform[0][2] * transform[0][2]));
+
+    // step 3: transpose remaining matrix
+    const mat4 rotation = transpose(scale * translate * transform);
+
+    return rotation * scale * translate; // final product
+}
+
+inline vec4 mvmult(const mat4& a, const vec4& b) noexcept {
+    return a * b;
+    // ok but what was the point of the code here
+}
+
+inline vec3 applyTransformToPoint(const mat4& transform, const vec3& point) noexcept {
+    const vec4 res = mvmult(transform, vec4(point.x, point.y, point.z, 1.0));
+    return vec3(res.x / res.w, res.y / res.w, res.z / res.w);
+}
+
+inline vec3 applyTransformToNormal(const mat4& transform, const vec3& normal) {
+    const vec4 res = mvmult(transpose(InverseTransform(transform)), vec4(normal.x, normal.y, normal.z, 1.0));
+    return vec3(res.x / res.w, res.y / res.w, res.z / res.w);
+}
+
+inline vec3 applyTransform(const mat4& transform, const vec4& point) noexcept {
+    return applyTransformToPoint(transform, vec3(point.x / point.w, point.y / point.w, point.z / point.w));
+}

@@ -54,6 +54,7 @@ enum {
     TOGGLE_LIGHTS,
     TOGGLE_INACTIVES_DIMMING,
     TOGGLE_AXES,
+    TOGGLE_BACKSHADOW
 };
 
 enum {
@@ -174,6 +175,10 @@ void toggleAxes() noexcept {
     scene->drawAxes = !scene->drawAxes;
 }
 
+void toggleBackshadow() noexcept {
+    renderer->drawBackshadow = !renderer->drawBackshadow;
+}
+
 mat4& controlled(int context, int control_mode) noexcept {
     switch (control_mode) {
     case CONTROL_CAMERA_IN_VIEW: return scene->getActiveCamera()->self;
@@ -232,6 +237,7 @@ void keyboard(unsigned char key, int x, int y) {
     case 'l': toggleLights(); break;
     case 'i': toggleInactivesDimming(); break;
     case 'x': toggleAxes(); break;
+    case 'k': toggleBackshadow(); break;
 
     case 'r': resetFrame(controlled(CONTROL_CONTEXT_NONE)); break;
 
@@ -362,7 +368,7 @@ void mainMenu(int id)
         focus();
         break;
     case MAIN_ABOUT:
-        message(_T("Computer Graphics Part 1 - Wireframes\nby Itay Beit Halachmi and Dvir David Biton"));
+        message(_T("Computer Graphics Part 2 - Simple Renderer\nby Itay Beit Halachmi and Dvir David Biton"));
         break;
     case MAIN_HELP:
         showHelp();
@@ -387,9 +393,11 @@ void modelsMenu(int id) {
 }
 
 void newModelMenu(int id) {
-    if (scene->activeModel == -1) { // the active camera and light will be set later once the model's added
+    if (scene->activeCamera == -1) { // the active camera and light will be set later once the model's added
         glutSetMenu(menuCameras);
         glutAddMenuEntry("(0) Camera", 0);
+    }
+    if (scene->activeLight == -1) {
         glutSetMenu(menuLights);
         glutAddMenuEntry("(0) Ambient", 0);
         glutAddMenuEntry("(1) Point", 1);
@@ -524,7 +532,10 @@ void newCameraMenu(int id) {
 }
 
 void shadingMenu(int id) {
-    if (scene->activeCamera != -1) scene->getActiveCamera()->shading = id;
+    if (scene->activeCamera != -1) {
+        scene->getActiveCamera()->shading = id;
+        display();
+    }
 }
 
 Light* getLight(int type, Light* defaults = NULL) {
@@ -614,6 +625,7 @@ void togglesMenu(int id) {
     case TOGGLE_LIGHTS: toggleLights(); break;
     case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
     case TOGGLE_AXES: toggleAxes(); break;
+    case TOGGLE_BACKSHADOW: toggleBackshadow(); break;
     default: message(_T("Unimplemented togglesMenu option!")); // shouldn't happen!
     }
     display();
@@ -702,6 +714,7 @@ void supersamplingMenu(int id) {
     case ADVANCED_DISABLE: renderer->setSupersampling(false);
     default: message(_T("Unimplemented supersamplingMenu option!")); // shouldn't happen!
     }
+    display();
 }
 
 void fogMenu(int id) {
@@ -716,6 +729,7 @@ void fogMenu(int id) {
     case ADVANCED_DISABLE: renderer->setFog(false);
     default: message(_T("Unimplemented fogMenu option!")); // shouldn't happen!
     }
+    display();
 }
 
 void bloomMenu(int id) {
@@ -727,6 +741,7 @@ void bloomMenu(int id) {
     case ADVANCED_DISABLE: renderer->setBloom(false);
     default: message(_T("Unimplemented bloomMenu option!")); // shouldn't happen!
     }
+    display();
 }
 
 void makeModelsSubMenu() {
@@ -877,6 +892,7 @@ void initMenu()
     /**/glutAddMenuEntry("Light Indicators", TOGGLE_LIGHTS);
     /**/glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING);
     /**/glutAddMenuEntry("Axes", TOGGLE_AXES);
+    /**/glutAddMenuEntry("Backshadows", TOGGLE_BACKSHADOW);
     glutSetMenu(menuMain);
     glutAddSubMenu("Control Mode", menuControl); glutSetMenu(menuControl);
     /**/glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);
@@ -920,7 +936,7 @@ void initMenu()
     glutAddMenuEntry("Focus", MAIN_FOCUS);
     if (ALLOW_DEMO) glutAddMenuEntry("Demo", MAIN_DEMO);
     glutAddMenuEntry("About", MAIN_ABOUT);
-    glutAddMenuEntry("Help", MAIN_HELP);
+    //glutAddMenuEntry("Help", MAIN_HELP); // no way jose, this'd become way too big if i tried updating it
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 //----------------------------------------------------------------------------

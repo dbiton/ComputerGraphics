@@ -15,7 +15,9 @@ void Scene::AddModel(MeshModel* model) {
     if (activeCamera == -1) { // happens if this is the first model we're loading. so we set up a default scene for it
         cameras.push_back(Camera::DefaultCamera(model->getBoundingBoxMin(), model->getBoundingBoxMax()));
         activeCamera = 0;
-
+        cameras[0]->LookAt(getPosition(cameras[0]->getTransform()), vec4(), vec4(0, 0, 1, 0));
+    }
+    if (activeLight == -1) {
         lights.push_back(new AmbientLight(Color(1), 0.5));
         lights.push_back(new PointLight(Color(1), 2, 1.1 * model->getBoundingBoxMax()));
         activeLight = 1;
@@ -111,16 +113,18 @@ void Scene::focus() {
     getActiveCamera()->LookAt(getPosition(getActiveCamera()->getTransform()), getPosition(getActiveModel()->getTransform()), getActiveCamera()->getUpDirection());
 }
 
-void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up) { // TODO for some reason this math is not idempotent...
-    const vec4 n = normalize(eye - at),
-               u = normalize(cross(up, n)),
-               v = normalize(cross(n, u)),
+void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up) {
+    const vec4 n = normalize(eye - at);
+    vec4 u = cross(up, n);
+    if (length(u) < FLT_EPSILON) u = cross(up, n + vec4(1, 0, 0, 0)); // fix for when too close to colinear
+    u = normalize(u);
+    const vec4 v = normalize(cross(n, u)),
                t = vec4(0.0, 0.0, 0.0, 1.0);
     lookingAt = at;
     upDirection = up;
 
     reset(self);
-    world = mat4(u, v, n, t) * Translate(-eye);
+    world = InverseTransform(mat4(u, v, n, t) * Translate(-eye)); // will be inverted again later!
 }
 
 void Camera::UpdateLastParameters(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, const int type) {
@@ -207,7 +211,7 @@ void PointLight::setPosition(vec3 _position) {
 }
 
 vec3 PointLight::dirToSource(const vec3& p, const mat4& object2clip) const {
-    return normalize(applyTransformToPoint(object2clip, position - p));
+    return normalize(applyTransformToPoint(object2clip, position) - p);
 }
 
 void ParallelLight::setDirection(vec3 _direction) {
