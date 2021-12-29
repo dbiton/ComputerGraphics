@@ -27,6 +27,7 @@ GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) {
 }
 
 void Renderer::DrawTriangles(MeshModel* model, bool isActiveModel, int shading) {
+    model_pos = getPosition(model->getTransform());
     Color color_mesh(1, 1, 1), 
           color_face_normal(0, 1, 0),
           color_vert_normal(0, 0.5, 1);
@@ -190,6 +191,7 @@ void Renderer::DrawLight(Light* light, bool isActiveLight) {
 }
 
 void Renderer::SetCameraTransform(const mat4& cTransform) {
+    camera_pos = getPosition(cTransform);
     transform_camera_inverse = InverseTransform(cTransform);
 }
 
@@ -347,7 +349,8 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
                     exit(1);
                 }
                 if (m_isFog) {
-                    float fogFactor = (m_fogMaxDistance - depth) / (m_fogMaxDistance - m_fogMinDistance);
+                    float d = length(camera_pos - model_pos);
+                    float fogFactor = (m_fogMaxDistance - d) / (m_fogMaxDistance - m_fogMinDistance);
                     fogFactor = max(0.f, min(1.f, fogFactor)); // clamp
                     color = (1-fogFactor) * m_fogColor + fogFactor * color;
                 }
