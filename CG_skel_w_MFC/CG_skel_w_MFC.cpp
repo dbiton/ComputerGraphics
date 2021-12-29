@@ -727,7 +727,7 @@ void supersamplingMenu(int id) {
         CSingleFloatDialog dialog(_T("Supersampling factor"), renderer->getSupersamplingFactor(), true);
         if (dialog.DoModal() == IDOK) renderer->setSupersampling(true, dialog.getValue());
     } break;
-    case ADVANCED_DISABLE: renderer->setSupersampling(false);
+    case ADVANCED_DISABLE: renderer->setSupersampling(false); break;
     default: message(_T("Unimplemented supersamplingMenu option!")); // shouldn't happen!
     }
     display();
@@ -742,7 +742,7 @@ void fogMenu(int id) {
             renderer->setFog(true, Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()),
                 dialog.getMinDistance(), dialog.getMaxDistance());
     } break;
-    case ADVANCED_DISABLE: renderer->setFog(false);
+    case ADVANCED_DISABLE: renderer->setFog(false); break;
     default: message(_T("Unimplemented fogMenu option!")); // shouldn't happen!
     }
     display();
@@ -754,7 +754,7 @@ void bloomMenu(int id) {
         CBloomDialog dialog(_T("Bloom Parameters"), renderer->getThreshBloom(), renderer->getSpreadBloom());
         if (dialog.DoModal() == IDOK) renderer->setBloom(true, dialog.getThresh(), dialog.getSpread());
     } break;
-    case ADVANCED_DISABLE: renderer->setBloom(false);
+    case ADVANCED_DISABLE: renderer->setBloom(false); break;
     default: message(_T("Unimplemented bloomMenu option!")); // shouldn't happen!
     }
     display();
