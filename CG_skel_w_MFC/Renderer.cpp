@@ -349,7 +349,7 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
                 if (m_isFog) {
                     float fogFactor = (m_fogMaxDistance - depth) / (m_fogMaxDistance - m_fogMinDistance);
                     fogFactor = max(0.f, min(1.f, fogFactor)); // clamp
-                    color = fogFactor * m_fogColor + (1 - fogFactor) * color;
+                    color = (1-fogFactor) * m_fogColor + fogFactor * color;
                 }
                 if (m_isSuperSample) {
                     DrawPixelSuperSampled(p.x, p.y, color);
