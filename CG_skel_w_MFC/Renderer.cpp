@@ -174,12 +174,10 @@ void Renderer::DrawLight(Light* light, bool isActiveLight) {
         DrawLine(vec2(crossMin.x, crossMax.y), vec2(crossMax.x, crossMin.y), color);
     } break;
     case LIGHT_PARALLEL: {
-        const vec2 dir = clipToScreen(applyTransformToDirection(projection * transform_camera_inverse, ((ParallelLight*)light)->getDirection())),
-                   center = vec2(m_width, m_height) / 2,
-                   lineMax = center - (m_height / 2) * normalize(dir),
-                   offset = vec2(10);
-
-        const vec3 dir3 = applyTransformToPoint(transform_camera_inverse, ((ParallelLight*)light)->getDirection());
+        const vec2 dir = clipToScreen(applyTransformToNormal(projection * transform_camera_inverse, ((ParallelLight*)light)->getDirection())),
+            center = vec2(m_width, m_height) / 2,
+            lineMax = center + (m_height / 2) * normalize(dir),
+            offset = 10 * normalize(vec2(-dir.y, dir.x));
 
         DrawLine(center, lineMax, color);
         DrawLine(center + offset, lineMax + offset, color);

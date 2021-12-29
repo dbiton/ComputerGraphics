@@ -31,7 +31,8 @@ enum {
 
 enum {
     MATERIAL_UNIFORM,
-    MATERIAL_FULLSATSPECTRUM
+    MATERIAL_FULLSATSPECTRUM,
+    MATERIAL_PHYSSPECTRUM
 };
 
 enum {
@@ -393,16 +394,6 @@ void modelsMenu(int id) {
 }
 
 void newModelMenu(int id) {
-    if (scene->activeCamera == -1) { // the active camera and light will be set later once the model's added
-        glutSetMenu(menuCameras);
-        glutAddMenuEntry("(0) Camera", 0);
-    }
-    if (scene->activeLight == -1) {
-        glutSetMenu(menuLights);
-        glutAddMenuEntry("(0) Ambient", 0);
-        glutAddMenuEntry("(1) Point", 1);
-    }
-
     switch (id) { // all new models will be automatically placed at the camera's LookingAt position
     case NEW_OBJ: {
         CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.obj|*.*"));
@@ -444,6 +435,15 @@ void newModelMenu(int id) {
     } break;
     default: message(_T("Unimplemented newModelMenu option!")); // shouldn't happen!
     }
+    if (scene->activeCamera == -1) { // the active camera and light will be set later once the model's added
+        glutSetMenu(menuCameras);
+        glutAddMenuEntry("(0) Camera", 0);
+    }
+    if (scene->activeLight == -1) {
+        glutSetMenu(menuLights);
+        glutAddMenuEntry("(0) Ambient", 0);
+        glutAddMenuEntry("(1) Point", 1);
+    }
     char newEntry[50];
     sprintf(newEntry, "(%d) %s", scene->activeModel, scene->getActiveModel()->getName().c_str());
     glutSetMenu(menuModels);
@@ -469,10 +469,24 @@ void materialMenu(int id) {
             dialog.getAmbientReflect(), dialog.getRoughness(), dialog.getShininess());
     } break;
     case MATERIAL_FULLSATSPECTRUM: {
-        CRainbowMaterialDialog dialog(_T("Uniform Material Parameters"), material->ambient_reflect, material->roughness, material->shininess);
+        CNonuniformMaterialDialog dialog(_T("Full Saturation Spectrum Material Parameters"),
+            "Ambient Reflect:", material->ambient_reflect,
+            "Roughness:", material->roughness,
+            "Shininess:", material->shininess,
+            "You have unlocked RAINBOW MODE!!!");
         if (dialog.DoModal() != IDOK) return;
         delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new FullSatSpectrumMaterial(dialog.getAmbientReflect(), dialog.getRoughness(), dialog.getShininess());
+        scene->getActiveModel()->material = new FullSatSpectrumMaterial(dialog.getX(), dialog.getY(), dialog.getZ());
+    } break;
+    case MATERIAL_PHYSSPECTRUM: {
+        CNonuniformMaterialDialog dialog(_T("Physical Spectrum Material Parameters"),
+            "Red:", material->ambient_reflect,
+            "Green:", material->roughness,
+            "Blue:", material->shininess,
+            "you unlocked anti-rainbow mode...");
+        if (dialog.DoModal() != IDOK) return;
+        delete scene->getActiveModel()->material;
+        scene->getActiveModel()->material = new PhysSpectrumMaterial(Color(dialog.getX(), dialog.getY(), dialog.getZ()));
     } break;
     default: message(_T("Unimplemented materialMenu option!")); // shouldn't happen!
     }
@@ -775,6 +789,7 @@ void makeModelsSubMenu() {
     /**/glutAddSubMenu("Set Material", menuMaterial); glutSetMenu(menuMaterial);
     /*    */glutAddMenuEntry("Uniform...", MATERIAL_UNIFORM);
     /*    */glutAddMenuEntry("Full Saturation Spectrum", MATERIAL_FULLSATSPECTRUM);
+    /*    */glutAddMenuEntry("Physical Spectrum", MATERIAL_PHYSSPECTRUM);
     /**/glutSetMenu(menuModels);
     /**/glutAddMenuEntry("Delete active model", -1);
     /**/for (int i = 0; i < scene->getModels()->size(); i++) {

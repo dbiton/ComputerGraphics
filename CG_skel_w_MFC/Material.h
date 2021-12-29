@@ -55,3 +55,14 @@ protected:
         return Material{ color, Color(), ambient_reflect, roughness, shininess };
     }
 };
+
+struct PhysSpectrumMaterial : public Material {
+    PhysSpectrumMaterial(Color base)
+        : Material(base, Color(), 0, 0, 0) { }
+protected:
+    Material ComputeAt(const vec3 v, const vec3 min, const vec3 max) {
+        const float angle = (v.x - min.x) / (max.x - min.x);
+        const Color color(max(0, abs(3 * angle - 1.5) - 0.5), max(0, 1 - abs(3 * angle - 1)), max(0, 1 - abs(3 * angle - 2)));
+        return Material{ base, Color(), color.x, color.y, color.z };
+    }
+};

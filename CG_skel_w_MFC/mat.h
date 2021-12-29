@@ -637,12 +637,6 @@ inline vec3 applyTransformToPoint(const mat4& transform, const vec3& point) noex
     return vec3(res.x / res.w, res.y / res.w, res.z / res.w);
 }
 
-inline vec3 applyTransformToDirection(const mat4& transform, const vec3& point) noexcept {
-    vec4 res = mvmult(transform, vec4(point.x, point.y, point.z, 1.0));
-    res.w = abs(res.w);
-    return vec3(res.x / res.w, res.y / res.w, res.z / res.w);
-}
-
 inline vec3 applyTransformToNormal(const mat4& transform, const vec3& normal) {
     const vec4 res = mvmult(transpose(InverseTransform(transform)), vec4(normal.x, normal.y, normal.z, 0.0));
     return vec3(res.x, res.y, res.z);
