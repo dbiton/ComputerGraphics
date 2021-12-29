@@ -394,6 +394,7 @@ void modelsMenu(int id) {
 }
 
 void newModelMenu(int id) {
+    bool firstUpdate = (scene->getCameras()->size() == 0);
     switch (id) { // all new models will be automatically placed at the camera's LookingAt position
     case NEW_OBJ: {
         CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.obj|*.*"));
@@ -435,14 +436,9 @@ void newModelMenu(int id) {
     } break;
     default: message(_T("Unimplemented newModelMenu option!")); // shouldn't happen!
     }
-    if (scene->activeCamera == -1) { // the active camera and light will be set later once the model's added
-        glutSetMenu(menuCameras);
-        glutAddMenuEntry("(0) Camera", 0);
-    }
-    if (scene->activeLight == -1) {
-        glutSetMenu(menuLights);
-        glutAddMenuEntry("(0) Ambient", 0);
-        glutAddMenuEntry("(1) Point", 1);
+    if (firstUpdate) { // the active camera and light will be set later once the model's added
+        makeCamerasSubMenu();
+        makeLightsSubMenu();
     }
     char newEntry[50];
     sprintf(newEntry, "(%d) %s", scene->activeModel, scene->getActiveModel()->getName().c_str());
