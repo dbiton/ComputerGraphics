@@ -219,8 +219,6 @@ void Renderer::CreateBuffers(int width, int height, bool first) {
     m_outBuffer = new float[3 * m_width * m_height];
     if (m_zbuffer) delete m_zbuffer;
     m_zbuffer = new float[m_width * m_height];
-    if (m_bloomBuffer) delete m_bloomBuffer;
-    m_bloomBuffer = new float[3 * m_width * m_height];
 }
 
 vec2 Renderer::clipToScreen(const vec4& clip_pos) {
@@ -273,8 +271,8 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
     if (dot(cross(v_clip[1] - v_clip[0], v_clip[2] - v_clip[1]), vec3(0, 0, -1)) < 0) return;
 
     vec2 v2d[3] = { clipToScreen(v_clip[0]), clipToScreen(v_clip[1]), clipToScreen(v_clip[2]) };
-    int width = m_width;
-    int height = m_height;
+    int width = m_width,
+        height = m_height;
     if (m_isSuperSample) {
         for (int i = 0; i < 3; i++) v2d[i] *= m_factorSuperSample;
         width *= m_factorSuperSample;
@@ -550,6 +548,19 @@ void Renderer::ClearDepthBuffer() {
     if (m_zbufferSuperSample) memset(m_zbufferSuperSample, 0, sizeof(float) * m_factorSuperSample * m_factorSuperSample * m_width * m_height);
 }
 
+void Renderer::ClearBloomBuffer() {
+    if (m_isBloom) {
+        int width = m_width,
+            height = m_height;
+        if (m_isSuperSample) {
+            width *= m_factorSuperSample;
+            height *= m_factorSuperSample;
+        }
+        if (m_bloomBuffer) delete m_bloomBuffer; // has to be reset every time, depending on whether or not we're supersampling
+        m_bloomBuffer = new float[3 * width * height];
+    }
+}
+
 void Renderer::setSupersampling(bool isSupersampling, int factorSuperSample) {
     m_isSuperSample = isSupersampling;
     m_factorSuperSample = factorSuperSample;
@@ -559,11 +570,13 @@ void Renderer::setSupersampling(bool isSupersampling, int factorSuperSample) {
     m_zbufferSuperSample = new float[m_factorSuperSample * m_factorSuperSample * m_width * m_height];
     ClearColorBuffer();
     ClearDepthBuffer();
+    ClearBloomBuffer();
 }
 
 void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
-    m_threshBloom = threshBloom;
     m_isBloom = isBloom;
+    ClearBloomBuffer();
+    m_threshBloom = threshBloom;
     m_spreadBloom = spreadBloom;
     if (m_weightsBloom) delete m_weightsBloom;
     m_weightsBloom = new float[spreadBloom * 2 + 1];
@@ -579,39 +592,50 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
 }
 
 void Renderer::applyEffects() {
-    if (m_isBloom) { // TODO what if bloom and supersampling?
+    int width = m_width,
+        height = m_height;
+    if (m_isSuperSample) {
+        width *= m_factorSuperSample;
+        height *= m_factorSuperSample;
+    }
+    if (m_isBloom) {
         // extract bright pixels
-        memset(m_bloomBuffer, 0, sizeof(float) * 3 * m_width * m_height);
-        for (int x = 0; x < m_width; x++) {
-            for (int y = 0; y < m_height; y++) {
+        memset(m_bloomBuffer, 0, sizeof(float) * 3 * width * height);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
                 for (int c = 0; c < 3; c++) {
-                    if (m_outBuffer[INDEX(m_width, x, y, c)] > m_threshBloom) {
-                        m_bloomBuffer[INDEX(m_width, x, y, c)] = m_outBuffer[INDEX(m_width, x, y, c)];
+                    if (m_isSuperSample) {
+                        if (m_outBufferSuperSample[INDEX(width, x, y, c)] > m_threshBloom) {
+                            m_bloomBuffer[INDEX(width, x, y, c)] = m_outBufferSuperSample[INDEX(width, x, y, c)];
+                        }
+                    }
+                    else if (m_outBuffer[INDEX(width, x, y, c)] > m_threshBloom) {
+                        m_bloomBuffer[INDEX(width, x, y, c)] = m_outBuffer[INDEX(width, x, y, c)];
                     }
                 }
             }
         }
         // horizontal pass
-        for (int x = 0; x < m_width; x++) {
-            for (int y = 0; y < m_height; y++) {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
                 for (int c = 0; c < 3; c++) {
                     for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
                         int x_curr = x + i - m_spreadBloom;
-                        if (x_curr > 0 && x_curr < m_width) {
-                            m_bloomBuffer[INDEX(m_width, x_curr, y, c)] += m_bloomBuffer[INDEX(m_width, x, y, c)] * m_weightsBloom[i];
+                        if (x_curr > 0 && x_curr < width) {
+                            m_bloomBuffer[INDEX(width, x_curr, y, c)] += m_bloomBuffer[INDEX(width, x, y, c)] * m_weightsBloom[i];
                         }
                     }
                 }
             }
         }
         // vertical pass
-        for (int x = 0; x < m_width; x++) {
-            for (int y = 0; y < m_height; y++) {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
                 for (int c = 0; c < 3; c++) {
                     for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
                         int y_curr = y + i - m_spreadBloom;
-                        if (y_curr > 0 && y_curr < m_height) {
-                            m_bloomBuffer[INDEX(m_width, x, y_curr, c)] += m_bloomBuffer[INDEX(m_width, x, y, c)] * m_weightsBloom[i];
+                        if (y_curr > 0 && y_curr < height) {
+                            m_bloomBuffer[INDEX(width, x, y_curr, c)] += m_bloomBuffer[INDEX(width, x, y, c)] * m_weightsBloom[i];
                         }
                     }
                 }
@@ -622,12 +646,12 @@ void Renderer::applyEffects() {
 
     if (m_isSuperSample) {
         const float factorPixel = 1.f / (m_factorSuperSample * m_factorSuperSample);
-        for (int x = 0; x < m_width * m_factorSuperSample; x++) {
-            for (int y = 0; y < m_height * m_factorSuperSample; y++) {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
                 int i = x / m_factorSuperSample;
                 int j = y / m_factorSuperSample;
                 for (int c = 0; c < 3; c++) {
-                    m_outBuffer[INDEX(m_width, i, j, c)] += m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, c)] * factorPixel;
+                    m_outBuffer[INDEX(m_width, i, j, c)] += m_outBufferSuperSample[INDEX(width, x, y, c)] * factorPixel;
                 }
             }
         }
@@ -635,11 +659,23 @@ void Renderer::applyEffects() {
 }
 
 void Renderer::blendBloomBuffer() {
-    for (int x = 0; x < m_width; x++) {
-        for (int y = 0; y < m_height; y++) {
+    int width = m_width,
+        height = m_height;
+    if (m_isSuperSample) {
+        width *= m_factorSuperSample;
+        height *= m_factorSuperSample;
+    }
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
             for (int c = 0; c < 3; c++) {
-                const float v = m_outBuffer[INDEX(m_width, x, y, c)] + m_bloomBuffer[INDEX(m_width, x, y, c)];
-                m_outBuffer[INDEX(m_width, x, y, c)] = 1.f - 1 / (1 + v); // fit between 0 and 1
+                if (m_isSuperSample) {
+                    const float v = m_outBufferSuperSample[INDEX(width, x, y, c)] + m_bloomBuffer[INDEX(width, x, y, c)];
+                    m_outBufferSuperSample[INDEX(width, x, y, c)] = 1.f - 1 / (1 + v); // fit between 0 and 1
+                }
+                else {
+                    const float v = m_outBuffer[INDEX(width, x, y, c)] + m_bloomBuffer[INDEX(width, x, y, c)];
+                    m_outBuffer[INDEX(width, x, y, c)] = 1.f - 1 / (1 + v); // fit between 0 and 1
+                }
             }
         }
     }

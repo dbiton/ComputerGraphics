@@ -77,6 +77,7 @@ public:
 	void SwapBuffers();
 	void ClearColorBuffer();
 	void ClearDepthBuffer();
+	void ClearBloomBuffer();
 	void SetDemoBuffer();
 	void CreateBuffers(int width, int height, bool first = false);
 	float GetHeightMultiplier() noexcept { return m_height / m_firstHeight; }
