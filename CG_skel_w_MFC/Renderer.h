@@ -50,9 +50,8 @@ class Renderer
 	mat4 transform_object;
 	mat4 transform_camera_inverse;
 
-	mat4 object2clip;
-
 	std::vector<Light*> lights;
+	int ambientLightDrawn = 0;
 public:
 	bool drawBackshadow = true;
 
@@ -66,6 +65,7 @@ public:
 	void DrawBox(MeshModel* model);
 	void DrawAxes();
 	void DrawCamera(const mat4& transform);
+	void DrawLightsStart();
 	void DrawLight(Light* light, bool isActiveLight);
 
 	void SetCameraTransform(const mat4& cTransform);
@@ -99,7 +99,7 @@ private:
 	vec2 clipToScreen(const vec3& clip_pos);
 	vec2 clipToScreen(const vec4& clip_pos);
 	
-	void ShadeTriangle(const vec3 verts[3], const vec3 vert_normals[3], std::vector<Material> mats, int shadeType);
+	void ShadeTriangle(const vec3 verts[3], const vec3 vert_normals[3], std::vector<Material> mats, int shadeType, const mat4& world2clip);
 	void DrawLine(vec2 p0, vec2 p1, const Color& c);
 	void DrawPixel(int x, int y, const Color& c);
 	void DrawPixelSuperSampled(int x, int y, const Color& c);

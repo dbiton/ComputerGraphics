@@ -598,6 +598,8 @@ void newLightMenu(int id) {
     Light* newLight = getLight(id);
     if (newLight != NULL) {
         scene->AddLight(newLight);
+        scene->activeLight = scene->getLights()->size() - 1;
+        makeLightsSubMenu();
         display();
     }
 }

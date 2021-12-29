@@ -596,16 +596,16 @@ END_MESSAGE_MAP()
 int CAmbientLightDialog::OnCreate(LPCREATESTRUCT lpcs)
 {
     redEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(65, 10, 200, 30), this, PER_FOVY_EDIT);
+        CRect(65, 10, 200, 30), this, RED_EDIT);
 
     greenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(65, 50, 200, 70), this, PER_ASPECT_EDIT);
+        CRect(65, 50, 200, 70), this, GREEN_EDIT);
 
     blueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(65, 90, 200, 110), this, PER_ZNEAR_EDIT);
+        CRect(65, 90, 200, 110), this, BLUE_EDIT);
 
     brightnessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(300, 50, 400, 70), this, PER_ZFAR_EDIT);
+        CRect(300, 50, 400, 70), this, BRIGHTNESS_EDIT);
 
     return 0;
 }
