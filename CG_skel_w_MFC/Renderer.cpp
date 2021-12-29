@@ -426,9 +426,9 @@ void Renderer::DrawPixel(int x, int y, const Color& c) {
 
 void Renderer::DrawPixelSuperSampled(int x, int y, const Color& c) {
     if (x < 0 || y < 0 || x >= m_width * m_factorSuperSample || y >= m_height * m_factorSuperSample) return;
-    m_outBufferSuperSample[INDEX(m_width, x, y, 0)] = c[0];
-    m_outBufferSuperSample[INDEX(m_width, x, y, 1)] = c[1];
-    m_outBufferSuperSample[INDEX(m_width, x, y, 2)] = c[2];
+    m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, 0)] = c[0];
+    m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, 1)] = c[1];
+    m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, 2)] = c[2];
 }
 
 Color Renderer::CalcColor(const Material& material, const vec3& surface_position, const vec3& surface_normal) {
@@ -538,12 +538,12 @@ void Renderer::SwapBuffers() {
 
 void Renderer::ClearColorBuffer() {
     if (m_outBuffer) memset(m_outBuffer, 0, sizeof(float) * 3 * m_width * m_height);
-    if (m_outBufferSuperSample) memset(m_outBufferSuperSample, 0, sizeof(float) * m_factorSuperSample * 3 * m_width * m_height);
+    if (m_outBufferSuperSample) memset(m_outBufferSuperSample, 0, sizeof(float) * m_factorSuperSample * m_factorSuperSample * 3 * m_width * m_height);
 }
 
 void Renderer::ClearDepthBuffer() {
     if (m_zbuffer) memset(m_zbuffer, FLT_MAX, sizeof(float) * m_width * m_height);
-    if (m_zbufferSuperSample) memset(m_zbufferSuperSample, 0, sizeof(float) * m_factorSuperSample * m_width * m_height);
+    if (m_zbufferSuperSample) memset(m_zbufferSuperSample, 0, sizeof(float) * m_factorSuperSample * m_factorSuperSample * m_width * m_height);
 }
 
 void Renderer::setSupersampling(bool isSupersampling, int factorSuperSample) {
@@ -617,13 +617,13 @@ void Renderer::applyEffects() {
     }
 
     if (m_isSuperSample) {
-        float factorPixel = 1.f / (m_factorSuperSample * m_factorSuperSample);
+        const float factorPixel = 1.f / (m_factorSuperSample * m_factorSuperSample);
         for (int x = 0; x < m_width * m_factorSuperSample; x++) {
             for (int y = 0; y < m_height * m_factorSuperSample; y++) {
                 int i = x / m_factorSuperSample;
                 int j = y / m_factorSuperSample;
-                for (int c = 0; c < 3; c++) { // TODO is this right? maybe it should be += instead of =
-                    m_outBuffer[INDEX(m_width, i, j, c)] = m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, c)] * factorPixel;
+                for (int c = 0; c < 3; c++) {
+                    m_outBuffer[INDEX(m_width, i, j, c)] += m_outBufferSuperSample[INDEX(m_width * m_factorSuperSample, x, y, c)] * factorPixel;
                 }
             }
         }
@@ -634,7 +634,7 @@ void Renderer::blendBloomBuffer() {
     for (int x = 0; x < m_width; x++) {
         for (int y = 0; y < m_height; y++) {
             for (int c = 0; c < 3; c++) {
-                float v = m_outBuffer[INDEX(m_width, x, y, c)] + m_bloomBuffer[INDEX(m_width, x, y, c)];
+                const float v = m_outBuffer[INDEX(m_width, x, y, c)] + m_bloomBuffer[INDEX(m_width, x, y, c)];
                 m_outBuffer[INDEX(m_width, x, y, c)] = 1.f - 1 / (1 + v); // fit between 0 and 1
             }
         }
