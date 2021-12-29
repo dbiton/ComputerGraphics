@@ -225,21 +225,22 @@ protected:
     DECLARE_MESSAGE_MAP()
 };
 
-class CRainbowMaterialDialog : public CInputDialog
+class CNonuniformMaterialDialog : public CInputDialog
 {
 public:
-    CRainbowMaterialDialog(CString title) : CInputDialog(title) { }
-    CRainbowMaterialDialog(CString title, float ambientReflect, float roughness, float shininess)
-        : CInputDialog(title), ambientReflect(ambientReflect), roughness(roughness), shininess(shininess) { }
-    virtual ~CRainbowMaterialDialog() { }
+    CNonuniformMaterialDialog(CString title) : CInputDialog(title) { }
+    CNonuniformMaterialDialog(CString title, std::string xName, float x, std::string yName, float y, std::string zName, float z, std::string bonus)
+        : CInputDialog(title), xName(xName), x(x), yName(yName), y(y), zName(zName), z(z), bonus(bonus) { }
+    virtual ~CNonuniformMaterialDialog() { }
 
-    float getAmbientReflect() noexcept { return ambientReflect; }
-    float getRoughness() noexcept { return roughness; }
-    float getShininess() noexcept { return shininess; }
+    float getX() noexcept { return x; }
+    float getY() noexcept { return y; }
+    float getZ() noexcept { return z; }
 
 protected:
-    float ambientReflect = 0, roughness = 0, shininess = 0;
-    CEdit ambientReflectEdit, roughnessEdit, shininessEdit;
+    float x = 0, y = 0, z = 0;
+    std::string xName, yName, zName, bonus;
+    CEdit xEdit, yEdit, zEdit;
 
     virtual void DoDataExchange(CDataExchange* pDX);
 

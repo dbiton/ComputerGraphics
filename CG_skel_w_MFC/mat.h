@@ -638,8 +638,8 @@ inline vec3 applyTransformToPoint(const mat4& transform, const vec3& point) noex
 }
 
 inline vec3 applyTransformToNormal(const mat4& transform, const vec3& normal) {
-    const vec4 res = mvmult(transpose(InverseTransform(transform)), vec4(normal.x, normal.y, normal.z, 1.0));
-    return vec3(res.x / res.w, res.y / res.w, res.z / res.w);
+    const vec4 res = mvmult(transpose(InverseTransform(transform)), vec4(normal.x, normal.y, normal.z, 0.0));
+    return vec3(res.x, res.y, res.z);
 }
 
 inline vec3 applyTransform(const mat4& transform, const vec4& point) noexcept {

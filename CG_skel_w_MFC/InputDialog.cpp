@@ -513,55 +513,55 @@ void CUniformMaterialDialog::OnPaint()
 }
 
 // -------------------------
-//    Class CRainbowMaterialDialog
+//    Class CNonuniformMaterialDialog
 // -------------------------
 
-void CRainbowMaterialDialog::DoDataExchange(CDataExchange* pDX)
+void CNonuniformMaterialDialog::DoDataExchange(CDataExchange* pDX)
 {
     CInputDialog::DoDataExchange(pDX);
-    DDX_Text(pDX, AMBIENT_REFLECT_EDIT, ambientReflect); // reusing the enums from CUniformMaterialDialog lmao
-    DDX_Text(pDX, ROUGHNESS_EDIT, roughness);
-    DDX_Text(pDX, SHININESS_EDIT, shininess);
+    DDX_Text(pDX, IDC_X_EDIT, x); // reusing enums
+    DDX_Text(pDX, IDC_Y_EDIT, y);
+    DDX_Text(pDX, IDC_Z_EDIT, z);
 }
 
-// CUniformMaterialDialog message handlers
-BEGIN_MESSAGE_MAP(CRainbowMaterialDialog, CInputDialog)
+// CNonuniformMaterialDialog message handlers
+BEGIN_MESSAGE_MAP(CNonuniformMaterialDialog, CInputDialog)
     ON_WM_CREATE()
     ON_WM_PAINT()
 END_MESSAGE_MAP()
 
-int CRainbowMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
+int CNonuniformMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
 {
-    ambientReflectEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(230, 130, 300, 150), this, AMBIENT_REFLECT_EDIT);
+    xEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 130, 300, 150), this, IDC_X_EDIT);
 
-    roughnessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(230, 170, 300, 190), this, ROUGHNESS_EDIT);
+    yEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 170, 300, 190), this, IDC_Y_EDIT);
 
-    shininessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(230, 210, 300, 230), this, SHININESS_EDIT);
+    zEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(230, 210, 300, 230), this, IDC_Z_EDIT);
 
     return 0;
 }
 
-void CRainbowMaterialDialog::OnPaint()
+void CNonuniformMaterialDialog::OnPaint()
 {
     CPaintDC dc(this);
     dc.SetBkMode(TRANSPARENT);
 
     CRect secretRect(90, 70, 400, 90);
-    dc.DrawText(CString("You have unlocked RAINBOW MODE!!!"), -1, &secretRect, DT_SINGLELINE);
+    dc.DrawText(CString(bonus.c_str()), -1, &secretRect, DT_SINGLELINE);
 
-    CRect ambientReflectRect(120, 130, 300, 150);
-    dc.DrawText(CString("Ambient Reflect:"), -1, &ambientReflectRect, DT_SINGLELINE);
+    CRect xRect(120, 130, 300, 150);
+    dc.DrawText(CString(xName.c_str()), -1, &xRect, DT_SINGLELINE);
 
-    CRect roughnessRect(120, 170, 300, 190);
-    dc.DrawText(CString("Roughness:"), -1, &roughnessRect, DT_SINGLELINE);
+    CRect yRect(120, 170, 300, 190);
+    dc.DrawText(CString(yName.c_str()), -1, &yRect, DT_SINGLELINE);
 
-    CRect shininessRect(120, 210, 300, 230);
-    dc.DrawText(CString("Shininess:"), -1, &shininessRect, DT_SINGLELINE);
+    CRect zRect(120, 210, 300, 230);
+    dc.DrawText(CString(zName.c_str()), -1, &zRect, DT_SINGLELINE);
 
-    ambientReflectEdit.SetFocus();
+    xEdit.SetFocus();
 }
 
 // -------------------------
@@ -596,16 +596,16 @@ END_MESSAGE_MAP()
 int CAmbientLightDialog::OnCreate(LPCREATESTRUCT lpcs)
 {
     redEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(65, 10, 200, 30), this, PER_FOVY_EDIT);
+        CRect(65, 10, 200, 30), this, RED_EDIT);
 
     greenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(65, 50, 200, 70), this, PER_ASPECT_EDIT);
+        CRect(65, 50, 200, 70), this, GREEN_EDIT);
 
     blueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(65, 90, 200, 110), this, PER_ZNEAR_EDIT);
+        CRect(65, 90, 200, 110), this, BLUE_EDIT);
 
     brightnessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(300, 50, 400, 70), this, PER_ZFAR_EDIT);
+        CRect(300, 50, 400, 70), this, BRIGHTNESS_EDIT);
 
     return 0;
 }

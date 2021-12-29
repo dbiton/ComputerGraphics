@@ -17,14 +17,14 @@ PrimMeshModel PrimMeshModel::Cuboid(vec3 p, vec3 dim)
     cuboid.name = "Cuboid";
     /*
         verts:
-        0: (-1,-1,-1)
-        1: (-1,-1, 1)
-        2: (-1, 1,-1)
-        3: (-1, 1, 1)
-        4: ( 1,-1,-1)
-        5: ( 1,-1, 1)
-        6: ( 1, 1,-1)
-        7: ( 1, 1, 1)
+        1: (-1,-1,-1)
+        2: (-1,-1, 1)
+        3: (-1, 1,-1)
+        4: (-1, 1, 1)
+        5: ( 1,-1,-1)
+        6: ( 1,-1, 1)
+        7: ( 1, 1,-1)
+        8: ( 1, 1, 1)
     */
     for (int x = -1; x <= 1; x += 2) {
         for (int y = -1; y <= 1; y += 2) {
@@ -36,11 +36,11 @@ PrimMeshModel PrimMeshModel::Cuboid(vec3 p, vec3 dim)
         }
     }
     // quad 0
-    faces.push_back(Face(1, 2, 5));
-    faces.push_back(Face(5, 2, 6));
+    faces.push_back(Face(5, 2, 1));
+    faces.push_back(Face(6, 2, 5));
     // quad 1
-    faces.push_back(Face(2, 4, 6));
-    faces.push_back(Face(6, 4, 8));
+    faces.push_back(Face(6, 4, 2));
+    faces.push_back(Face(8, 4, 6));
     // quad 2
     faces.push_back(Face(3, 4, 7));
     faces.push_back(Face(7, 4, 8));
@@ -48,8 +48,8 @@ PrimMeshModel PrimMeshModel::Cuboid(vec3 p, vec3 dim)
     faces.push_back(Face(1, 3, 5));
     faces.push_back(Face(5, 3, 7));
     // quad 5
-    faces.push_back(Face(5, 6, 7));
-    faces.push_back(Face(7, 6, 8));
+    faces.push_back(Face(7, 6, 5));
+    faces.push_back(Face(8, 6, 7));
     // quad 6
     faces.push_back(Face(1, 2, 3));
     faces.push_back(Face(3, 2, 4));
@@ -84,7 +84,7 @@ PrimMeshModel PrimMeshModel::Pyramid(vec3 p, GLfloat height, GLfloat base_radius
             faces.push_back(Face(i + 1, i + 2, base_sides + 1));
             // base face
             if (i > 0) {
-                faces.push_back(Face(i + 1, i + 2, 1));
+                faces.push_back(Face(1, i + 2, i + 1));
             }
         }
     }
@@ -125,20 +125,19 @@ PrimMeshModel PrimMeshModel::Prism(vec3 p, GLfloat height, GLfloat base_radius, 
         }
     }
 
-    faces.push_back(Face(1, 2, 1 + base_sides + 1));
-    faces.push_back(Face(1 + base_sides, 2 + base_sides, 1));
     for (int i = 1; i < base_sides - 1; i++) {
         // side face
-        faces.push_back(Face(i + 1 + base_sides, i + 2 + base_sides, i + 1));
-        faces.push_back(Face(i + 1, i + 2, i + 1 + base_sides + 1));
+        faces.push_back(Face(i + 1, i + 2 + base_sides, i + 1 + base_sides));
+        faces.push_back(Face(i + 1, i + 2, i + 2 + base_sides));
         // base face
-        faces.push_back(Face(1 + base_sides, i + 2 + base_sides, i + 1 + base_sides));
+        faces.push_back(Face(i + 1 + base_sides, i + 2 + base_sides, 1 + base_sides));
         faces.push_back(Face(1, i + 2, i + 1));
     }
-    // two last faces
-    faces.push_back(Face(base_sides + 1, 1, base_sides));
-    //faces.push_back(Face(1, base_sides + 1, base_sides * 2 - 1));
-
+    // four last faces
+    faces.push_back(Face(1, 1 + base_sides, base_sides));
+    faces.push_back(Face(base_sides, 1 + base_sides, 2 * base_sides));
+    faces.push_back(Face(2, 2 + base_sides, 1));
+    faces.push_back(Face(1, 2 + base_sides, 1 + base_sides));
 
     prism.processRawVerts(verts, verts, faces);
     prism.fitBoundingBox();

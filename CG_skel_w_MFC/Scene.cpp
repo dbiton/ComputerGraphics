@@ -48,6 +48,14 @@ void Scene::draw() {
     renderer->SetCameraTransform(getActiveCamera()->getTransform());
     renderer->SetProjection(Projection());
 
+    for (int i = 0; i < models.size(); i++)
+    {
+        renderer->setLights(lights);
+        renderer->SetObjectTransform(models[i]->getTransform());
+        renderer->DrawTriangles(models[i], !dimInactives || i == activeModel, getActiveCamera()->shading);
+        if (models[i]->draw_bounding_box) renderer->DrawBox(models[i]);
+    }
+    renderer->applyEffects();
     if (drawAxes) renderer->DrawAxes();
     if (drawCameras) {
         for (int i = 0; i < cameras.size(); i++) {
@@ -57,18 +65,11 @@ void Scene::draw() {
         }
     }
     if (drawLights) {
+        renderer->DrawLightsStart();
         for (int i = 0; i < lights.size(); i++) {
             renderer->DrawLight(lights[i], !dimInactives || i == activeLight);
         }
     }
-    for (int i = 0; i < models.size(); i++)
-    {
-        renderer->setLights(lights);
-        renderer->SetObjectTransform(models[i]->getTransform());
-        renderer->DrawTriangles(models[i], !dimInactives || i == activeModel, getActiveCamera()->shading);
-        if (models[i]->draw_bounding_box) renderer->DrawBox(models[i]);
-    }
-    renderer->applyEffects();
     renderer->SwapBuffers();
 }
 
@@ -210,8 +211,8 @@ void PointLight::setPosition(vec3 _position) {
     position = _position;
 }
 
-vec3 PointLight::dirToSource(const vec3& p, const mat4& object2clip) const {
-    return normalize(applyTransformToPoint(object2clip, position) - p);
+vec3 PointLight::dirToSource(const vec3& p) const {
+    return normalize(position - p);
 }
 
 void ParallelLight::setDirection(vec3 _direction) {
@@ -220,11 +221,11 @@ void ParallelLight::setDirection(vec3 _direction) {
     direction = _direction;
 }
 
-vec3 ParallelLight::dirToSource(const vec3& p, const mat4& object2clip) const {
-    return applyTransformToNormal(object2clip, direction);
+vec3 ParallelLight::dirToSource(const vec3& p) const {
+    return direction;
 }
 
-vec3 AmbientLight::dirToSource(const vec3& p, const mat4& object2clip) const {
+vec3 AmbientLight::dirToSource(const vec3& p) const {
     // ambient light is by definition directionless, so...
     return vec3();
 }

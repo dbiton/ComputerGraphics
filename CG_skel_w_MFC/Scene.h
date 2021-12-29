@@ -29,14 +29,14 @@ public:
 	float getBrightness() const;
 	int getType() const;
 	std::string getNameOfType() const;
-	virtual vec3 dirToSource(const vec3& p, const mat4& object2clip) const = 0;
+	virtual vec3 dirToSource(const vec3& p) const = 0;
 };
 
 class AmbientLight : public Light {
 public:
 	AmbientLight(Color color, float brightness)
 		: Light(color, brightness, LIGHT_AMBIENT) { }
-	virtual vec3 dirToSource(const vec3& p, const mat4& object2clip) const;
+	virtual vec3 dirToSource(const vec3& p) const;
 };
 
 class PointLight : public Light {
@@ -47,7 +47,7 @@ public:
 	void setPosition(vec3 _position);
 	vec3 getPosition() const { return position; }
 
-	virtual vec3 dirToSource(const vec3& p, const mat4& object2clip) const;
+	virtual vec3 dirToSource(const vec3& p) const;
 };
 
 class ParallelLight : public Light {
@@ -58,7 +58,7 @@ public:
 	void setDirection(vec3 _direction);
 	vec3 getDirection() const { return direction; }
 
-	virtual vec3 dirToSource(const vec3& p, const mat4& object2clip) const;
+	virtual vec3 dirToSource(const vec3& p) const;
 };
 
 enum {

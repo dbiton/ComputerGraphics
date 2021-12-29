@@ -27,9 +27,9 @@ GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) {
 }
 
 void Renderer::DrawTriangles(MeshModel* model, bool isActiveModel, int shading) {
-    Color color_mesh(1, 1, 1);
-    Color color_face_normal(0, 1, 0);
-    Color color_vert_normal(0, 0.5, 1);
+    Color color_mesh(1, 1, 1), 
+          color_face_normal(0, 1, 0),
+          color_vert_normal(0, 0.5, 1);
     if (!isActiveModel) {
         constexpr float fade = 0.5;
         color_mesh *= fade;
@@ -39,47 +39,45 @@ void Renderer::DrawTriangles(MeshModel* model, bool isActiveModel, int shading) 
     constexpr GLfloat fn_len = 0.25,
                       vn_len = 0.5;
 
-    object2clip = projection * transform_camera_inverse * transform_object;
+    const mat4 world2clip = projection * transform_camera_inverse;
     for (int i = 0; i < model->getVertices()->size(); i += 3) {
         vec3 v[3];
         vec3 vn[3];
-        vec3 v_clip[3];
-        vec3 vn_clip[3];
+        vec2 v_screen[3];
 
         // load vertices
         for (int j = 0; j < 3; j++) {
-            v[j] = (*model->getVertices())[i + j].position;
-            vn[j] = (*model->getVertices())[i + j].normal;
-            v_clip[j] = applyTransformToPoint(object2clip, v[j]);
-            vn_clip[j] = normalize(applyTransformToNormal(object2clip, vn[j])); // TODO the normalize here might be nothing more than a bandaid...
+            v[j] = applyTransformToPoint(transform_object, (*model->getVertices())[i + j].position);
+            vn[j] = applyTransformToNormal(transform_object, (*model->getVertices())[i + j].normal);
+            if (model->draw_wireframe) v_screen[j] = clipToScreen(applyTransformToPoint(world2clip, v[j]));
         }
-
-        const GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
-        const vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len, // face normal
-                   fm = (v[0] + v[1] + v[2]) / 3; // face mid
 
         // draw color (shade)
         if (shading != SHADE_NONE) {
-            ShadeTriangle(v, vn, model->material->ComputeAt(v, model->getBoundingBoxMin(), model->getBoundingBoxMax()), shading);
+            ShadeTriangle(v, vn, model->material->ComputeAt(v, model->getBoundingBoxMin(), model->getBoundingBoxMax()), shading, projection * transform_camera_inverse);
         }
 
         // draw wireframe mesh
         if (model->draw_wireframe) {
             for (int j = 0; j < 3; j++) {
-                DrawLine(clipToScreen(v_clip[j]), clipToScreen(v_clip[(j + 1) % 3]), color_mesh);
+                DrawLine(v_screen[j], v_screen[(j + 1) % 3], color_mesh);
             }
         }
 
+        const GLfloat normalsLength = averageLength(v[0], v[1], v[2]);
+
         // draw face normal
         if (model->draw_normals_per_face) {
-            DrawLine(clipToScreen(applyTransformToPoint(object2clip, fm)), clipToScreen(applyTransformToPoint(object2clip, fm + fn)), color_face_normal);
+            const vec3 fn = normalize(cross(v[1] - v[0], v[2] - v[1])) * normalsLength * fn_len, // face normal
+                       fm = (v[0] + v[1] + v[2]) / 3; // face mid
+            DrawLine(clipToScreen(applyTransformToPoint(world2clip, fm)), clipToScreen(applyTransformToPoint(world2clip, fm + fn)), color_face_normal);
         }
 
         // draw vertex normals
         if (model->draw_normals_per_vert) {
             for (int j = 0; j < 3; j++) {
-                DrawLine(clipToScreen(applyTransformToPoint(object2clip, v[j])),
-                    clipToScreen(applyTransformToPoint(object2clip, v[j] + normalize(vn[j]) * normalsLength * vn_len)), color_vert_normal);
+                DrawLine(clipToScreen(applyTransformToPoint(world2clip, v[j])),
+                    clipToScreen(applyTransformToPoint(world2clip, v[j] + normalize(vn[j]) * normalsLength * vn_len)), color_vert_normal);
             }
         }
     }
@@ -152,16 +150,38 @@ void Renderer::DrawCamera(const mat4& transform) {
     DrawLine(pos2, forward2, Color(1, 1, 0));
 }
 
+void Renderer::DrawLightsStart() {
+    ambientLightDrawn = 0;
+}
+
 void Renderer::DrawLight(Light* light, bool isActiveLight) {
+    Color color = light->getColor() * light->getBrightness();
+    for (int i = 0; i < 3; i++) color[i] /= (1 + color[i]); // normalize...
+    
     switch (light->getType()) {
     case LIGHT_AMBIENT: {
-        // TODO either nothing or some sort of indicator in the corner
+        const vec2 boxMin(10 + ambientLightDrawn++ * 20, 10);
+
+        for (int i = 0; i < 10; i++)
+            DrawLine(boxMin + vec2(i, 0), boxMin + vec2(i, 10), color);
     } break;
     case LIGHT_POINT: {
-        // TODO probably some kind of X where the light is, in the camera's frame
+        const vec2 pos = clipToScreen(applyTransformToPoint(projection * transform_camera_inverse, ((PointLight*)light)->getPosition())),
+                   crossMin = pos - vec2(5),
+                   crossMax = pos + vec2(5);
+
+        DrawLine(crossMin, crossMax, color);
+        DrawLine(vec2(crossMin.x, crossMax.y), vec2(crossMax.x, crossMin.y), color);
     } break;
     case LIGHT_PARALLEL: {
-        // TODO probably a few parallel lines representing the light's direction
+        const vec2 dir = clipToScreen(applyTransformToNormal(projection * transform_camera_inverse, ((ParallelLight*)light)->getDirection())),
+            center = vec2(m_width, m_height) / 2,
+            lineMax = center + (m_height / 2) * normalize(dir),
+            offset = 10 * normalize(vec2(-dir.y, dir.x));
+
+        DrawLine(center, lineMax, color);
+        DrawLine(center + offset, lineMax + offset, color);
+        DrawLine(center - offset, lineMax - offset, color);
     } break;
     default:
         printf("LightType unimplemented!");
@@ -246,8 +266,8 @@ float Area(vec2 p0, vec2 p1, vec2 p2) noexcept {
     return 0.5f * std::abs(p1_p0.x * p2_p0.y - p2_p0.x * p1_p0.y);
 }
 
-void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Material> mats, int shading) {
-    vec3 v_clip[3] = { applyTransformToPoint(object2clip, v[0]), applyTransformToPoint(object2clip, v[1]), applyTransformToPoint(object2clip, v[2]) };
+void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Material> mats, int shading, const mat4& world2clip) {
+    vec3 v_clip[3] = { applyTransformToPoint(world2clip, v[0]), applyTransformToPoint(world2clip, v[1]), applyTransformToPoint(world2clip, v[2]) };
 
     // backface culling
     if (dot(cross(v_clip[1] - v_clip[0], v_clip[2] - v_clip[1]), vec3(0, 0, -1)) < 0) return;
@@ -413,8 +433,9 @@ void Renderer::DrawPixelSuperSampled(int x, int y, const Color& c) {
 
 Color Renderer::CalcColor(const Material& material, const vec3& surface_position, const vec3& surface_normal) {
     Color color = material.emissive;
-    for (const auto& light : lights) { // TODO investigate sharp changes in color, dolphin.obj has this fairly reliably
-        const vec3 l = light->dirToSource(surface_position, object2clip);
+
+    for (const auto& light : lights) {
+        const vec3 l = light->dirToSource(surface_position);
 
         // this is an ambient light source
         if (length(l) == 0) {
