@@ -371,7 +371,6 @@ void Renderer::DrawLine(vec2 p0, vec2 p1, const Color& c) {
         p0 *= m_factorSuperSample;
         p1 *= m_factorSuperSample;
     }
-
     const int x0 = std::round(p0.x),
               y0 = std::round(p0.y),
               x1 = std::round(p1.x),
