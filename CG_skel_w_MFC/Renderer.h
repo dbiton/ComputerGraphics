@@ -48,14 +48,14 @@ class Renderer
 
 	mat4 projection;
 	mat4 transform_object;
-	mat4 transform_camera_inverse;
+	mat4 transform_camera, transform_camera_inverse;
 
 	vec3 camera_pos, model_pos;
 
 	std::vector<Light*> lights;
 	int ambientLightDrawn = 0;
 public:
-	bool drawBackshadow = true;
+	bool drawBackshadow = false;
 
 	Renderer();
 	Renderer(int width, int height);

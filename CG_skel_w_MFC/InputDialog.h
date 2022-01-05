@@ -192,17 +192,22 @@ class CUniformMaterialDialog : public CInputDialog
 {
 public:
     CUniformMaterialDialog(CString title) : CInputDialog(title) { }
-    CUniformMaterialDialog(CString title, float baseRed, float baseGreen, float baseBlue,
+    CUniformMaterialDialog(CString title, float diffuseRed, float diffuseGreen, float diffuseBlue,
+        float specularRed, float specularGreen, float specularBlue,
         float emissiveRed, float emissiveGreen, float emissiveBlue,
         float ambientReflect, float roughness, float shininess)
-        : CInputDialog(title), baseRed(baseRed), baseGreen(baseGreen), baseBlue(baseBlue),
+        : CInputDialog(title), diffuseRed(diffuseRed), diffuseGreen(diffuseGreen), diffuseBlue(diffuseBlue),
+        specularRed(specularRed), specularGreen(specularGreen), specularBlue(specularBlue),
         emissiveRed(emissiveRed), emissiveGreen(emissiveGreen), emissiveBlue(emissiveBlue),
         ambientReflect(ambientReflect), roughness(roughness), shininess(shininess) { }
     virtual ~CUniformMaterialDialog() { }
 
-    float getBaseRed() noexcept { return baseRed; }
-    float getBaseGreen() noexcept { return baseGreen; }
-    float getBaseBlue() noexcept { return baseBlue; }
+    float getDiffuseRed() noexcept { return diffuseRed; }
+    float getDiffuseGreen() noexcept { return diffuseGreen; }
+    float getDiffuseBlue() noexcept { return diffuseBlue; }
+    float getSpecularRed() noexcept { return specularRed; }
+    float getSpecularGreen() noexcept { return specularGreen; }
+    float getSpecularBlue() noexcept { return specularBlue; }
     float getEmissiveRed() noexcept { return emissiveRed; }
     float getEmissiveGreen() noexcept { return emissiveGreen; }
     float getEmissiveBlue() noexcept { return emissiveBlue; }
@@ -211,12 +216,14 @@ public:
     float getShininess() noexcept { return shininess; }
 
 protected:
-    float baseRed = 0, baseGreen = 0, baseBlue = 0,
-        emissiveRed = 0, emissiveGreen = 0, emissiveBlue = 0,
-        ambientReflect = 0, roughness = 0, shininess = 0;
-    CEdit baseRedEdit, baseGreenEdit, baseBlueEdit,
-        emissiveRedEdit, emissiveGreenEdit, emissiveBlueEdit,
-        ambientReflectEdit, roughnessEdit, shininessEdit;
+    float diffuseRed = 0, diffuseGreen = 0, diffuseBlue = 0,
+          specularRed = 0, specularGreen = 0, specularBlue = 0,
+          emissiveRed = 0, emissiveGreen = 0, emissiveBlue = 0,
+          ambientReflect = 0, roughness = 0, shininess = 0;
+    CEdit diffuseRedEdit, diffuseGreenEdit, diffuseBlueEdit,
+          specularRedEdit, specularGreenEdit, specularBlueEdit,
+          emissiveRedEdit, emissiveGreenEdit, emissiveBlueEdit,
+          ambientReflectEdit, roughnessEdit, shininessEdit;
 
     virtual void DoDataExchange(CDataExchange* pDX);
 
@@ -225,22 +232,51 @@ protected:
     DECLARE_MESSAGE_MAP()
 };
 
-class CNonuniformMaterialDialog : public CInputDialog
+class CRainbowMaterialDialog : public CInputDialog
 {
 public:
-    CNonuniformMaterialDialog(CString title) : CInputDialog(title) { }
-    CNonuniformMaterialDialog(CString title, std::string xName, float x, std::string yName, float y, std::string zName, float z, std::string bonus)
-        : CInputDialog(title), xName(xName), x(x), yName(yName), y(y), zName(zName), z(z), bonus(bonus) { }
-    virtual ~CNonuniformMaterialDialog() { }
+    CRainbowMaterialDialog(CString title) : CInputDialog(title) { }
+    CRainbowMaterialDialog(CString title, float ambientReflect, float roughness, float shininess)
+        : CInputDialog(title), ambientReflect(ambientReflect), roughness(roughness), shininess(shininess) { }
+    virtual ~CRainbowMaterialDialog() { }
 
-    float getX() noexcept { return x; }
-    float getY() noexcept { return y; }
-    float getZ() noexcept { return z; }
+    float getAmbientReflect() noexcept { return ambientReflect; }
+    float getRoughness() noexcept { return roughness; }
+    float getShininess() noexcept { return shininess; }
 
 protected:
-    float x = 0, y = 0, z = 0;
-    std::string xName, yName, zName, bonus;
-    CEdit xEdit, yEdit, zEdit;
+    float ambientReflect = 0, roughness = 0, shininess = 0;
+    CEdit ambientReflectEdit, roughnessEdit, shininessEdit;
+
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+    afx_msg int OnCreate(LPCREATESTRUCT lpcs);
+    afx_msg void OnPaint();
+    DECLARE_MESSAGE_MAP()
+};
+
+class CPhysSpectrumMaterialDialog : public CInputDialog
+{
+public:
+    CPhysSpectrumMaterialDialog(CString title) : CInputDialog(title) { }
+    CPhysSpectrumMaterialDialog(CString title, float diffuseRed, float diffuseGreen, float diffuseBlue,
+        float specularRed, float specularGreen, float specularBlue)
+        : CInputDialog(title), diffuseRed(diffuseRed), diffuseGreen(diffuseGreen), diffuseBlue(diffuseBlue),
+        specularRed(specularRed), specularGreen(specularGreen), specularBlue(specularBlue) { }
+    virtual ~CPhysSpectrumMaterialDialog() { }
+
+    float getDiffuseRed() noexcept { return diffuseRed; }
+    float getDiffuseGreen() noexcept { return diffuseGreen; }
+    float getDiffuseBlue() noexcept { return diffuseBlue; }
+    float getSpecularRed() noexcept { return specularRed; }
+    float getSpecularGreen() noexcept { return specularGreen; }
+    float getSpecularBlue() noexcept { return specularBlue; }
+
+protected:
+    float diffuseRed = 0, diffuseGreen = 0, diffuseBlue = 0,
+          specularRed = 0, specularGreen = 0, specularBlue = 0;
+    CEdit diffuseRedEdit, diffuseGreenEdit, diffuseBlueEdit,
+          specularRedEdit, specularGreenEdit, specularBlueEdit;
 
     virtual void DoDataExchange(CDataExchange* pDX);
 

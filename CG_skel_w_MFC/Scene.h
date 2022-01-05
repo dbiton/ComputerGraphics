@@ -97,7 +97,7 @@ public:
 
 	static Camera* DefaultCamera(vec3 boxMin, vec3 boxMax) {
 		Camera* res = new Camera();
-		res->Perspective(90, 1, 1, 8);
+		res->Ortho(-1, 1, -1, 1, 1, 3);
 		mat4 transform = res->getTransform();
 		setPosition(transform, boxMin + 2 * (boxMax - boxMin));
 		res->self = transform;

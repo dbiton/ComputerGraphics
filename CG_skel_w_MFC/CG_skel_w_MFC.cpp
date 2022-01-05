@@ -455,34 +455,32 @@ void materialMenu(int id) {
     switch (id) {
     case MATERIAL_UNIFORM: {
         CUniformMaterialDialog dialog(_T("Uniform Material Parameters"),
-            material->base.x, material->base.y, material->base.z,
+            material->diffuse.x, material->diffuse.y, material->diffuse.z,
+            material->specular.x, material->specular.y, material->specular.z,
             material->emissive.x, material->emissive.y, material->emissive.z,
             material->ambient_reflect, material->roughness, material->shininess);
         if (dialog.DoModal() != IDOK) return;
         delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new Material(Color(dialog.getBaseRed(), dialog.getBaseGreen(), dialog.getBaseBlue()),
+        scene->getActiveModel()->material = new Material(Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
+            Color(dialog.getSpecularRed(), dialog.getSpecularGreen(), dialog.getSpecularBlue()),
             Color(dialog.getEmissiveRed(), dialog.getEmissiveGreen(), dialog.getEmissiveBlue()),
             dialog.getAmbientReflect(), dialog.getRoughness(), dialog.getShininess());
     } break;
     case MATERIAL_FULLSATSPECTRUM: {
-        CNonuniformMaterialDialog dialog(_T("Full Saturation Spectrum Material Parameters"),
-            "Ambient Reflect:", material->ambient_reflect,
-            "Roughness:", material->roughness,
-            "Shininess:", material->shininess,
-            "You have unlocked RAINBOW MODE!!!");
+        CRainbowMaterialDialog dialog(_T("Full Saturation Spectrum Material Parameters"),
+            material->ambient_reflect, material->roughness, material->shininess);
         if (dialog.DoModal() != IDOK) return;
         delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new FullSatSpectrumMaterial(dialog.getX(), dialog.getY(), dialog.getZ());
+        scene->getActiveModel()->material = new FullSatSpectrumMaterial(dialog.getAmbientReflect(), dialog.getRoughness(), dialog.getShininess());
     } break;
     case MATERIAL_PHYSSPECTRUM: {
-        CNonuniformMaterialDialog dialog(_T("Physical Spectrum Material Parameters"),
-            "Red:", material->ambient_reflect,
-            "Green:", material->roughness,
-            "Blue:", material->shininess,
-            "you unlocked anti-rainbow mode...");
+        CPhysSpectrumMaterialDialog dialog(_T("Physical Spectrum Material Parameters"),
+            material->diffuse.x, material->diffuse.y, material->diffuse.z,
+            material->specular.x, material->specular.y, material->specular.z);
         if (dialog.DoModal() != IDOK) return;
         delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new PhysSpectrumMaterial(Color(dialog.getX(), dialog.getY(), dialog.getZ()));
+        scene->getActiveModel()->material = new PhysSpectrumMaterial(Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
+            Color(dialog.getSpecularRed(), dialog.getSpecularGreen(), dialog.getSpecularBlue()));
     } break;
     default: message(_T("Unimplemented materialMenu option!")); // shouldn't happen!
     }
@@ -732,7 +730,7 @@ void supersamplingMenu(int id) {
 void fogMenu(int id) {
     switch (id) {
     case ADVANCED_ENABLE: {
-        CFogDialog dialog(_T("Bloom Parameters"), renderer->getFogColor().x, renderer->getFogColor().y, renderer->getFogColor().z,
+        CFogDialog dialog(_T("Fog Parameters"), renderer->getFogColor().x, renderer->getFogColor().y, renderer->getFogColor().z,
             renderer->getFogMinDistance(), renderer->getFogMaxDistance());
         if (dialog.DoModal() == IDOK)
             renderer->setFog(true, Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()),

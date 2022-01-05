@@ -414,9 +414,12 @@ void CSingleFloatDialog::OnPaint()
 // -------------------------
 
 enum {
-    BASE_RED_EDIT = 210,
-    BASE_GREEN_EDIT,
-    BASE_BLUE_EDIT,
+    DIFFUSE_RED_EDIT = 210,
+    DIFFUSE_GREEN_EDIT,
+    DIFFUSE_BLUE_EDIT,
+    SPECULAR_RED_EDIT,
+    SPECULAR_GREEN_EDIT,
+    SPECULAR_BLUE_EDIT,
     EMISSIVE_RED_EDIT,
     EMISSIVE_GREEN_EDIT,
     EMISSIVE_BLUE_EDIT,
@@ -428,9 +431,12 @@ enum {
 void CUniformMaterialDialog::DoDataExchange(CDataExchange* pDX)
 {
     CInputDialog::DoDataExchange(pDX);
-    DDX_Text(pDX, BASE_RED_EDIT, baseRed);
-    DDX_Text(pDX, BASE_GREEN_EDIT, baseGreen);
-    DDX_Text(pDX, BASE_BLUE_EDIT, baseBlue);
+    DDX_Text(pDX, DIFFUSE_RED_EDIT, diffuseRed);
+    DDX_Text(pDX, DIFFUSE_GREEN_EDIT, diffuseGreen);
+    DDX_Text(pDX, DIFFUSE_BLUE_EDIT, diffuseBlue);
+    DDX_Text(pDX, SPECULAR_RED_EDIT, specularRed);
+    DDX_Text(pDX, SPECULAR_GREEN_EDIT, specularGreen);
+    DDX_Text(pDX, SPECULAR_BLUE_EDIT, specularBlue);
     DDX_Text(pDX, EMISSIVE_RED_EDIT, emissiveRed);
     DDX_Text(pDX, EMISSIVE_GREEN_EDIT, emissiveGreen);
     DDX_Text(pDX, EMISSIVE_BLUE_EDIT, emissiveBlue);
@@ -447,24 +453,109 @@ END_MESSAGE_MAP()
 
 int CUniformMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
 {
-    baseRedEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(100, 10, 200, 30), this, BASE_RED_EDIT);
+    diffuseRedEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(135, 10, 200, 30), this, DIFFUSE_RED_EDIT);
 
-    baseGreenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(100, 50, 200, 70), this, BASE_GREEN_EDIT);
+    diffuseGreenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(135, 50, 200, 70), this, DIFFUSE_GREEN_EDIT);
 
-    baseBlueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(100, 90, 200, 110), this, BASE_BLUE_EDIT);
+    diffuseBlueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(135, 90, 200, 110), this, DIFFUSE_BLUE_EDIT);
+
+    specularRedEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 10, 400, 30), this, SPECULAR_RED_EDIT);
+
+    specularGreenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 50, 400, 70), this, SPECULAR_GREEN_EDIT);
+
+    specularBlueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 90, 400, 110), this, SPECULAR_BLUE_EDIT);
 
     emissiveRedEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(335, 10, 400, 30), this, EMISSIVE_RED_EDIT);
+        CRect(135, 130, 200, 150), this, EMISSIVE_RED_EDIT);
 
     emissiveGreenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(335, 50, 400, 70), this, EMISSIVE_GREEN_EDIT);
+        CRect(135, 170, 200, 190), this, EMISSIVE_GREEN_EDIT);
 
     emissiveBlueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(335, 90, 400, 110), this, EMISSIVE_BLUE_EDIT);
+        CRect(135, 210, 200, 230), this, EMISSIVE_BLUE_EDIT);
 
+    ambientReflectEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 130, 400, 150), this, AMBIENT_REFLECT_EDIT);
+
+    roughnessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 170, 400, 190), this, ROUGHNESS_EDIT);
+
+    shininessEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 210, 400, 230), this, SHININESS_EDIT);
+
+    return 0;
+}
+
+void CUniformMaterialDialog::OnPaint()
+{
+    CPaintDC dc(this);
+    dc.SetBkMode(TRANSPARENT);
+
+    CRect diffuseRedRect(10, 10, 200, 30);
+    dc.DrawText(CString("Diffuse Red:"), -1, &diffuseRedRect, DT_SINGLELINE);
+
+    CRect diffuseGreenRect(10, 50, 200, 70);
+    dc.DrawText(CString("Diffuse Green:"), -1, &diffuseGreenRect, DT_SINGLELINE);
+
+    CRect diffuseBlueRec(10, 90, 200, 110);
+    dc.DrawText(CString("Diffuse Blue:"), -1, &diffuseBlueRec, DT_SINGLELINE);
+
+    CRect specularRedRect(220, 10, 400, 30);
+    dc.DrawText(CString("Specular Red:"), -1, &specularRedRect, DT_SINGLELINE);
+
+    CRect specularGreenRect(220, 50, 400, 70);
+    dc.DrawText(CString("Specular Green:"), -1, &specularGreenRect, DT_SINGLELINE);
+
+    CRect specularBlueRect(220, 90, 400, 110);
+    dc.DrawText(CString("Specular Blue:"), -1, &specularBlueRect, DT_SINGLELINE);
+
+    CRect emissiveRedRect(10, 130, 200, 150);
+    dc.DrawText(CString("Emissive Red:"), -1, &emissiveRedRect, DT_SINGLELINE);
+
+    CRect emissiveGreenRect(10, 170, 200, 190);
+    dc.DrawText(CString("Emissive Green:"), -1, &emissiveGreenRect, DT_SINGLELINE);
+
+    CRect emissiveBlueRec(10, 210, 200, 230);
+    dc.DrawText(CString("Emissive Blue:"), -1, &emissiveBlueRec, DT_SINGLELINE);
+
+    CRect ambientReflectRect(220, 130, 400, 150);
+    dc.DrawText(CString("Ambient Reflect:"), -1, &ambientReflectRect, DT_SINGLELINE);
+
+    CRect roughnessRect(220, 170, 400, 190);
+    dc.DrawText(CString("Roughness:"), -1, &roughnessRect, DT_SINGLELINE);
+
+    CRect shininessRect(220, 210, 400, 230);
+    dc.DrawText(CString("Shininess:"), -1, &shininessRect, DT_SINGLELINE);
+
+    diffuseRedEdit.SetFocus();
+}
+
+// -------------------------
+//    Class CRainbowMaterialDialog
+// -------------------------
+
+void CRainbowMaterialDialog::DoDataExchange(CDataExchange* pDX)
+{
+    CInputDialog::DoDataExchange(pDX);
+    DDX_Text(pDX, AMBIENT_REFLECT_EDIT, ambientReflect); // reusing enums
+    DDX_Text(pDX, ROUGHNESS_EDIT, roughness);
+    DDX_Text(pDX, SHININESS_EDIT, shininess);
+}
+
+// CRainbowMaterialDialog message handlers
+BEGIN_MESSAGE_MAP(CRainbowMaterialDialog, CInputDialog)
+    ON_WM_CREATE()
+    ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+int CRainbowMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
+{
     ambientReflectEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
         CRect(230, 130, 300, 150), this, AMBIENT_REFLECT_EDIT);
 
@@ -477,28 +568,13 @@ int CUniformMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
     return 0;
 }
 
-void CUniformMaterialDialog::OnPaint()
+void CRainbowMaterialDialog::OnPaint()
 {
     CPaintDC dc(this);
     dc.SetBkMode(TRANSPARENT);
 
-    CRect baseRedRect(10, 10, 200, 30);
-    dc.DrawText(CString("Base Red:"), -1, &baseRedRect, DT_SINGLELINE);
-
-    CRect baseGreenRect(10, 50, 200, 70);
-    dc.DrawText(CString("Base Green:"), -1, &baseGreenRect, DT_SINGLELINE);
-
-    CRect baseBlueRec(10, 90, 200, 110);
-    dc.DrawText(CString("Base Blue:"), -1, &baseBlueRec, DT_SINGLELINE);
-
-    CRect emissiveRedRect(220, 10, 400, 30);
-    dc.DrawText(CString("Emissive Red:"), -1, &emissiveRedRect, DT_SINGLELINE);
-
-    CRect emissiveGreenRect(220, 50, 400, 70);
-    dc.DrawText(CString("Emissive Green:"), -1, &emissiveGreenRect, DT_SINGLELINE);
-
-    CRect emissiveBlueRect(220, 90, 400, 110);
-    dc.DrawText(CString("Emissive Blue:"), -1, &emissiveBlueRect, DT_SINGLELINE);
+    CRect secretRect(90, 70, 400, 90);
+    dc.DrawText(CString("You have unlocked RAINBOW MODE!!!"), -1, &secretRect, DT_SINGLELINE);
 
     CRect ambientReflectRect(120, 130, 300, 150);
     dc.DrawText(CString("Ambient Reflect:"), -1, &ambientReflectRect, DT_SINGLELINE);
@@ -509,59 +585,89 @@ void CUniformMaterialDialog::OnPaint()
     CRect shininessRect(120, 210, 300, 230);
     dc.DrawText(CString("Shininess:"), -1, &shininessRect, DT_SINGLELINE);
 
-    baseRedEdit.SetFocus();
+    ambientReflectEdit.SetFocus();
 }
 
 // -------------------------
-//    Class CNonuniformMaterialDialog
+//    Class CPhysSpectrumMaterialDialog
 // -------------------------
-
-void CNonuniformMaterialDialog::DoDataExchange(CDataExchange* pDX)
+/*  case MATERIAL_PHYSSPECTRUM: {
+        CNonuniformMaterialDialog dialog(_T("Physical Spectrum Material Parameters"),
+            "Red:", material->ambient_reflect,
+            "Green:", material->roughness,
+            "Blue:", material->shininess,
+            );
+        if (dialog.DoModal() != IDOK) return;
+        delete scene->getActiveModel()->material;
+        scene->getActiveModel()->material = new PhysSpectrumMaterial(Color(dialog.getX(), dialog.getY(), dialog.getZ()));
+    } break;*/
+void CPhysSpectrumMaterialDialog::DoDataExchange(CDataExchange* pDX)
 {
     CInputDialog::DoDataExchange(pDX);
-    DDX_Text(pDX, IDC_X_EDIT, x); // reusing enums
-    DDX_Text(pDX, IDC_Y_EDIT, y);
-    DDX_Text(pDX, IDC_Z_EDIT, z);
+    DDX_Text(pDX, DIFFUSE_RED_EDIT, diffuseRed); // reusing enums
+    DDX_Text(pDX, DIFFUSE_GREEN_EDIT, diffuseGreen);
+    DDX_Text(pDX, DIFFUSE_BLUE_EDIT, diffuseBlue);
+    DDX_Text(pDX, SPECULAR_RED_EDIT, specularRed);
+    DDX_Text(pDX, SPECULAR_GREEN_EDIT, specularGreen);
+    DDX_Text(pDX, SPECULAR_BLUE_EDIT, specularBlue);
 }
 
-// CNonuniformMaterialDialog message handlers
-BEGIN_MESSAGE_MAP(CNonuniformMaterialDialog, CInputDialog)
+// CPhysSpectrumMaterialDialog message handlers
+BEGIN_MESSAGE_MAP(CPhysSpectrumMaterialDialog, CInputDialog)
     ON_WM_CREATE()
     ON_WM_PAINT()
 END_MESSAGE_MAP()
 
-int CNonuniformMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
+int CPhysSpectrumMaterialDialog::OnCreate(LPCREATESTRUCT lpcs)
 {
-    xEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(230, 130, 300, 150), this, IDC_X_EDIT);
+    diffuseRedEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(135, 130, 200, 150), this, DIFFUSE_RED_EDIT);
 
-    yEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(230, 170, 300, 190), this, IDC_Y_EDIT);
+    diffuseGreenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(135, 170, 200, 190), this, DIFFUSE_GREEN_EDIT);
 
-    zEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
-        CRect(230, 210, 300, 230), this, IDC_Z_EDIT);
+    diffuseBlueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(135, 210, 200, 230), this, DIFFUSE_BLUE_EDIT);
+
+    specularRedEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 130, 400, 150), this, SPECULAR_RED_EDIT);
+
+    specularGreenEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 170, 400, 190), this, SPECULAR_GREEN_EDIT);
+
+    specularBlueEdit.Create(ES_MULTILINE | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+        CRect(335, 210, 400, 230), this, SPECULAR_BLUE_EDIT);
 
     return 0;
 }
 
-void CNonuniformMaterialDialog::OnPaint()
+void CPhysSpectrumMaterialDialog::OnPaint()
 {
     CPaintDC dc(this);
     dc.SetBkMode(TRANSPARENT);
 
     CRect secretRect(90, 70, 400, 90);
-    dc.DrawText(CString(bonus.c_str()), -1, &secretRect, DT_SINGLELINE);
+    dc.DrawText(CString("you unlocked anti-rainbow mode..."), -1, &secretRect, DT_SINGLELINE);
 
-    CRect xRect(120, 130, 300, 150);
-    dc.DrawText(CString(xName.c_str()), -1, &xRect, DT_SINGLELINE);
+    CRect diffuseRedRect(10, 130, 200, 150);
+    dc.DrawText(CString("Diffuse Red:"), -1, &diffuseRedRect, DT_SINGLELINE);
 
-    CRect yRect(120, 170, 300, 190);
-    dc.DrawText(CString(yName.c_str()), -1, &yRect, DT_SINGLELINE);
+    CRect diffuseGreenRect(10, 170, 200, 190);
+    dc.DrawText(CString("Diffuse Green:"), -1, &diffuseGreenRect, DT_SINGLELINE);
 
-    CRect zRect(120, 210, 300, 230);
-    dc.DrawText(CString(zName.c_str()), -1, &zRect, DT_SINGLELINE);
+    CRect diffuseBlueRec(10, 210, 200, 230);
+    dc.DrawText(CString("Diffuse Blue:"), -1, &diffuseBlueRec, DT_SINGLELINE);
 
-    xEdit.SetFocus();
+    CRect specularRedRect(220, 130, 400, 150);
+    dc.DrawText(CString("Specular Red:"), -1, &specularRedRect, DT_SINGLELINE);
+
+    CRect specularGreenRect(220, 170, 400, 190);
+    dc.DrawText(CString("Specular Green:"), -1, &specularGreenRect, DT_SINGLELINE);
+
+    CRect specularBlueRect(220, 210, 400, 230);
+    dc.DrawText(CString("Specular Blue:"), -1, &specularBlueRect, DT_SINGLELINE);
+
+    diffuseRedEdit.SetFocus();
 }
 
 // -------------------------

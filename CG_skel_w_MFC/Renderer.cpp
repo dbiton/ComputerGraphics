@@ -41,20 +41,22 @@ void Renderer::DrawTriangles(MeshModel* model, bool isActiveModel, int shading) 
 
     const mat4 world2clip = projection * transform_camera_inverse;
     for (int i = 0; i < model->getVertices()->size(); i += 3) {
+        vec3 v_original[3];
         vec3 v[3];
         vec3 vn[3];
         vec2 v_screen[3];
 
         // load vertices
         for (int j = 0; j < 3; j++) {
-            v[j] = applyTransformToPoint(transform_object, (*model->getVertices())[i + j].position);
+            v_original[j] = (*model->getVertices())[i + j].position;
+            v[j] = applyTransformToPoint(transform_object, v_original[j]);
             vn[j] = applyTransformToNormal(transform_object, (*model->getVertices())[i + j].normal);
             if (model->draw_wireframe) v_screen[j] = clipToScreen(applyTransformToPoint(world2clip, v[j]));
         }
 
         // draw color (shade)
         if (shading != SHADE_NONE) {
-            ShadeTriangle(v, vn, model->material->ComputeAt(v, model->getBoundingBoxMin(), model->getBoundingBoxMax()), shading, projection * transform_camera_inverse);
+            ShadeTriangle(v, vn, model->material->ComputeAt(v_original, model->getBoundingBoxMin(), model->getBoundingBoxMax()), shading, projection * transform_camera_inverse);
         }
 
         // draw wireframe mesh
@@ -190,6 +192,7 @@ void Renderer::DrawLight(Light* light, bool isActiveLight) {
 }
 
 void Renderer::SetCameraTransform(const mat4& cTransform) {
+    transform_camera = cTransform;
     transform_camera_inverse = InverseTransform(cTransform);
 }
 
@@ -442,20 +445,20 @@ Color Renderer::CalcColor(const Material& material, const vec3& surface_position
         if (length(l) == 0) {
             // ambient
             const vec3 alc = material.ambient_reflect * light->getBrightness() * light->getColor();
-            color += alc * material.base;
+            color += alc * material.diffuse;
         }
         else {
             if (dot(l, surface_normal) < 0 && !drawBackshadow) continue;
-            const vec3 v = normalize(getPosition(transform_camera_inverse) - surface_position);
-            const vec3 r = l - 2 * dot(l, surface_normal) * surface_normal;
-
-            // diffuse
             const vec3 dlc = material.roughness * dot(l, surface_normal) * light->getBrightness() * light->getColor();
-            color += dlc * material.base;
+            color += dlc * material.diffuse;
 
-            // specular
-            const vec3 slc = (1 - material.roughness) * pow(abs(dot(r, v)), material.shininess) * light->getBrightness() * light->getColor();
-            color += slc * material.base;
+            const vec3 v = normalize(getPosition(transform_camera) - surface_position),
+                       r = l - 2 * dot(l, surface_normal) * surface_normal;
+            const GLfloat angle = dot(r, v);
+            if (angle < 0) {
+                const vec3 slc = (1 - material.roughness) * pow(-angle, material.shininess) * light->getBrightness() * light->getColor();
+                color += slc * material.specular;
+            }
         }
     }
     // color values should be in the [0,1] range, so we bound them using x/(1+x)
