@@ -16,7 +16,9 @@ void Scene::AddModel(MeshModel* model) {
         cameras.push_back(Camera::DefaultCamera(model->getBoundingBoxMin(), model->getBoundingBoxMax()));
         activeCamera = 0;
         cameras[0]->LookAt(getPosition(cameras[0]->getTransform()), vec4(), vec4(0, 0, 1, 0));
-        scaleBy(cameras[0]->world, vec3(4));
+        const vec3 box = model->getBoundingBoxMax() - model->getBoundingBoxMin();
+        const GLfloat scale = max(max(box.x, box.y), box.z);
+        scaleBy(cameras[0]->world, vec3(scale));
     }
     if (activeLight == -1) {
         lights.push_back(new AmbientLight(Color(1), 0.5));
