@@ -56,6 +56,7 @@ class Renderer
 	int ambientLightDrawn = 0;
 public:
 	bool drawBackshadow = false;
+	int shading;
 
 	Renderer();
 	Renderer(int width, int height);

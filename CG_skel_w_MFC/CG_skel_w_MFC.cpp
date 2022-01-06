@@ -537,7 +537,7 @@ void newCameraMenu(int id) {
 
 void shadingMenu(int id) {
     if (scene->activeCamera != -1) {
-        scene->getActiveCamera()->shading = id;
+        renderer->shading = id;
         display();
     }
 }
@@ -803,20 +803,13 @@ void makeCamerasSubMenu() {
         glutSetMenu(menuMain);
         glutAddSubMenu("Cameras", menuCameras);
     }
-    const int menuNewCamera = glutCreateMenu(newCameraMenu),
-              menuShading = glutCreateMenu(shadingMenu);
+    const int menuNewCamera = glutCreateMenu(newCameraMenu);
 
     // intentional indents to visualize the structure of the menu
     glutSetMenu(menuCameras);
     /**/glutAddSubMenu("New...", menuNewCamera); glutSetMenu(menuNewCamera);
     /*    */glutAddMenuEntry("Duplicate...", NEW_CAMERA_DUPLICATE);
     /*    */glutAddMenuEntry("At position...", NEW_CAMERA_AT_POS);
-    /**/glutSetMenu(menuCameras);
-    /**/glutAddSubMenu("Set Shading", menuShading); glutSetMenu(menuShading);
-    /*    */glutAddMenuEntry("None", SHADE_NONE);
-    /*    */glutAddMenuEntry("Flat", SHADE_FLAT);
-    /*    */glutAddMenuEntry("Gouraud", SHADE_GOURAUD);
-    /*    */glutAddMenuEntry("Phong", SHADE_PHONG);
     /**/glutSetMenu(menuCameras);
     /**/glutAddMenuEntry("Delete active camera", -1);
     /**/for (int i = 0; i < scene->getCameras()->size(); i++) {
@@ -868,8 +861,8 @@ void initMenu()
 {
     // create all the submenus first, then construct everything visually.
     // maybe this is more inefficient, but it's easier to work with
-    int menuToggles, menuControl, menuReset, menuProjection,
-        menuSensitivity, menuAdvanced, menuSupersampling, menuFog, menuBloom;
+    int menuToggles, menuControl, menuReset, menuProjection, menuSensitivity,
+        menuShading, menuAdvanced, menuSupersampling, menuFog, menuBloom;
 
     // intentional indents to visualize the structure of the menu
     menuMain = glutCreateMenu(mainMenu);
@@ -881,6 +874,7 @@ void initMenu()
     /**/menuReset = glutCreateMenu(resetMenu);
     /**/menuProjection = glutCreateMenu(projectionMenu);
     /**/menuSensitivity = glutCreateMenu(sensitivityMenu);
+    /**/menuShading = glutCreateMenu(shadingMenu);
     /**/menuAdvanced = glutCreateMenu(advancedMenu);
     /*    */menuSupersampling = glutCreateMenu(supersamplingMenu);
     /*    */menuFog = glutCreateMenu(fogMenu);
@@ -925,6 +919,12 @@ void initMenu()
     /**/glutAddMenuEntry("Movement", SENSITIVITY_MOVEMENT);
     /**/glutAddMenuEntry("Scaling", SENSITIVITY_SCALING);
     /**/glutAddMenuEntry("Rotation", SENSITIVITY_ROTATION);
+    glutSetMenu(menuMain);
+    glutAddSubMenu("Shading", menuShading); glutSetMenu(menuShading);
+    /**/glutAddMenuEntry("None", SHADE_NONE);
+    /**/glutAddMenuEntry("Flat", SHADE_FLAT);
+    /**/glutAddMenuEntry("Gouraud", SHADE_GOURAUD);
+    /**/glutAddMenuEntry("Phong", SHADE_PHONG);
     glutSetMenu(menuMain);
     glutAddSubMenu("Advanced", menuAdvanced); glutSetMenu(menuAdvanced);
     /**/glutAddSubMenu("Supersampling", menuSupersampling); glutSetMenu(menuSupersampling);

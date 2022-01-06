@@ -78,7 +78,6 @@ public:
 	Camera() { }
 
 	mat4 projection;
-	int shading;
 	float lastBottom, lastTop, lastLeft, lastRight, lastNear, lastFar;
 	int lastType; // all of this is needed to update the projection matrix upon reshape
 
@@ -101,7 +100,6 @@ public:
 		mat4 transform = res->getTransform();
 		setPosition(transform, boxMin + 2 * (boxMax - boxMin));
 		res->self = transform;
-		res->shading = SHADE_PHONG;
 		return res;
 	}
 };

@@ -19,6 +19,7 @@ void Scene::AddModel(MeshModel* model) {
         const vec3 box = model->getBoundingBoxMax() - model->getBoundingBoxMin();
         const GLfloat scale = max(max(box.x, box.y), box.z);
         scaleBy(cameras[0]->world, vec3(scale));
+        renderer->shading = SHADE_PHONG;
     }
     if (activeLight == -1) {
         lights.push_back(new AmbientLight(Color(1), 0.5));
@@ -55,7 +56,7 @@ void Scene::draw() {
     {
         renderer->setLights(lights);
         renderer->SetObjectTransform(models[i]->getTransform());
-        renderer->DrawTriangles(models[i], !dimInactives || i == activeModel, getActiveCamera()->shading);
+        renderer->DrawTriangles(models[i], !dimInactives || i == activeModel, renderer->shading);
         if (models[i]->draw_bounding_box) renderer->DrawBox(models[i]);
     }
     renderer->applyEffects();
