@@ -127,7 +127,7 @@ void display(void)
 void reshape(int width, int height)
 {
     if (height < 1) height = 1; // if height is too small, OpenGL freaks out
-    renderer->CreateBuffers(width, height); // at least it seems like we don't need to re-init the whole OpenGL rendering...
+    renderer->ResizeBuffers(width, height); // at least it seems like we don't need to re-init the whole OpenGL rendering...
 }
 
 inline void message(CString message) { AfxMessageBox(message); }
@@ -290,11 +290,7 @@ void motion(int x, int y)
     last_x = x;
     last_y = y;
 
-    if (rb_down) {
-    }
-    else if (rb_down) {
-    }
-    else if (mb_down) {
+    if (mb_down) {
         if (scene->activeCamera != -1) {
             rotateBy(controlled(CONTROL_CONTEXT_ROTATE), rotation_coe * vec3(dy, -dx, 0));
         }

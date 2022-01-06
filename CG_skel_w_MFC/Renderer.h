@@ -38,7 +38,7 @@ class Renderer
 	float m_fogMinDistance = 0;
 
 	bool m_isBloom = false;
-	float* m_bloomBuffer;
+	float* m_bloomBufferHorz, *m_bloomBufferVert;
 	float* m_weightsBloom;
 	float m_threshBloom = 1;
 	int m_spreadBloom = 0;
@@ -79,7 +79,8 @@ public:
 	void ClearDepthBuffer();
 	void ClearBloomBuffer();
 	void SetDemoBuffer();
-	void CreateBuffers(int width, int height, bool first = false);
+	void CreateBuffers(int width, int height);
+	void ResizeBuffers(int width, int height);
 	float GetHeightMultiplier() noexcept { return m_height / m_firstHeight; }
 	float GetWidthMultiplier() noexcept { return m_width / m_firstWidth; }
 
