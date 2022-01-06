@@ -619,8 +619,8 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
         }
         m_weightsBloom = new float[spreadBloom * 2 + 1];
         float sum = 0;
-        float c; 
-        for (c= m_spreadBloom; exp(-(m_spreadBloom + 1) * (m_spreadBloom + 1) / (2 * c * c)) > 1.f/256; c/=2);
+        float c = m_spreadBloom;
+        //for (c= m_spreadBloom; exp(-(m_spreadBloom + 1) * (m_spreadBloom + 1) / (2 * c * c)) > 0.1f; c/=2);
 
         for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
             const float d = i - (m_spreadBloom + 1); // casting to float because we don't want integer division
