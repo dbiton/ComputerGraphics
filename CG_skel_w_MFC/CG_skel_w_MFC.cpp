@@ -15,7 +15,6 @@
 #include "InitShader.h"
 #include "InputDialog.h"
 #include "mat.h"
-#include "Renderer.h"
 #include "Scene.h"
 #include "vec.h"
 
@@ -71,6 +70,13 @@ enum {
 };
 
 enum {
+    SHADE_NONE,
+    SHADE_FLAT, 
+    SHADE_GOURAUD, 
+    SHADE_PHONG
+};
+
+enum {
     PROJ_FRUSTUM,
     PROJ_ORTHO,
     PROJ_PERSPECTIVE
@@ -106,7 +112,6 @@ enum { // used for intuitive mode
 constexpr bool ALLOW_DEMO = false;
 
 Scene* scene;
-Renderer* renderer;
 
 int last_x, last_y;
 bool lb_down, rb_down, mb_down;
@@ -119,15 +124,12 @@ float move_coe = 1, scale_coe = 1, rotation_coe = 1;
 
 void display(void)
 {
-    renderer->ClearColorBuffer();
-    renderer->ClearDepthBuffer();
     if (scene->activeCamera != -1) scene->draw();
 }
 
 void reshape(int width, int height)
 {
     if (height < 1) height = 1; // if height is too small, OpenGL freaks out
-    renderer->ResizeBuffers(width, height); // at least it seems like we don't need to re-init the whole OpenGL rendering...
 }
 
 inline void message(CString message) { AfxMessageBox(message); }
@@ -174,10 +176,6 @@ void toggleInactivesDimming() noexcept {
 
 void toggleAxes() noexcept {
     scene->drawAxes = !scene->drawAxes;
-}
-
-void toggleBackshadow() noexcept {
-    renderer->drawBackshadow = !renderer->drawBackshadow;
 }
 
 mat4& controlled(int context, int control_mode) noexcept {
@@ -238,7 +236,6 @@ void keyboard(unsigned char key, int x, int y) {
     case 'l': toggleLights(); break;
     case 'i': toggleInactivesDimming(); break;
     case 'x': toggleAxes(); break;
-    case 'k': toggleBackshadow(); break;
 
     case 'r': resetFrame(controlled(CONTROL_CONTEXT_NONE)); break;
 
@@ -537,7 +534,7 @@ void newCameraMenu(int id) {
 
 void shadingMenu(int id) {
     if (scene->activeCamera != -1) {
-        renderer->shading = id;
+        scene->shading = id;
         display();
     }
 }
@@ -631,7 +628,6 @@ void togglesMenu(int id) {
     case TOGGLE_LIGHTS: toggleLights(); break;
     case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
     case TOGGLE_AXES: toggleAxes(); break;
-    case TOGGLE_BACKSHADOW: toggleBackshadow(); break;
     default: message(_T("Unimplemented togglesMenu option!")); // shouldn't happen!
     }
     display();
@@ -714,10 +710,10 @@ void advancedMenu(int id) {
 void supersamplingMenu(int id) {
     switch (id) {
     case ADVANCED_ENABLE: {
-        CSingleFloatDialog dialog(_T("Supersampling factor"), renderer->getSupersamplingFactor(), true);
-        if (dialog.DoModal() == IDOK) renderer->setSupersampling(true, dialog.getValue());
+        CSingleFloatDialog dialog(_T("Supersampling factor"), scene->getSupersamplingFactor(), true);
+        if (dialog.DoModal() == IDOK) scene->setSupersampling(true, dialog.getValue());
     } break;
-    case ADVANCED_DISABLE: renderer->setSupersampling(false); break;
+    case ADVANCED_DISABLE: scene->setSupersampling(false); break;
     default: message(_T("Unimplemented supersamplingMenu option!")); // shouldn't happen!
     }
     display();
@@ -726,13 +722,13 @@ void supersamplingMenu(int id) {
 void fogMenu(int id) {
     switch (id) {
     case ADVANCED_ENABLE: {
-        CFogDialog dialog(_T("Fog Parameters"), renderer->getFogColor().x, renderer->getFogColor().y, renderer->getFogColor().z,
-            renderer->getFogMinDistance(), renderer->getFogMaxDistance());
+        CFogDialog dialog(_T("Fog Parameters"), scene->getFogColor().x, scene->getFogColor().y, scene->getFogColor().z,
+            scene->getFogMinDistance(), scene->getFogMaxDistance());
         if (dialog.DoModal() == IDOK)
-            renderer->setFog(true, Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()),
+            scene->setFog(true, Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()),
                 dialog.getMinDistance(), dialog.getMaxDistance());
     } break;
-    case ADVANCED_DISABLE: renderer->setFog(false); break;
+    case ADVANCED_DISABLE: scene->setFog(false); break;
     default: message(_T("Unimplemented fogMenu option!")); // shouldn't happen!
     }
     display();
@@ -741,10 +737,10 @@ void fogMenu(int id) {
 void bloomMenu(int id) {
     switch (id) {
     case ADVANCED_ENABLE: {
-        CBloomDialog dialog(_T("Bloom Parameters"), renderer->getThreshBloom(), renderer->getSpreadBloom());
-        if (dialog.DoModal() == IDOK) renderer->setBloom(true, dialog.getThresh(), dialog.getSpread());
+        CBloomDialog dialog(_T("Bloom Parameters"), scene->getThreshBloom(), scene->getSpreadBloom());
+        if (dialog.DoModal() == IDOK) scene->setBloom(true, dialog.getThresh(), dialog.getSpread());
     } break;
-    case ADVANCED_DISABLE: renderer->setBloom(false); break;
+    case ADVANCED_DISABLE: scene->setBloom(false); break;
     default: message(_T("Unimplemented bloomMenu option!")); // shouldn't happen!
     }
     display();
@@ -969,8 +965,7 @@ int my_main(int argc, char** argv)
     }
     fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
-    renderer = new Renderer(512, 512);
-    scene = new Scene(renderer);
+    scene = new Scene();
 
     //----------------------------------------------------------------------------
     // Initialize Callbacks
@@ -984,7 +979,6 @@ int my_main(int argc, char** argv)
 
     glutMainLoop();
     delete scene;
-    delete renderer;
     return 0;
 }
 

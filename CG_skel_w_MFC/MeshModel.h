@@ -12,14 +12,18 @@ class MeshModel : public Entity
 protected:
 	// data as imported from obj - in model space
 	std::vector<Vertex> vertices;
+	std::vector<GLuint> indices;
+
 	vec3 bounding_box_min;
 	vec3 bounding_box_max;
 	std::string name;
 
+	GLuint vao, vbo, ebo;
+
 	MeshModel() noexcept;
 
 	void fitBoundingBox();
-	void processRawVerts(const std::vector<vec3>& verts, const std::vector<vec3>& normals, const std::vector<Face>& faces);
+	void processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces);
 public:
 
 	Material* material = Material::DefaultMaterial();
@@ -35,8 +39,10 @@ public:
 	
 	vec3 getBoundingBoxMin() { return bounding_box_min; }
 	vec3 getBoundingBoxMax() { return bounding_box_max; }
-	std::vector<Vertex>* getVertices() { return &vertices; }
 	std::string getName() { return name; }
 
+	void Draw();
 	void Recenter();
+private:
+	void SetupGL();
 };

@@ -4,7 +4,6 @@
 #include <vector>
 #include "GL/glew.h"
 #include "MeshModel.h"
-#include "Renderer.h"
 
 enum {
 	LIGHT_AMBIENT,
@@ -108,12 +107,21 @@ class Scene {
 	std::vector<MeshModel*> models;
 	std::vector<Light*> lights;
 	std::vector<Camera*> cameras;
-	Renderer* renderer;
 
 	void AddModel(MeshModel* model);
 	mat4 Projection();
 
+	bool isBloom, isFog, isSupersample;
+	int spreadBloom;
+	float threshBloom;
+	Color colorFog;
+	float minDistanceFog, maxDistanceFog;
+	int factorSupersample;
+
+	GLuint program;
 public:
+	int shading = 0;
+
 	int activeModel = -1;
 	int activeLight = -1;
 	int activeCamera = -1;
@@ -123,7 +131,10 @@ public:
 	bool drawCameras = false;
 	bool drawLights = false;
 
-	Scene(Renderer *_renderer) : renderer(_renderer) { }
+	Scene() {
+		program = InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
+		glUseProgram(program);
+	}
 
 	void loadOBJModel(std::string fileName, std::string modelName);
 	void draw();
@@ -146,4 +157,17 @@ public:
 	void AddPrism(vec3 p, GLfloat height, GLfloat base_radius, int base_sides);
 	void AddSphere(vec3 p, GLfloat radius, int subdivisions);
 	void focus();
+
+	void setFog(bool enable, const Color& color, float min, float max);
+	void setSupersampling(bool enable, int factor=0);
+	void setBloom(bool enable, float thresh=0, int spread=0);
+
+	float getThreshBloom() const;
+	int getSpreadBloom() const;
+
+	float getSupersamplingFactor() const;
+
+	Color getFogColor() const;
+	float getFogMinDistance() const;
+	float getFogMaxDistance() const;
 };

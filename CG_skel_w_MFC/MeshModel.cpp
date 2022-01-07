@@ -58,13 +58,16 @@ MeshModel::MeshModel(string fileName, string modelName)
 	name = modelName;
 	loadFile(fileName);
 	fitBoundingBox();
+	SetupGL();
 }
 
 MeshModel::~MeshModel() { }
 
 void MeshModel::loadFile(string fileName)
 {
-	std::vector<vec3> verts, normals;
+	std::vector<vec3> positions;
+	std::vector<vec3> normals;
+	std::vector<vec2> texs;
 	std::vector<Face> faces;
 
 	ifstream ifile(fileName.c_str());
@@ -83,13 +86,13 @@ void MeshModel::loadFile(string fileName)
 
 		// based on the type parse data
 		if (lineType == "v")
-			verts.push_back(vec3fFromStream(issLine));
+			positions.push_back(vec3fFromStream(issLine));
 		else if (lineType == "vn")
 			normals.push_back(vec3fFromStream(issLine));
 		else if (lineType == "f")
 			faces.push_back(faceFromStream(issLine));
 		else if (lineType == "vt") {
-			// not processing vertex textures...
+			texs.push_back(vec2fFromStream(issLine));
 		}
 		else if (lineType == "#" || lineType == "") {
 			// comment / empty line
@@ -99,7 +102,7 @@ void MeshModel::loadFile(string fileName)
 		}
 	}
 
-	processRawVerts(verts, normals, faces);
+	processRawVerts(positions, normals, texs, faces);
 }
 
 void MeshModel::fitBoundingBox()
@@ -119,27 +122,55 @@ void MeshModel::fitBoundingBox()
 	}
 }
 
+void MeshModel::Draw()
+{
+	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(vao);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
 void MeshModel::Recenter() {
 	setPosition(self, -(bounding_box_min + bounding_box_max) / 2); // center it in its own axis system!
 }
 
-void MeshModel::processRawVerts(const std::vector<vec3>& verts, const std::vector<vec3>& normals, const std::vector<Face>& faces)
+void MeshModel::SetupGL()
+{
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &ebo);
+
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, normal));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, tex));
+
+	glBindVertexArray(0);
+}
+
+void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces)
 {
 	vertices.clear();
+	for (int i = 0; i < positions.size(); i++) {
+		Vertex v;
+		v.position = positions[i];
+		v.normal = normals[i];
+		v.tex = vec2(0.0);
+		vertices.push_back(v);
+	}
 	for (const auto& face : faces) {
-		Vertex v0, v1, v2;
-
-		v0.position = verts[face.v[0] - 1];
-		v1.position = verts[face.v[1] - 1];
-		v2.position = verts[face.v[2] - 1];
-
-		v0.normal = normals[face.vn[0] - 1];
-		v1.normal = normals[face.vn[1] - 1];
-		v2.normal = normals[face.vn[2] - 1];
-
-		vertices.push_back(v0);
-		vertices.push_back(v1);
-		vertices.push_back(v2);
+		for (int i = 0; i < 3; i++) indices.push_back(face.v[i]);
+		for (int i = 0; i < 3; i++) indices.push_back(face.vn[i]);
+		for (int i = 0; i < 2; i++) indices.push_back(face.vt[i]);
 	}
 }
 

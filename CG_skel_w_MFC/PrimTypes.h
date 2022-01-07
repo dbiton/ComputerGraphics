@@ -1,12 +1,14 @@
 #pragma once
 
 #include "vec.h"
+#include <GL/GL.h>
 
 typedef vec3 Color;
 
 struct Vertex {
 	vec3 position;
 	vec3 normal;
+	vec2 tex;
 };
 
 struct Face {

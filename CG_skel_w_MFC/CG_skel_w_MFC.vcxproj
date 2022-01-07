@@ -110,7 +110,6 @@ copy $(ProjectDir)*.glsl $(OutputPath)</Command>
     <ClCompile Include="InputDialog.cpp" />
     <ClCompile Include="MeshModel.cpp" />
     <ClCompile Include="PrimMeshModel.cpp" />
-    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -127,7 +126,6 @@ copy $(ProjectDir)*.glsl $(OutputPath)</Command>
     <ClInclude Include="MeshModel.h" />
     <ClInclude Include="PrimMeshModel.h" />
     <ClInclude Include="PrimTypes.h" />
-    <ClInclude Include="Renderer.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="stdafx.h" />

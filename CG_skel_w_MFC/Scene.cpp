@@ -5,6 +5,8 @@
 #include <cassert>
 #include "MeshModel.h"
 #include "PrimMeshModel.h"
+#include "GL\freeglut.h"
+#include "InitShader.h"
 #include "Scene.h"
 
 using namespace std;
@@ -49,37 +51,15 @@ mat4 Scene::Projection() {
 }
 
 void Scene::draw() {
-    renderer->SetCameraTransform(getActiveCamera()->getTransform());
-    renderer->SetProjection(Projection());
-
-    for (int i = 0; i < models.size(); i++)
-    {
-        renderer->setLights(lights);
-        renderer->SetObjectTransform(models[i]->getTransform());
-        renderer->DrawTriangles(models[i], !dimInactives || i == activeModel, renderer->shading);
-        if (models[i]->draw_bounding_box) renderer->DrawBox(models[i]);
+    glClear(GL_COLOR_BUFFER_BIT);
+    for (const auto& model : models) {
+        model->Draw();
     }
-    renderer->applyEffects();
-    if (drawAxes) renderer->DrawAxes();
-    if (drawCameras) {
-        for (int i = 0; i < cameras.size(); i++) {
-            if (i != activeCamera) {
-                renderer->DrawCamera(cameras[i]->getTransform());
-            }
-        }
-    }
-    if (drawLights) {
-        renderer->DrawLightsStart();
-        for (int i = 0; i < lights.size(); i++) {
-            renderer->DrawLight(lights[i], !dimInactives || i == activeLight);
-        }
-    }
-    renderer->SwapBuffers();
+    glFlush();
+    glutSwapBuffers();
 }
 
 void Scene::drawDemo() {
-    renderer->SetDemoBuffer();
-    renderer->SwapBuffers();
 }
 
 int Scene::AddCamera(const Camera& camera) {
@@ -232,4 +212,70 @@ vec3 ParallelLight::dirToSource(const vec3& p) const {
 vec3 AmbientLight::dirToSource(const vec3& p) const {
     // ambient light is by definition directionless, so...
     return vec3();
+}
+
+void Scene::setFog(bool enable, const Color& color, float min, float max)
+{
+    isFog = enable;
+    if (isFog) {
+        colorFog = color;
+        minDistanceFog = min;
+        maxDistanceFog = max;
+    }
+    else {
+
+    }
+}
+
+void Scene::setSupersampling(bool enable, int factor)
+{
+    isSupersample = enable;
+    if (isSupersample) {
+        factorSupersample = factor;
+    }
+    else {
+
+    }
+}
+
+void Scene::setBloom(bool enable, float thresh, int spread)
+{
+    isBloom = enable;
+    if (isBloom) {
+        threshBloom = thresh;
+        spreadBloom = spread;
+    }
+    else {
+
+    }
+}
+
+float Scene::getThreshBloom() const
+{
+    return threshBloom;
+}
+
+int Scene::getSpreadBloom() const
+{
+    return spreadBloom;
+}
+
+float Scene::getSupersamplingFactor() const
+{
+    return factorSupersample;
+}
+
+Color Scene::getFogColor() const
+{
+    return colorFog;
+}
+
+float Scene::getFogMinDistance() const
+{
+    return minDistanceFog;
+}
+
+float Scene::getFogMaxDistance() const
+{
+    return maxDistanceFog;
 }
