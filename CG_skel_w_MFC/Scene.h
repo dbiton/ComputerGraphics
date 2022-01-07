@@ -103,6 +103,13 @@ public:
 	}
 };
 
+enum {
+	SHADE_NONE,
+	SHADE_FLAT,
+	SHADE_GOURAUD,
+	SHADE_PHONG
+};
+
 class Scene {
 	std::vector<MeshModel*> models;
 	std::vector<Light*> lights;
@@ -131,10 +138,7 @@ public:
 	bool drawCameras = false;
 	bool drawLights = false;
 
-	Scene() {
-		program = InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
-		glUseProgram(program);
-	}
+	Scene();
 
 	void loadOBJModel(std::string fileName, std::string modelName);
 	void draw();
@@ -158,9 +162,9 @@ public:
 	void AddSphere(vec3 p, GLfloat radius, int subdivisions);
 	void focus();
 
-	void setFog(bool enable, const Color& color, float min, float max);
+	void setFog(bool enable, Color color = Color(0.f), float min = 0.f, float max = 0.f);
 	void setSupersampling(bool enable, int factor=0);
-	void setBloom(bool enable, float thresh=0, int spread=0);
+	void setBloom(bool enable, float thresh=0.f, int spread=0);
 
 	float getThreshBloom() const;
 	int getSpreadBloom() const;

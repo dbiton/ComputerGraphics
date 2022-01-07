@@ -70,13 +70,6 @@ enum {
 };
 
 enum {
-    SHADE_NONE,
-    SHADE_FLAT, 
-    SHADE_GOURAUD, 
-    SHADE_PHONG
-};
-
-enum {
     PROJ_FRUSTUM,
     PROJ_ORTHO,
     PROJ_PERSPECTIVE

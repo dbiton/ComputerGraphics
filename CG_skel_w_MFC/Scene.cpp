@@ -21,7 +21,7 @@ void Scene::AddModel(MeshModel* model) {
         const vec3 box = model->getBoundingBoxMax() - model->getBoundingBoxMin();
         const GLfloat scale = max(max(box.x, box.y), box.z);
         scaleBy(cameras[0]->world, vec3(scale));
-        renderer->shading = SHADE_PHONG;
+        shading = SHADE_PHONG;
     }
     if (activeLight == -1) {
         lights.push_back(new AmbientLight(Color(1), 0.5));
@@ -32,22 +32,34 @@ void Scene::AddModel(MeshModel* model) {
     draw();
 }
 
+Scene::Scene()
+{
+    program = InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
+    glUseProgram(program);
+
+    // no backfaces
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    // testing...
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(-2, 2, -1.5, 1.5, 1, 40);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0, 0, -3);
+    glRotatef(50, 1, 0, 0);
+    glRotatef(70, 0, 1, 0);
+}
+
 void Scene::loadOBJModel(string fileName, string modelName) {
     AddModel(new MeshModel(fileName, modelName));
 }
 
 mat4 Scene::Projection() {
-    Camera* camera = getActiveCamera();
-    const float midHeight = (camera->lastTop + camera->lastBottom) / 2,
-                midWidth = (camera->lastLeft + camera->lastRight) / 2,
-                dh = (camera->lastTop - camera->lastBottom) / 2 * renderer->GetHeightMultiplier(),
-                dw = (camera->lastLeft - camera->lastRight) / 2 * renderer->GetWidthMultiplier();
-    if (camera->lastType == PROJECTION_ORTHO) {
-        return camera->Ortho(midWidth + dw, midWidth - dw, midHeight + dh, midHeight - dh, camera->lastNear, camera->lastFar, false);
-    }
-    else {
-        return camera->Frustum(midWidth + dw, midWidth - dw, midHeight + dh, midHeight - dh, camera->lastNear, camera->lastFar, false);
-    }
+    return mat4();
 }
 
 void Scene::draw() {
@@ -214,7 +226,7 @@ vec3 AmbientLight::dirToSource(const vec3& p) const {
     return vec3();
 }
 
-void Scene::setFog(bool enable, const Color& color, float min, float max)
+void Scene::setFog(bool enable, const Color color, float min, float max)
 {
     isFog = enable;
     if (isFog) {
