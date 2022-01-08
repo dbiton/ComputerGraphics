@@ -585,10 +585,22 @@ void Renderer::ClearBloomBuffer() {
 void Renderer::setSupersampling(bool isSupersampling, int factorSuperSample) {
     m_isSuperSample = isSupersampling;
     m_factorSuperSample = factorSuperSample;
-    if (m_outBufferSuperSample) delete m_outBufferSuperSample;
-    if (m_zbufferSuperSample) delete m_zbufferSuperSample;
-    if (m_bloomBufferHorz) delete m_bloomBufferHorz;
-    if (m_bloomBufferVert) delete m_bloomBufferVert;
+    if (m_outBufferSuperSample) {
+        delete m_outBufferSuperSample;
+        m_outBufferSuperSample = nullptr;
+    }
+    if (m_zbufferSuperSample) {
+        delete m_zbufferSuperSample;
+        m_zbufferSuperSample = nullptr;
+    }
+    if (m_bloomBufferHorz) {
+        delete m_bloomBufferHorz;
+        m_bloomBufferHorz = nullptr;
+    }
+    if (m_bloomBufferVert) {
+        delete m_bloomBufferVert;
+        m_bloomBufferVert = nullptr;
+    }
     if (isSupersampling) {
         m_outBufferSuperSample = new float[m_factorSuperSample * m_factorSuperSample * 3 * m_width * m_height];
         m_zbufferSuperSample = new float[m_factorSuperSample * m_factorSuperSample * m_width * m_height];
@@ -605,9 +617,18 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
     ClearBloomBuffer();
     m_threshBloom = threshBloom;
     m_spreadBloom = spreadBloom;
-    if (m_weightsBloom) delete m_weightsBloom;
-    if (m_bloomBufferHorz) delete m_bloomBufferHorz;
-    if (m_bloomBufferVert) delete m_bloomBufferVert;
+    if (m_weightsBloom) {
+        delete m_weightsBloom;
+        m_weightsBloom = nullptr;
+    }
+    if (m_bloomBufferHorz) {
+        delete m_bloomBufferHorz;
+        m_bloomBufferHorz = nullptr;
+    }
+    if (m_bloomBufferVert) {
+        delete m_bloomBufferVert;
+        m_bloomBufferVert = nullptr;
+    }
     if (isBloom) {
         if (m_isSuperSample) {
             m_bloomBufferHorz = new float[m_factorSuperSample * m_factorSuperSample * 3 * m_width * m_height];
@@ -620,7 +641,6 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
         m_weightsBloom = new float[spreadBloom * 2 + 1];
         float sum = 0;
         float c = m_spreadBloom;
-        //for (c= m_spreadBloom; exp(-(m_spreadBloom + 1) * (m_spreadBloom + 1) / (2 * c * c)) > 0.1f; c/=2);
 
         for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
             const float d = i - (m_spreadBloom + 1); // casting to float because we don't want integer division
@@ -629,7 +649,6 @@ void Renderer::setBloom(bool isBloom, float threshBloom, int spreadBloom) {
         }
         for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
             m_weightsBloom[i] /= sum;
-            printf("%f\n", m_weightsBloom[i]);
         }
     }
 }
@@ -685,7 +704,14 @@ void Renderer::applyEffects() {
                 int i = x / m_factorSuperSample;
                 int j = y / m_factorSuperSample;
                 for (int c = 0; c < 3; c++) {
-                    m_outBuffer[INDEX(m_width, i, j, c)] += m_outBufferSuperSample[INDEX(width, x, y, c)] * factorPixel;
+                    m_outBuffer[INDEX(m_width, i, j, c)] += m_outBufferSuperSample[INDEX(width, x, y, c)];
+                }
+            }
+        }
+        for (int x = 0; x < m_width; x++) {
+            for (int y = 0; y < m_height; y++) {
+                for (int c = 0; c < 3; c++) {
+                    m_outBuffer[INDEX(m_width, x, y, c)] *= factorPixel;
                 }
             }
         }
