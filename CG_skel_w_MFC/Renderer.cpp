@@ -327,14 +327,14 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
     y_min = max(0, y_min);
     y_max = min(height - 1, y_max);
 
-    for (int x = x_min; x <= x_max; x++) {
-        for (int y = y_min; y <= y_max; y++) {
+    for (int y = y_min; y <= y_max; y++) {
+        for (int x = x_min; x <= x_max; x++) {
             const vec2 p(x, y);
             // out of frame
 
             const float a0 = Area(p, v2d[1], v2d[2]) / A,
-                        a1 = Area(p, v2d[2], v2d[0]) / A,
-                        a2 = Area(p, v2d[0], v2d[1]) / A;
+                a1 = Area(p, v2d[2], v2d[0]) / A,
+                a2 = Area(p, v2d[0], v2d[1]) / A;
 
             if (std::abs(a0 + a1 + a2 - 1) > 16 * FLT_EPSILON) continue; // If out of the triangle
 
@@ -375,7 +375,7 @@ void Renderer::ShadeTriangle(const vec3 v[3], const vec3 vn[3], std::vector<Mate
                     const float depth2 = abs(a0 * v_camera[0].z + a1 * v_camera[1].z + a2 * v_camera[2].z);
                     float fogFactor = (m_fogMaxDistance - depth2) / (m_fogMaxDistance - m_fogMinDistance);
                     fogFactor = max(0.f, min(1.f, fogFactor)); // clamp
-                    color = (1-fogFactor) * m_fogColor + fogFactor * color;
+                    color = (1 - fogFactor) * m_fogColor + fogFactor * color;
                 }
                 if (m_isSuperSample) {
                     DrawPixelSuperSampled(p.x, p.y, color);
@@ -666,8 +666,8 @@ void Renderer::applyEffects() {
         if (m_isSuperSample) buffer = m_outBufferSuperSample;
         // horizontal pass
         memset(m_bloomBufferHorz, 0, sizeof(float) * 3 * width * height);
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
                     const int x_curr = x + i - m_spreadBloom;
                     if (x_curr > 0 && x_curr < width) {
@@ -682,8 +682,8 @@ void Renderer::applyEffects() {
         }
         // vertical pass
         memset(m_bloomBufferVert, 0, sizeof(float) * 3 * width * height);
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 for (int i = 0; i < m_spreadBloom * 2 + 1; i++) {
                     const int y_curr = y + i - m_spreadBloom;
                     if (y_curr > 0 && y_curr < height) {
@@ -699,19 +699,12 @@ void Renderer::applyEffects() {
 
     if (m_isSuperSample) {
         const float factorPixel = 1.f / (m_factorSuperSample * m_factorSuperSample);
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 int i = x / m_factorSuperSample;
                 int j = y / m_factorSuperSample;
                 for (int c = 0; c < 3; c++) {
-                    m_outBuffer[INDEX(m_width, i, j, c)] += m_outBufferSuperSample[INDEX(width, x, y, c)];
-                }
-            }
-        }
-        for (int x = 0; x < m_width; x++) {
-            for (int y = 0; y < m_height; y++) {
-                for (int c = 0; c < 3; c++) {
-                    m_outBuffer[INDEX(m_width, x, y, c)] *= factorPixel;
+                    m_outBuffer[INDEX(m_width, i, j, c)] += m_outBufferSuperSample[INDEX(width, x, y, c)] * factorPixel;
                 }
             }
         }
