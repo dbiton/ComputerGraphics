@@ -619,7 +619,7 @@ inline mat4& InverseTransform(const mat4& transform) {
     const mat4 translate = Translate(-transform[0][3], -transform[1][3], -transform[2][3]);
 
     // step 2: find (uniform) scaling factor of the remaining 3x3
-    const mat4 scale = Scale(1.0 / std::sqrt(transform[0][0] * transform[0][0] + transform[0][1] * transform[0][1] + transform[0][2] * transform[0][2]));
+    const mat4 scale = Scale(1.0 / std::cbrt(Determinant(transform)));
 
     // step 3: transpose remaining matrix
     const mat4 rotation = transpose(scale * translate * transform);
