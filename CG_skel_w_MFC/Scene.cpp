@@ -37,9 +37,8 @@ Scene::Scene()
     program = InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
     glUseProgram(program);
 
-    // no backfaces
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
 }
 
 void Scene::loadOBJModel(string fileName, string modelName) {
@@ -52,7 +51,6 @@ mat4 Scene::Projection() {
 
 void Scene::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(program);
     for (const auto& model : models) {
         mat4 modelview = getActiveCamera()->projection * getActiveCamera()->getTransform() * model->getTransform();
         GLuint modelview_loc = glGetUniformLocation(program, "modelview");

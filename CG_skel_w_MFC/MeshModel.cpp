@@ -164,13 +164,13 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 		Vertex v;
 		v.position = positions[i];
 		v.normal = normals[i];
-		v.tex = vec2(0.0);
+		//v.tex = vec2(0.0);
 		vertices.push_back(v);
 	}
 	for (const auto& face : faces) {
 		for (int i = 0; i < 3; i++) indices.push_back(face.v[i]);
-		for (int i = 0; i < 3; i++) indices.push_back(face.vn[i]);
-		for (int i = 0; i < 2; i++) indices.push_back(face.vt[i]);
+		//for (int i = 0; i < 3; i++) indices.push_back(face.vn[i]);
+		//for (int i = 0; i < 2; i++) indices.push_back(face.vt[i]);
 	}
 }
 

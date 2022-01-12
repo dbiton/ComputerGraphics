@@ -1,9 +1,9 @@
 #version 150
 
-in vec4 vPosition;
+in vec3 vPosition;
 uniform mat4 modelview;
 
 void main()
 {
-   gl_Position = modelview * vPosition;
+   gl_Position = modelview * vec4(vPosition, 1.0);
 }
