@@ -40,18 +40,6 @@ Scene::Scene()
     // no backfaces
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-
-    // testing...
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glFrustum(-2, 2, -1.5, 1.5, 1, 40);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0, 0, -3);
-    glRotatef(50, 1, 0, 0);
-    glRotatef(70, 0, 1, 0);
 }
 
 void Scene::loadOBJModel(string fileName, string modelName) {
@@ -64,7 +52,11 @@ mat4 Scene::Projection() {
 
 void Scene::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
+    glUseProgram(program);
     for (const auto& model : models) {
+        mat4 modelview = getActiveCamera()->projection * getActiveCamera()->getTransform() * model->getTransform();
+        GLuint modelview_loc = glGetUniformLocation(program, "modelview");
+        glUniformMatrix4fv(modelview_loc, 1, GL_FALSE, modelview);
         model->Draw();
     }
     glFlush();
