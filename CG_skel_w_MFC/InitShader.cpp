@@ -5,6 +5,9 @@
 #include "GL/freeglut.h"
 #include "GL/freeglut_ext.h"
 #include "InitShader.h"
+
+static GLuint program;
+
 // Create a NULL-terminated string by reading the provided file
 static char*
 readShaderSource(const char* shaderFile)
@@ -28,7 +31,7 @@ readShaderSource(const char* shaderFile)
 
 
 // Create a GLSL program object from vertex and fragment shader files
-GLuint
+void
 InitShader(const char* vShaderFile, const char* fShaderFile)
 {
     struct Shader {
@@ -40,7 +43,7 @@ InitShader(const char* vShaderFile, const char* fShaderFile)
 	{ fShaderFile, GL_FRAGMENT_SHADER, NULL }
     };
 
-    GLuint program = glCreateProgram();
+    program = glCreateProgram();
     
     for ( int i = 0; i < 2; ++i ) {
 	Shader& s = shaders[i];
@@ -92,6 +95,6 @@ InitShader(const char* vShaderFile, const char* fShaderFile)
 
     /* use program object */
     glUseProgram(program);
-
-    return program;
 }
+
+GLuint GetProgram() { return program; }

@@ -948,15 +948,11 @@ int my_main(int argc, char** argv)
     glutInitContextProfile(GLUT_CORE_PROFILE);
     glutCreateWindow("CG");
     glewExperimental = GL_TRUE;
-    glewInit();
-    GLenum err = glewInit();
-    if (GLEW_OK != err)
-    {
-        /* Problem: glewInit failed, something is seriously wrong. */
-        fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-        /*		...*/
-    }
+    const GLenum err = glewInit(); // Problem: glewInit failed, something is seriously wrong.
+    if (GLEW_OK != err) fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+    InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     scene = new Scene();
 

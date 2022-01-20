@@ -8,6 +8,7 @@
 #include "mat.h"
 #include "MeshModel.h"
 #include "PrimMeshModel.h"
+#include "InitShader.h"
 #include "vec.h"
 
 using namespace std;
@@ -127,7 +128,6 @@ void MeshModel::Draw()
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
 }
 
 void MeshModel::Recenter() {
@@ -147,14 +147,16 @@ void MeshModel::SetupGL()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, normal));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, tex));
+	GLuint loc = glGetAttribLocation(GetProgram(), "vPosition");
+	glEnableVertexAttribArray(loc);
+	glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+	loc = glGetAttribLocation(GetProgram(), "vNormal");
+	glEnableVertexAttribArray(loc);
+	glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, normal));
+	loc = glGetAttribLocation(GetProgram(), "vTex");
+	glEnableVertexAttribArray(loc);
+	glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, tex));
 
-	glBindVertexArray(0);
 }
 
 void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces)
@@ -168,7 +170,7 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 		vertices.push_back(v);
 	}
 	for (const auto& face : faces) {
-		for (int i = 0; i < 3; i++) indices.push_back(face.v[i]);
+		for (int i = 0; i < 3; i++) indices.push_back(face.v[i] - 1);
 		//for (int i = 0; i < 3; i++) indices.push_back(face.vn[i]);
 		//for (int i = 0; i < 2; i++) indices.push_back(face.vt[i]);
 	}

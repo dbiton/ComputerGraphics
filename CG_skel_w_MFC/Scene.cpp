@@ -32,14 +32,7 @@ void Scene::AddModel(MeshModel* model) {
     draw();
 }
 
-Scene::Scene()
-{
-    program = InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
-    glUseProgram(program);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
-}
+Scene::Scene() { }
 
 void Scene::loadOBJModel(string fileName, string modelName) {
     AddModel(new MeshModel(fileName, modelName));
@@ -53,7 +46,7 @@ void Scene::draw() {
     glClear(GL_COLOR_BUFFER_BIT);
     for (const auto& model : models) {
         mat4 modelview = getActiveCamera()->projection * getActiveCamera()->getTransform() * model->getTransform();
-        GLuint modelview_loc = glGetUniformLocation(program, "modelview");
+        GLuint modelview_loc = glGetUniformLocation(GetProgram(), "modelview");
         glUniformMatrix4fv(modelview_loc, 1, GL_FALSE, modelview);
         model->Draw();
     }

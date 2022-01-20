@@ -125,7 +125,6 @@ class Scene {
 	float minDistanceFog, maxDistanceFog;
 	int factorSupersample;
 
-	GLuint program;
 public:
 	int shading = 0;
 
