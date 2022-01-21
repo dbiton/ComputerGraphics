@@ -58,7 +58,6 @@ MeshModel::MeshModel(string fileName, string modelName)
 {
 	name = modelName;
 	loadFile(fileName);
-	fitBoundingBox();
 	SetupGL();
 }
 
@@ -143,6 +142,12 @@ void MeshModel::Draw()
 		glBindVertexArray(vao_sNormals);
 		glDrawArrays(GL_LINES, 0, vertices_sNormals.size());
 	}
+	if (draw_bounding_box) {
+		glUniform4f(inColor, 1, 0, 0, 1);
+		glBindVertexArray(vao_boundingBox);
+		// again, this could benefit from an element array buffer, but whatever
+		glDrawArrays(GL_LINES, 0, vertices_boundingBox.size());
+	}
 }
 
 void MeshModel::Recenter() {
@@ -186,6 +191,13 @@ void MeshModel::SetupGL()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_sNormals);
 	glBufferData(GL_ARRAY_BUFFER, vertices_sNormals.size() * sizeof(Vertex), &vertices_sNormals[0], GL_STATIC_DRAW);
 	bindShaderFields();
+
+	glGenVertexArrays(1, &vao_boundingBox);
+	glGenBuffers(1, &vbo_boundingBox);
+	glBindVertexArray(vao_boundingBox);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_boundingBox);
+	glBufferData(GL_ARRAY_BUFFER, vertices_boundingBox.size() * sizeof(Vertex), &vertices_boundingBox[0], GL_STATIC_DRAW);
+	bindShaderFields();
 }
 
 GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) noexcept {
@@ -228,6 +240,68 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 		v.position += fn;
 		vertices_sNormals.push_back(v);
 	}
+
+	// create the bounding box vbo, yes i know this is disgusting copypaste code but i cba to make this any prettier
+	fitBoundingBox();
+	const vec3 v000 = bounding_box_min,
+		       v100 = vec3(bounding_box_max.x, bounding_box_min.y, bounding_box_min.z),
+		       v010 = vec3(bounding_box_min.x, bounding_box_max.y, bounding_box_min.z),
+		       v110 = vec3(bounding_box_max.x, bounding_box_max.y, bounding_box_min.z),
+		       v001 = vec3(bounding_box_min.x, bounding_box_min.y, bounding_box_max.z),
+		       v101 = vec3(bounding_box_max.x, bounding_box_min.y, bounding_box_max.z),
+		       v011 = vec3(bounding_box_min.x, bounding_box_max.y, bounding_box_max.z),
+		       v111 = bounding_box_max;
+
+	v.position = v000;
+	vertices_boundingBox.push_back(v);
+	v.position = v100;
+	vertices_boundingBox.push_back(v);
+	v.position = v000;
+	vertices_boundingBox.push_back(v);
+	v.position = v010;
+	vertices_boundingBox.push_back(v);
+	v.position = v000;
+	vertices_boundingBox.push_back(v);
+	v.position = v001;
+	vertices_boundingBox.push_back(v);
+
+	v.position = v110;
+	vertices_boundingBox.push_back(v);
+	v.position = v100;
+	vertices_boundingBox.push_back(v);
+	v.position = v101;
+	vertices_boundingBox.push_back(v);
+	v.position = v100;
+	vertices_boundingBox.push_back(v);
+	v.position = v110;
+	vertices_boundingBox.push_back(v);
+	v.position = v010;
+	vertices_boundingBox.push_back(v);
+	v.position = v011;
+	vertices_boundingBox.push_back(v);
+	v.position = v010;
+	vertices_boundingBox.push_back(v);
+	v.position = v101;
+	vertices_boundingBox.push_back(v);
+	v.position = v001;
+	vertices_boundingBox.push_back(v);
+	v.position = v011;
+	vertices_boundingBox.push_back(v);
+	v.position = v001;
+	vertices_boundingBox.push_back(v);
+
+	v.position = v111;
+	vertices_boundingBox.push_back(v);
+	v.position = v011;
+	vertices_boundingBox.push_back(v);
+	v.position = v111;
+	vertices_boundingBox.push_back(v);
+	v.position = v101;
+	vertices_boundingBox.push_back(v);
+	v.position = v111;
+	vertices_boundingBox.push_back(v);
+	v.position = v110;
+	vertices_boundingBox.push_back(v);
 }
 
 
