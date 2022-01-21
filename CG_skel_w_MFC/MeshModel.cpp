@@ -58,7 +58,6 @@ MeshModel::MeshModel(string fileName, string modelName)
 {
 	name = modelName;
 	loadFile(fileName);
-	SetupGL();
 }
 
 MeshModel::~MeshModel() { }
@@ -133,6 +132,7 @@ void MeshModel::Draw()
 	if (draw_normals_per_vert) {
 		glUniform4f(inColor, 0, 1, 0, 1);
 		glBindVertexArray(vao_vNormals);
+		// TODO if we have time, optimize vertices_vNormals and vertices_boundingBox using an EBO, and add lazy init!
 		// calling glDrawArrays instead of glDrawElements because we don't use element array buffers for these.
 		// admittedly, vertex normals would benefit from an element array buffer (vao_vNormals would be cut in half), but surface normals really can't, so whatever
 		glDrawArrays(GL_LINES, 0, vertices_vNormals.size());
@@ -302,6 +302,8 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 	vertices_boundingBox.push_back(v);
 	v.position = v110;
 	vertices_boundingBox.push_back(v);
+
+	SetupGL();
 }
 
 
