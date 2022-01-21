@@ -44,10 +44,16 @@ mat4 Scene::Projection() {
 
 void Scene::draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    GLuint viewPos_loc = glGetUniformLocation(GetProgram(), "viewPos");
+    glUniform3fv(viewPos_loc, 1, getPosition(getActiveCamera()->getTransform()));
+    GLuint view_loc = glGetUniformLocation(GetProgram(), "view");
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, getActiveCamera()->getTransform());
+    GLuint projection_loc = glGetUniformLocation(GetProgram(), "projection");
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, getActiveCamera()->projection);
     for (const auto& model : models) {
-        mat4 modelview = getActiveCamera()->projection * getActiveCamera()->getTransform() * model->getTransform();
-        GLuint modelview_loc = glGetUniformLocation(GetProgram(), "modelview");
-        glUniformMatrix4fv(modelview_loc, 1, GL_FALSE, modelview);
+        GLuint model_loc = glGetUniformLocation(GetProgram(), "model");
+        glUniformMatrix4fv(model_loc, 1, GL_FALSE, model->getTransform());
         model->Draw();
     }
     glFlush();

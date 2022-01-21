@@ -945,7 +945,7 @@ int my_main(int argc, char** argv)
     if (GLEW_OK != err) fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
-    InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
+    InitShader("vshader.glsl", "fshader.glsl");
 
     scene = new Scene();
 
