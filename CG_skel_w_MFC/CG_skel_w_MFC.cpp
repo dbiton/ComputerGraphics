@@ -148,13 +148,6 @@ void toggleBoundingBox() noexcept {
     }
 }
 
-void toggleWireframe() noexcept {
-    if (scene->activeModel != -1) {
-        MeshModel* model = scene->getActiveModel();
-        model->draw_wireframe = !model->draw_wireframe;
-    }
-}
-
 void toggleCameras() noexcept {
     scene->drawCameras = !scene->drawCameras;
 }
@@ -224,7 +217,7 @@ void keyboard(unsigned char key, int x, int y) {
     case 'f': toggleFaceNormals(); break;
     case 'v': toggleVertexNormals(); break;
     case 'b': toggleBoundingBox(); break;
-    case 'o': toggleWireframe(); break;
+    case 'o': ToggleWireframes(); break;
     case 'm': toggleCameras(); break;
     case 'l': toggleLights(); break;
     case 'i': toggleInactivesDimming(); break;
@@ -512,7 +505,7 @@ void newCameraMenu(int id) {
         }
         else
             newCamera = Camera::DefaultCamera(scene->getActiveModel()->getBoundingBoxMin(), scene->getActiveModel()->getBoundingBoxMax());
-        
+
         CXyzDialog dialog(_T("New Camera Position"), newPos.x, newPos.y, newPos.z);
         dialog.setText("X:", "Y:", "Z:");
         if (dialog.DoModal() != IDOK) return;
@@ -616,7 +609,7 @@ void togglesMenu(int id) {
     case TOGGLE_FACE_NORMALS: toggleFaceNormals(); break;
     case TOGGLE_VERTEX_NORMALS: toggleVertexNormals(); break;
     case TOGGLE_BOUNDING_BOX: toggleBoundingBox(); break;
-    case TOGGLE_WIREFRAME: toggleWireframe(); break;
+    case TOGGLE_WIREFRAME: ToggleWireframes(); break;
     case TOGGLE_CAMERAS: toggleCameras(); break;
     case TOGGLE_LIGHTS: toggleLights(); break;
     case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
@@ -951,8 +944,8 @@ int my_main(int argc, char** argv)
     const GLenum err = glewInit(); // Problem: glewInit failed, something is seriously wrong.
     if (GLEW_OK != err) fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+
     InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     scene = new Scene();
 

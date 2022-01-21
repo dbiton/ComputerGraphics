@@ -32,7 +32,6 @@ public:
 	bool draw_normals_per_vert = false;
 	bool draw_normals_per_face = false;
 	bool draw_bounding_box = false;
-	bool draw_wireframe = false;
 
 	MeshModel(std::string fileName, std::string modelName);
 	~MeshModel();

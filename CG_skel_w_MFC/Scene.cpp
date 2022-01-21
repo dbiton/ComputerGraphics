@@ -43,7 +43,7 @@ mat4 Scene::Projection() {
 }
 
 void Scene::draw() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     for (const auto& model : models) {
         mat4 modelview = getActiveCamera()->projection * getActiveCamera()->getTransform() * model->getTransform();
         GLuint modelview_loc = glGetUniformLocation(GetProgram(), "modelview");

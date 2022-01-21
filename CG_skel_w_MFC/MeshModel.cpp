@@ -125,23 +125,21 @@ void MeshModel::fitBoundingBox()
 
 void MeshModel::Draw()
 {
-	GLuint loc = glGetUniformLocation(GetProgram(), "inColor");
-	glUniform4f(loc, 1, 1, 1, 1);
+	const GLuint inColor = glGetUniformLocation(GetProgram(), "inColor");
+	if (IsWireframeMode()) glUniform4f(inColor, 1, 1, 1, 1);
+	else glUniform4f(inColor, 0, 0, 0, 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
 	if (draw_normals_per_vert) {
-		loc = glGetUniformLocation(GetProgram(), "inColor");
-		glUniform4f(loc, 0, 1, 0, 1);
+		glUniform4f(inColor, 0, 1, 0, 1);
 		glBindVertexArray(vao_vNormals);
-		// calling glDrawArrays instead of glDrawElements because we don't use element array buffers for these
-		// admittedly, vertex normals might benefit from an element array buffer, but surface normals really can't, so whatever
+		// calling glDrawArrays instead of glDrawElements because we don't use element array buffers for these.
+		// admittedly, vertex normals would benefit from an element array buffer (vao_vNormals would be cut in half), but surface normals really can't, so whatever
 		glDrawArrays(GL_LINES, 0, vertices_vNormals.size());
 	}
 	if (draw_normals_per_face) {
-		loc = glGetUniformLocation(GetProgram(), "inColor");
-		glUniform4f(loc, 0, 0.5, 1, 1);
+		glUniform4f(inColor, 0, 0.5, 1, 1);
 		glBindVertexArray(vao_sNormals);
 		glDrawArrays(GL_LINES, 0, vertices_sNormals.size());
 	}

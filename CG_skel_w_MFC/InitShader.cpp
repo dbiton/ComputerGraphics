@@ -7,6 +7,7 @@
 #include "InitShader.h"
 
 static GLuint program;
+static bool isWireframeMode; 
 
 // Create a NULL-terminated string by reading the provided file
 static char*
@@ -93,8 +94,19 @@ InitShader(const char* vShaderFile, const char* fShaderFile)
 	exit( EXIT_FAILURE );
     }
 
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glPolygonMode(GL_FRONT_AND_BACK, (isWireframeMode = false) ? GL_LINE : GL_FILL);
+
     /* use program object */
     glUseProgram(program);
 }
 
-GLuint GetProgram() { return program; }
+GLuint GetProgram() noexcept { return program; }
+
+void ToggleWireframes() noexcept {
+	isWireframeMode = !isWireframeMode;
+	glPolygonMode(GL_FRONT_AND_BACK, isWireframeMode ? GL_LINE : GL_FILL);
+}
+
+bool IsWireframeMode() noexcept { return isWireframeMode; }
