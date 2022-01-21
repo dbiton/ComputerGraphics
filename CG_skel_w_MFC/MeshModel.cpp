@@ -125,28 +125,33 @@ void MeshModel::fitBoundingBox()
 
 void MeshModel::Draw()
 {
+	GLuint loc = glGetUniformLocation(GetProgram(), "inColor");
+	glUniform4f(loc, 1, 1, 1, 1);
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+	if (draw_normals_per_vert) {
+		loc = glGetUniformLocation(GetProgram(), "inColor");
+		glUniform4f(loc, 0, 1, 0, 1);
+		glBindVertexArray(vao_vNormals);
+		// calling glDrawArrays instead of glDrawElements because we don't use element array buffers for these
+		// admittedly, vertex normals might benefit from an element array buffer, but surface normals really can't, so whatever
+		glDrawArrays(GL_LINES, 0, vertices_vNormals.size());
+	}
+	if (draw_normals_per_face) {
+		loc = glGetUniformLocation(GetProgram(), "inColor");
+		glUniform4f(loc, 0, 0.5, 1, 1);
+		glBindVertexArray(vao_sNormals);
+		glDrawArrays(GL_LINES, 0, vertices_sNormals.size());
+	}
 }
 
 void MeshModel::Recenter() {
 	setPosition(self, -(bounding_box_min + bounding_box_max) / 2); // center it in its own axis system!
 }
 
-void MeshModel::SetupGL()
-{
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
-	glGenBuffers(1, &ebo);
-
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
-
+void bindShaderFields() {
 	GLuint loc = glGetAttribLocation(GetProgram(), "vPosition");
 	glEnableVertexAttribArray(loc);
 	glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
@@ -156,16 +161,46 @@ void MeshModel::SetupGL()
 	loc = glGetAttribLocation(GetProgram(), "vTex");
 	glEnableVertexAttribArray(loc);
 	glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, tex));
+}
 
+void MeshModel::SetupGL()
+{
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &ebo);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
+	bindShaderFields();
+
+	glGenVertexArrays(1, &vao_vNormals);
+	glGenBuffers(1, &vbo_vNormals);
+	glBindVertexArray(vao_vNormals);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_vNormals);
+	glBufferData(GL_ARRAY_BUFFER, vertices_vNormals.size() * sizeof(Vertex), &vertices_vNormals[0], GL_STATIC_DRAW);
+	bindShaderFields();
+
+	glGenVertexArrays(1, &vao_sNormals);
+	glGenBuffers(1, &vbo_sNormals);
+	glBindVertexArray(vao_sNormals);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_sNormals);
+	glBufferData(GL_ARRAY_BUFFER, vertices_sNormals.size() * sizeof(Vertex), &vertices_sNormals[0], GL_STATIC_DRAW);
+	bindShaderFields();
+}
+
+GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) noexcept {
+	return (length(p1 - p2) + length(p1 - p3) + length(p2 - p3)) / 3;
 }
 
 void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces)
 {
 	vertices.clear();
+	Vertex v;
 	for (int i = 0; i < positions.size(); i++) {
-		Vertex v;
 		v.position = positions[i];
-		v.normal = normals[i];
+		//v.normal = normals[i];
 		//v.tex = vec2(0.0);
 		vertices.push_back(v);
 	}
@@ -173,6 +208,27 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 		for (int i = 0; i < 3; i++) indices.push_back(face.v[i] - 1);
 		//for (int i = 0; i < 3; i++) indices.push_back(face.vn[i]);
 		//for (int i = 0; i < 2; i++) indices.push_back(face.vt[i]);
+	}
+
+	// fill in vbo's for drawing normals
+	constexpr GLfloat fn_len = 0.5,
+					  vn_len = 0.5;
+	for (const auto& face : faces) {
+		vec3 verts[3];
+		for (int i = 0; i < 3; i++) verts[i] = positions[face.v[i] - 1];
+		const GLfloat normalsLength = averageLength(verts[0], verts[1], verts[2]);
+		for (int i = 0; i < 3; i++) {
+			v.position = verts[i];
+			vertices_vNormals.push_back(v);
+			v.position += normalize(normals[face.vn[i] - 1]) * normalsLength * vn_len;
+			vertices_vNormals.push_back(v);
+		}
+		const vec3 fn = normalize(cross(verts[1] - verts[0], verts[2] - verts[1])) * normalsLength * fn_len, // face normal
+			       fm = (verts[0] + verts[1] + verts[2]) / 3; // face mid
+		v.position = fm;
+		vertices_sNormals.push_back(v);
+		v.position += fn;
+		vertices_sNormals.push_back(v);
 	}
 }
 

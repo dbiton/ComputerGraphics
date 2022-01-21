@@ -11,7 +11,7 @@ class MeshModel : public Entity
 {
 protected:
 	// data as imported from obj - in model space
-	std::vector<Vertex> vertices;
+	std::vector<Vertex> vertices, vertices_vNormals, vertices_sNormals;
 	std::vector<GLuint> indices;
 
 	vec3 bounding_box_min;
@@ -19,6 +19,8 @@ protected:
 	std::string name;
 
 	GLuint vao, vbo, ebo;
+	GLuint vao_vNormals, vbo_vNormals;
+	GLuint vao_sNormals, vbo_sNormals;
 
 	MeshModel() noexcept;
 
