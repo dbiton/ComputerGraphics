@@ -160,58 +160,6 @@ GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) noexcept {
     return (length(p1 - p2) + length(p1 - p3) + length(p2 - p3)) / 3;
 }
 
-// shamelessly stealing this code from opengl-tutorials.com and modifying it because it works so why not lol
-struct TripleIndex {
-    int vi, vni, vti;
-    bool operator<(const TripleIndex that) const noexcept {
-        // neat hack that allows comparing arbitrary structs. we need this because std::map requires the first type to implement comparison for it to work
-        return memcmp((void*)this, (void*)&that, sizeof(TripleIndex)) > 0;
-    };
-};
-
-bool tripletExists(const TripleIndex& index, std::map<TripleIndex, GLuint>& tripletToIndex, GLuint& result) {
-    std::map<TripleIndex, GLuint>::iterator it = tripletToIndex.find(index);
-    if (it == tripletToIndex.end()) {
-        return false;
-    }
-    else {
-        result = it->second;
-        return true;
-    }
-}
-
-void indexVBO(const std::vector<vec3>& in_vertices, const std::vector<vec2>& in_uvs, const std::vector<vec3>& in_normals, const std::vector<Face>& faces,
-    std::vector<GLuint>& out_indices, std::vector<Vertex>& out_vertices) {
-    std::map<TripleIndex, GLuint> tripletToIndex;
-
-    // For each input vertex
-    for (GLuint i = 0; i < faces.size(); i++) {
-        for (GLuint j = 0; j < 3; j++) {
-            TripleIndex triplet = { faces[i].v[j] - 1, faces[i].vn[j] - 1, faces[i].vt[j] - 1 };
-            // .obj can support negative indices, going from the end... just gotta hope that's it for "normalizing" these indices...
-            // TODO in case we ever get index out of bounds shenanigans here, we'll know we need to refine this normalizing!
-            if (triplet.vi < -1) triplet.vi += in_vertices.size() + 1;
-            if (triplet.vni < -1) triplet.vi += in_normals.size() + 1;
-            if (triplet.vti < -1) triplet.vi += in_uvs.size() + 1;
-            GLuint index;
-
-            if (tripletExists(triplet, tripletToIndex, index)) { // A similar vertex is already in the VBO, use it instead !
-                out_indices.push_back(index);
-            }
-            else { // If not, it needs to be added in the output data.
-                Vertex v;
-                v.position = in_vertices[triplet.vi];
-                v.tex = (triplet.vti == -1) ? vec2(0) : in_uvs[triplet.vti]; // no texture! can happen, and we can't assume it's missing for all...
-                v.normal = (triplet.vni == -1) ? vec3(0) : in_normals[triplet.vni]; // no normal! can happen, same as above
-                out_vertices.push_back(v);
-                index = out_vertices.size() - 1;
-                out_indices.push_back(index);
-                tripletToIndex[triplet] = index;
-            }
-        }
-    }
-}
-
 // Within other applications we would definitely use an EBO to reduce memory usage and increase performance,
 // but since we ain't getting into geometry shaders, we have no use for EBO's (mostly) because we need face normals and middles...
 void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces)
