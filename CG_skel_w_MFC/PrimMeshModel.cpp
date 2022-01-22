@@ -55,7 +55,6 @@ PrimMeshModel PrimMeshModel::Cuboid(vec3 p, vec3 dim)
     faces.push_back(Face(3, 2, 4));
 
     cuboid.processRawVerts(verts, verts, std::vector<vec2>(), faces); // no texes to speak of...
-    cuboid.fitBoundingBox();
 
     return cuboid;
 }
@@ -94,7 +93,6 @@ PrimMeshModel PrimMeshModel::Pyramid(vec3 p, GLfloat height, GLfloat base_radius
     verts.push_back(top);
 
     pyramid.processRawVerts(verts, verts, std::vector<vec2>(), faces); // no texes to speak of...
-    pyramid.fitBoundingBox();
 
     return pyramid;
 }
@@ -140,7 +138,6 @@ PrimMeshModel PrimMeshModel::Prism(vec3 p, GLfloat height, GLfloat base_radius, 
     faces.push_back(Face(1, 2 + base_sides, 1 + base_sides));
 
     prism.processRawVerts(verts, verts, std::vector<vec2>(), faces); // no texes to speak of...
-    prism.fitBoundingBox();
 
     return prism;
 }
@@ -222,7 +219,6 @@ PrimMeshModel PrimMeshModel::Sphere(vec3 p, GLfloat radius, int subdivisions)
     }
 
     sphere.processRawVerts(verts, verts, std::vector<vec2>(), faces); // no texes to speak of...
-    sphere.fitBoundingBox();
 
     return sphere;
 }

@@ -116,7 +116,6 @@ class Scene {
 	std::vector<Camera*> cameras;
 
 	void AddModel(MeshModel* model);
-	mat4 Projection();
 
 	bool isBloom, isFog, isSupersample;
 	int spreadBloom;

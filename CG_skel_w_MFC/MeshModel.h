@@ -10,22 +10,15 @@
 class MeshModel : public Entity
 {
 protected:
-	// data as imported from obj - in model space
-	std::vector<Vertex> vertices, vertices_vNormals, vertices_sNormals, vertices_boundingBox;
-	std::vector<GLuint> indices;
-
 	vec3 bounding_box_min;
 	vec3 bounding_box_max;
 	std::string name;
 
-	GLuint vao, vbo, ebo;
-	GLuint vao_vNormals, vbo_vNormals;
-	GLuint vao_sNormals, vbo_sNormals;
-	GLuint vao_boundingBox, vbo_boundingBox;
+	size_t ebo_size, vao_vNormals_size, vao_sNormals_size, vao_boundingBox_size;
+	GLuint vao, vao_vNormals, vao_sNormals, vao_boundingBox;
 
 	MeshModel() noexcept;
 
-	void fitBoundingBox();
 	void processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces);
 public:
 
@@ -45,6 +38,4 @@ public:
 
 	void Draw();
 	void Recenter();
-private:
-	void SetupGL();
 };
