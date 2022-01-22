@@ -8,6 +8,8 @@ typedef vec3 Color;
 struct Vertex {
 	vec3 position;
 	vec3 normal;
+	vec3 face_normal;
+	vec3 face_middle;
 	vec2 tex;
 };
 

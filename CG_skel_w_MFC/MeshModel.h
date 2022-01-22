@@ -14,7 +14,7 @@ protected:
 	vec3 bounding_box_max;
 	std::string name;
 
-	size_t ebo_size, vao_vNormals_size, vao_sNormals_size, vao_boundingBox_size;
+	size_t vao_size, vao_vNormals_size, vao_sNormals_size, vao_boundingBox_size;
 	GLuint vao, vao_vNormals, vao_sNormals, vao_boundingBox;
 
 	MeshModel() noexcept;

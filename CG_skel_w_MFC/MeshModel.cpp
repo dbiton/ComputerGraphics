@@ -112,7 +112,7 @@ void MeshModel::Draw()
     else glUniform4f(inColor, 0, 0, 0, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, ebo_size, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, vao_size);
     if (draw_normals_per_vert) {
         glUniform4f(inColor, 0, 1, 0, 1);
         glBindVertexArray(vao_vNormals);
@@ -145,6 +145,12 @@ void bindShaderFields() noexcept {
     loc = glGetAttribLocation(GetProgram(), "vNormal");
     glEnableVertexAttribArray(loc);
     glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, normal));
+    loc = glGetAttribLocation(GetProgram(), "fPosition");
+    glEnableVertexAttribArray(loc);
+    glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, face_middle));
+    loc = glGetAttribLocation(GetProgram(), "fNormal");
+    glEnableVertexAttribArray(loc);
+    glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, face_normal));
     loc = glGetAttribLocation(GetProgram(), "vTex");
     glEnableVertexAttribArray(loc);
     glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, tex));
@@ -206,13 +212,12 @@ void indexVBO(const std::vector<vec3>& in_vertices, const std::vector<vec2>& in_
     }
 }
 
+// Within other applications we would definitely use an EBO to reduce memory usage and increase performance,
+// but since we ain't getting into geometry shaders, we have no use for EBO's (mostly) because we need face normals and middles...
 void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces)
 {
     std::vector<Vertex> vertices, vertices_vNormals, vertices_sNormals, vertices_boundingBox;
-    std::vector<GLuint> indices;
-    indexVBO(positions, texs, normals, faces, indices, vertices);
-    ebo_size = indices.size();
-
+    
     // fill in vbo's for drawing normals
     Vertex v;
     constexpr GLfloat fn_len = 0.5,
@@ -221,14 +226,20 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
         vec3 verts[3];
         for (int i = 0; i < 3; i++) verts[i] = positions[face.v[i] - 1];
         const GLfloat normalsLength = averageLength(verts[0], verts[1], verts[2]);
+        const vec3 fn_real = normalize(cross(verts[1] - verts[0], verts[2] - verts[1])), // face normal
+            /*   */fn = fn_real * normalsLength * fn_len, // face normal, resized for visibility
+            /*   */fm = (verts[0] + verts[1] + verts[2]) / 3; // face mid
         for (int i = 0; i < 3; i++) {
             v.position = verts[i];
+            v.tex = (face.vt[i] == 0) ? vec2(0) : texs[face.vt[i] - 1]; // could get no texture, and we can't assume it's missing for all...
+            v.normal = (face.vn[i] == 0) ? vec3(0) : normals[face.vn[i] - 1]; // could get no normal, same as above
+            v.face_normal = fn_real;
+            v.face_middle = fm;
+            vertices.push_back(v);
             vertices_vNormals.push_back(v);
-            v.position += normalize(normals[face.vn[i] - 1]) * normalsLength * vn_len;
+            v.position += (face.vn[i] == 0) ? vec3(0) : normalize(v.normal) * normalsLength * vn_len;
             vertices_vNormals.push_back(v);
         }
-        const vec3 fn = normalize(cross(verts[1] - verts[0], verts[2] - verts[1])) * normalsLength * fn_len, // face normal
-            /*   */fm = (verts[0] + verts[1] + verts[2]) / 3; // face mid
         v.position = fm;
         vertices_sNormals.push_back(v);
         v.position += fn;
@@ -237,8 +248,8 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 
     // create the bounding box vbo, yes i know this is disgusting copypaste code but i cba to make this any prettier
     // also for some reason nothing renders right if we don't run this code, Recenter() is probably crucial here
-    vec3 vert_min(FLT_MAX, FLT_MAX, FLT_MAX);
-    vec3 vert_max(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+    vec3 vert_min(FLT_MAX);
+    vec3 vert_max(-FLT_MAX);
     for (const auto& vert : vertices) {
         for (int i = 0; i < 3; i++) {
             if (vert_min[i] > vert.position[i]) vert_min[i] = vert.position[i];
@@ -308,36 +319,38 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
     v.position = v110;
     vertices_boundingBox.push_back(v);
 
-    GLuint vbo, ebo, vbo_vNormals, vbo_sNormals, vbo_boundingBox;
+    vao_size = vertices.size();
+    vao_vNormals_size = vertices_vNormals.size();
+    vao_sNormals_size = vertices_sNormals.size();
+    vao_boundingBox_size = vertices_boundingBox.size();
+
+    GLuint vbo, vbo_vNormals, vbo_sNormals, vbo_boundingBox;
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ebo_size * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vao_size * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
     bindShaderFields();
 
     glGenVertexArrays(1, &vao_vNormals);
     glGenBuffers(1, &vbo_vNormals);
     glBindVertexArray(vao_vNormals);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_vNormals);
-    glBufferData(GL_ARRAY_BUFFER, vertices_vNormals.size() * sizeof(Vertex), &vertices_vNormals[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vao_vNormals_size * sizeof(Vertex), &vertices_vNormals[0], GL_STATIC_DRAW);
     bindShaderFields();
 
     glGenVertexArrays(1, &vao_sNormals);
     glGenBuffers(1, &vbo_sNormals);
     glBindVertexArray(vao_sNormals);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_sNormals);
-    glBufferData(GL_ARRAY_BUFFER, vertices_sNormals.size() * sizeof(Vertex), &vertices_sNormals[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vao_sNormals_size * sizeof(Vertex), &vertices_sNormals[0], GL_STATIC_DRAW);
     bindShaderFields();
 
     glGenVertexArrays(1, &vao_boundingBox);
     glGenBuffers(1, &vbo_boundingBox);
     glBindVertexArray(vao_boundingBox);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_boundingBox);
-    glBufferData(GL_ARRAY_BUFFER, vertices_boundingBox.size() * sizeof(Vertex), &vertices_boundingBox[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vao_boundingBox_size * sizeof(Vertex), &vertices_boundingBox[0], GL_STATIC_DRAW);
     bindShaderFields();
 }
 
