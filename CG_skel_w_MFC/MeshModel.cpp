@@ -210,14 +210,14 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 	Vertex v;
 	for (int i = 0; i < positions.size(); i++) {
 		v.position = positions[i];
-		//v.normal = normals[i];
-		//v.tex = vec2(0.0);
+		v.normal = normals[i];
+		v.tex = vec2(0.0);
 		vertices.push_back(v);
 	}
 	for (const auto& face : faces) {
 		for (int i = 0; i < 3; i++) indices.push_back(face.v[i] - 1);
-		//for (int i = 0; i < 3; i++) indices.push_back(face.vn[i]);
-		//for (int i = 0; i < 2; i++) indices.push_back(face.vt[i]);
+		for (int i = 0; i < 3; i++) indices.push_back(face.vn[i] - 1);
+		for (int i = 0; i < 2; i++) indices.push_back(face.vt[i] - 1);
 	}
 
 	// fill in vbo's for drawing normals
@@ -225,10 +225,15 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 					  vn_len = 0.5;
 	for (const auto& face : faces) {
 		vec3 verts[3];
-		for (int i = 0; i < 3; i++) verts[i] = positions[face.v[i] - 1];
+		vec3 verts_normals[3];
+		for (int i = 0; i < 3; i++) {
+			verts[i] = positions[face.v[i] - 1];
+			verts_normals[i] = normals[face.vn[i]-1];
+		}
 		const GLfloat normalsLength = averageLength(verts[0], verts[1], verts[2]);
 		for (int i = 0; i < 3; i++) {
 			v.position = verts[i];
+			v.normal = verts_normals[i];
 			vertices_vNormals.push_back(v);
 			v.position += normalize(normals[face.vn[i] - 1]) * normalsLength * vn_len;
 			vertices_vNormals.push_back(v);
