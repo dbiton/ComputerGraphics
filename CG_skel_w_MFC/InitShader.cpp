@@ -6,6 +6,9 @@
 #include "GL/freeglut_ext.h"
 #include "InitShader.h"
 
+#include "Material.h"
+#include "Scene.h"
+
 static GLuint program;
 static bool isWireframeMode; 
 
@@ -110,3 +113,45 @@ void ToggleWireframes() noexcept {
 }
 
 bool IsWireframeMode() noexcept { return isWireframeMode; }
+
+void shaderSetFloat(std::string name, GLfloat v)
+{
+	GLuint loc = glGetUniformLocation(GetProgram(), name.c_str());
+	glUniform1f(loc, v);
+}
+
+void shaderSetMat4(std::string name, GLfloat* v) {
+	GLuint loc = glGetUniformLocation(GetProgram(), name.c_str());
+	glUniformMatrix4fv(loc, 1, GL_FALSE, v);
+}
+
+void shaderSetVec3(std::string name, GLfloat* v) {
+	GLuint loc = glGetUniformLocation(GetProgram(), name.c_str());
+	glUniform3fv(loc, 1, v);
+}
+
+void shaderSetInt(std::string name, int v)
+{
+	GLuint loc = glGetUniformLocation(GetProgram(), name.c_str());
+	glUniform1i(loc, v);
+}
+
+void shaderSetMaterial(Material* material) {
+	shaderSetVec3("material.diffuse", material->diffuse);
+	shaderSetVec3("material.specular", material->specular);
+	shaderSetVec3("material.ambient", material->emissive);
+	shaderSetFloat("material.shininess", material->shininess);
+	shaderSetFloat("material.roughness", material->roughness);
+	shaderSetFloat("material.ambient_reflect", material->ambient_reflect);
+}
+
+void shaderSetLight(Light* light, int index)
+{
+	std::string l = "lights[" + std::to_string(index) + "].";
+	shaderSetVec3(l + "diffuse", light->diffuse);
+	shaderSetVec3(l + "specular", light->specular);
+	shaderSetVec3(l + "ambient", light->ambient);
+	shaderSetVec3(l + "position", light->position);
+	shaderSetFloat(l + "brightness", light->brightness);
+	shaderSetInt(l+"isDirectional", light->isDirectional);
+}

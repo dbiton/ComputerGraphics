@@ -11,53 +11,18 @@ enum {
 	LIGHT_PARALLEL
 };
 
-class Light {
-	Color color;
-	float brightness;
+struct Light {
+	Color ambient = Color(1,0,0);
+	Color diffuse = Color(0, 1, 0);
+	Color specular = Color(0, 0, 1);
+	vec3 position = vec3(1,1,1);
+	float brightness = 1;
+	bool isDirectional = false; // if this is true, position is actually the direction the light is coming from
+	
+	static Light PointLight(Color ambient, Color diffuse, Color specular, vec3 position, float brightness);
+	static Light DirectionalLight(Color ambient, Color diffuse, Color specular, vec3 position, float brightness);
 
-protected:
-	int type;
-	Light(Color color, float brightness, int type) : color(color), brightness(brightness), type(type) { }
-
-public:
-
-	void setColor(Color _color);
-	void setBrightness(float _brightness);
-
-	Color getColor() const;
-	float getBrightness() const;
-	int getType() const;
 	std::string getNameOfType() const;
-	virtual vec3 dirToSource(const vec3& p) const = 0;
-};
-
-class AmbientLight : public Light {
-public:
-	AmbientLight(Color color, float brightness)
-		: Light(color, brightness, LIGHT_AMBIENT) { }
-	virtual vec3 dirToSource(const vec3& p) const;
-};
-
-class PointLight : public Light {
-	vec3 position;
-public:
-	PointLight(Color color, float brightness, vec3 position)
-		: Light(color, brightness, LIGHT_POINT), position(position) { }
-	void setPosition(vec3 _position);
-	vec3 getPosition() const { return position; }
-
-	virtual vec3 dirToSource(const vec3& p) const;
-};
-
-class ParallelLight : public Light {
-	vec3 direction;
-public:
-	ParallelLight(Color color, float brightness, vec3 direction)
-		: Light(color, brightness, LIGHT_PARALLEL), direction(direction) { }
-	void setDirection(vec3 _direction);
-	vec3 getDirection() const { return direction; }
-
-	virtual vec3 dirToSource(const vec3& p) const;
 };
 
 enum {

@@ -24,8 +24,8 @@ void Scene::AddModel(MeshModel* model) {
         shading = SHADE_PHONG;
     }
     if (activeLight == -1) {
-        lights.push_back(new AmbientLight(Color(1), 0.5));
-        lights.push_back(new PointLight(Color(1), 2, 1.1 * model->getBoundingBoxMax()));
+        lights.push_back(new Light());
+        lights.push_back(new Light{ Color(1), Color(0.5), Color(0), 1.1 * model->getBoundingBoxMax(), 2, true });
         activeLight = 1;
     }
     moveBy(model->world, getActiveCamera()->getLookingAt()); // spawn the model where the camera's looking
@@ -40,15 +40,20 @@ void Scene::loadOBJModel(string fileName, string modelName) {
 
 void Scene::draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    GLuint viewPos_loc = glGetUniformLocation(GetProgram(), "viewPos");
-    glUniform3fv(viewPos_loc, 1, getPosition(getActiveCamera()->getTransform()));
-    GLuint view_loc = glGetUniformLocation(GetProgram(), "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, getActiveCamera()->getTransform());
-    GLuint projection_loc = glGetUniformLocation(GetProgram(), "projection");
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, getActiveCamera()->projection);
+    const float time = ((float)clock()) / CLOCKS_PER_SEC;
+    shaderSetFloat("time", time);
+    shaderSetVec3("viewPos", getPosition(getActiveCamera()->getTransform()));
+    shaderSetMat4("projection", getActiveCamera()->projection);
+    shaderSetMat4("view", getActiveCamera()->getTransform());
+    
+    for (int i = 0; i < lights.size() && i < 64; i++) {
+        shaderSetLight(lights[i], i);
+    }
+    shaderSetInt("numLights", lights.size());
+    
     for (const auto& model : models) {
-        GLuint model_loc = glGetUniformLocation(GetProgram(), "model");
-        glUniformMatrix4fv(model_loc, 1, GL_FALSE, model->getTransform());
+        shaderSetMaterial(model->material);
+        shaderSetMat4("model", model->getTransform());
         model->Draw();
     }
     glFlush();
@@ -156,58 +161,6 @@ void Camera::getPerspectiveParameters(float& fovy, float& aspect) {
     float distance_to_left = std::sqrt(lastLeft * lastLeft + lastNear * lastNear);
     fovy = 2 * std::atan2(lastTop, distance_to_left) / M_PI * 180;
     aspect = (lastTop - lastBottom) / (lastRight - lastLeft);
-}
-
-void Light::setColor(Color _color) {
-    color = _color;
-}
-
-void Light::setBrightness(float _brightness) {
-    brightness = _brightness;
-}
-
-Color Light::getColor() const {
-    return color;
-}
-
-float Light::getBrightness() const {
-    return brightness;
-}
-
-int Light::getType() const {
-    return type;
-}
-
-std::string Light::getNameOfType() const {
-    switch (type) {
-    case LIGHT_AMBIENT: return "Ambient";
-    case LIGHT_POINT: return "Point";
-    case LIGHT_PARALLEL: return "Parallel";
-    default: return "UNKNOWN LIGHT TYPE";
-    }
-}
-
-void PointLight::setPosition(vec3 _position) {
-    position = _position;
-}
-
-vec3 PointLight::dirToSource(const vec3& p) const {
-    return normalize(position - p);
-}
-
-void ParallelLight::setDirection(vec3 _direction) {
-    // check that _direction is normalized (or close enough to it)
-    assert(std::abs(length(_direction) - 1) < FLT_EPSILON);
-    direction = _direction;
-}
-
-vec3 ParallelLight::dirToSource(const vec3& p) const {
-    return direction;
-}
-
-vec3 AmbientLight::dirToSource(const vec3& p) const {
-    // ambient light is by definition directionless, so...
-    return vec3();
 }
 
 void Scene::setFog(bool enable, const Color color, float min, float max)
@@ -363,3 +316,20 @@ void computeMatricesFromInputs(){
     lastTime = currentTime;
 }
 */
+
+
+Light Light::PointLight(Color ambient, Color diffuse, Color specular, vec3 position, float brightness)
+{
+    return Light{ ambient,  diffuse,  specular,  position,  brightness, false };
+}
+
+Light Light::DirectionalLight(Color ambient, Color diffuse, Color specular, vec3 position, float brightness)
+{
+    return Light{ ambient,  diffuse,  specular,  position,  brightness, true };
+}
+
+std::string Light::getNameOfType() const
+{
+    if (isDirectional) return "Directional";
+    else return "Point";
+}

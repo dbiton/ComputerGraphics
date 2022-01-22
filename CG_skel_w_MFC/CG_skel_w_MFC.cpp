@@ -40,7 +40,6 @@ enum {
 };
 
 enum {
-    NEW_LIGHT_AMBIENT,
     NEW_LIGHT_POINT,
     NEW_LIGHT_PARALLEL
 };
@@ -529,26 +528,21 @@ Light* getLight(int type, Light* defaults = NULL) {
     float red = 0, green = 0, blue = 0, brightness = 0;
     vec3 vec(1, 0, 0);
     if (defaults != NULL) {
-        red = defaults->getColor().x;
-        green = defaults->getColor().y;
-        blue = defaults->getColor().z;
-        brightness = defaults->getBrightness();
-        if (type == LIGHT_POINT) vec = ((PointLight*)defaults)->getPosition();
-        else if (type == LIGHT_PARALLEL) vec = ((ParallelLight*)defaults)->getDirection();
+        red = defaults->diffuse.x;
+        green = defaults->diffuse.y;
+        blue = defaults->diffuse.z;
+        brightness = defaults->brightness;
+        vec = defaults->position;
     }
     switch (type) {
-    case NEW_LIGHT_AMBIENT: {
-        CAmbientLightDialog dialog(_T("Ambient Light Parameters"), red, green, blue, brightness);
-        if (dialog.DoModal() != IDOK) return NULL;
-        return new AmbientLight(Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()), dialog.getBrightness());
-    } break;
     case NEW_LIGHT_POINT: {
         CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
             "Origin X:", vec.x, "Origin Y:", vec.y, "Origin Z:", vec.z,
             "Brightness:", brightness);
         if (dialog.DoModal() != IDOK) return NULL;
-        return new PointLight(Color(dialog.getF11(), dialog.getF12(), dialog.getF13()), dialog.getF3(),
-            vec3(dialog.getF21(), dialog.getF22(), dialog.getF23()));
+        Color c(dialog.getF11(), dialog.getF12(), dialog.getF13());
+        vec3 v((dialog.getF21(), dialog.getF22(), dialog.getF23()));
+        return new Light(Light::PointLight(c, c, c, v, dialog.getF3()));
     } break;
     case NEW_LIGHT_PARALLEL: {
         CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
@@ -560,7 +554,8 @@ Light* getLight(int type, Light* defaults = NULL) {
             message(_T("Can't use zero vectors as direction!"));
             return NULL;
         }
-        return new ParallelLight(Color(dialog.getF11(), dialog.getF12(), dialog.getF13()), dialog.getF3(), normalize(direction));
+        Color c(dialog.getF11(), dialog.getF12(), dialog.getF13());
+        return new Light(Light::DirectionalLight(c,c,c,normalize(direction),dialog.getF3()));
     } break;
     default: message(_T("Unknown light type!")); return NULL; // shouldn't happen!
     }
@@ -821,12 +816,10 @@ void makeLightsSubMenu() {
     // intentional indents to visualize the structure of the menu
     glutSetMenu(menuLights);
     /**/glutAddSubMenu("New...", menuNewLight); glutSetMenu(menuNewLight);
-    /*    */glutAddMenuEntry("Ambient...", NEW_LIGHT_AMBIENT);
     /*    */glutAddMenuEntry("Point...", NEW_LIGHT_POINT);
     /*    */glutAddMenuEntry("Parallel...", NEW_LIGHT_PARALLEL);
     /**/glutSetMenu(menuLights);
     /**/glutAddSubMenu("Change active light", menuChangeLight); glutSetMenu(menuChangeLight);
-    /*    */glutAddMenuEntry("Ambient...", NEW_LIGHT_AMBIENT);
     /*    */glutAddMenuEntry("Point...", NEW_LIGHT_POINT);
     /*    */glutAddMenuEntry("Parallel...", NEW_LIGHT_PARALLEL);
     /**/glutSetMenu(menuLights);
