@@ -122,7 +122,7 @@ void shaderSetFloat(std::string name, GLfloat v)
 
 void shaderSetMat4(std::string name, GLfloat* v) {
 	GLuint loc = glGetUniformLocation(GetProgram(), name.c_str());
-	glUniformMatrix4fv(loc, 1, GL_FALSE, v);
+	glUniformMatrix4fv(loc, 1, GL_TRUE, v);
 }
 
 void shaderSetVec3(std::string name, GLfloat* v) {
