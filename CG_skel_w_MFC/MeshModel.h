@@ -23,8 +23,9 @@ protected:
 	MeshModel() noexcept;
 
 	void processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces);
-public:
 
+	int default_uv = 0;
+public:
 	Material* material = Material::DefaultMaterial();
 	bool draw_normals_per_vert = false;
 	bool draw_normals_per_face = false;
@@ -43,6 +44,11 @@ public:
 	vec3 getBoundingBoxMax() { return bounding_box_max; }
 	std::string getName() { return name; }
 
+	void setDefaultUV(int _default_uv);
+
 	void Draw();
 	void Recenter();
+private:
+	vec2 genSphereUV(vec3 p);
+	vec2 genPlaneUV(vec3 p);
 };

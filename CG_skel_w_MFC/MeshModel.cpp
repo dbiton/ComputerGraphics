@@ -144,6 +144,11 @@ void MeshModel::loadFile(string fileName)
     processRawVerts(positions, normals, texs, faces);
 }
 
+void MeshModel::setDefaultUV(int _default_uv)
+{
+    default_uv = _default_uv;
+}
+
 void MeshModel::Draw()
 {
     const GLuint inColor = glGetUniformLocation(GetProgram(), "inColor");
@@ -181,6 +186,16 @@ void MeshModel::Recenter() {
     scaleBy(self, vec3(rescale)); // and rescale so it's small
 }
 
+vec2 MeshModel::genSphereUV(vec3 p)
+{
+    return vec2((asin(-p.y)+1.f)/2.f, (atan2(p.x, p.z)/M_PI+1.f)/2.f);
+}
+
+vec2 MeshModel::genPlaneUV(vec3 p)
+{
+    return vec2(p.x, p.y);
+}
+
 void bindShaderFields() noexcept {
     GLuint loc = glGetAttribLocation(GetProgram(), "vPosition");
     glEnableVertexAttribArray(loc);
@@ -209,6 +224,8 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 {
     std::vector<Vertex> vertices, vertices_vNormals, vertices_sNormals, vertices_boundingBox;
     
+    bool has_uv = false;
+
     // fill in vbo's for drawing normals
     Vertex v;
     constexpr GLfloat fn_len = 0.5,
@@ -222,8 +239,16 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
             /*   */fm = (verts[0] + verts[1] + verts[2]) / 3; // face mid
         for (int i = 0; i < 3; i++) {
             v.position = verts[i];
-            v.tex = (face.vt[i] == 0) ? vec2(0) : texs[face.vt[i] - 1]; // could get no texture, and we can't assume it's missing for all...
+            if (face.vt[i] == 0) {
+                if (default_uv == 0) v.tex = genSphereUV(v.position);
+                else if (default_uv == 1) v.tex = genPlaneUV(v.position);
+            }
+            else {
+                has_uv = true;
+                v.tex = texs[face.vt[i] - 1];
+            }
             v.tex.y *= -1; // for some reason this needs to happen, otherwise the texture is all off
+
             v.normal = (face.vn[i] == 0) ? vec3(0) : normals[face.vn[i] - 1]; // could get no normal, same as above
             v.face_normal = fn_real;
             v.face_middle = fm;
@@ -312,6 +337,10 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
     vertices_boundingBox.push_back(v);
     v.position = v110;
     vertices_boundingBox.push_back(v);
+
+    if (!has_uv) {
+
+    }
 
     vao_size = vertices.size();
     vao_vNormals_size = vertices_vNormals.size();
