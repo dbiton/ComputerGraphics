@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "PrimTypes.h"
 #include "vec.h"
+#include "stb_image.h"
 
 class MeshModel : public Entity
 {
@@ -16,6 +17,7 @@ protected:
 
 	size_t vao_size, vao_vNormals_size, vao_sNormals_size, vao_boundingBox_size;
 	GLuint vao, vao_vNormals, vao_sNormals, vao_boundingBox;
+	GLuint texture = -1;
 	GLfloat rescale;
 	
 	MeshModel() noexcept;
@@ -30,6 +32,9 @@ public:
 
 	MeshModel(std::string fileName, std::string modelName);
 	~MeshModel();
+
+	void loadTexture(std::string path);
+	void clearTexture();
 
 	void loadFile(std::string fileName);
 	

@@ -88,9 +88,9 @@ class Scene {
     Color colorFog = Color(1);
     float minDistanceFog = 0, maxDistanceFog = 100;
     int factorSupersample = 2;
-    int colorAnimType = 1;
-    int vertexAnimType = 1;
-    int toonShades = 5;
+    int colorAnimType = 0;
+    int vertexAnimType = 0;
+    int toonShades = 0;
 
 public:
     int shading = 0;

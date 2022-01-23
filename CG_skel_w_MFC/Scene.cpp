@@ -48,6 +48,11 @@ void Scene::draw() {
     }
     shaderSetInt("numLights", lights.size());
 
+    shaderSetInt("toonEffect", toonShades);
+    shaderSetInt("colorEffect", colorAnimType);
+    shaderSetInt("animationEffect", vertexAnimType);
+
+
     for (const auto& model : models) {
         shaderSetMaterial(model->material);
         shaderSetMat4("model", model->getTransform());
@@ -203,7 +208,7 @@ void Scene::setColorAnim(bool enable, int type) // TODO
 
     }
     else {
-
+        colorAnimType = 0;
     }
 }
 
@@ -215,7 +220,7 @@ void Scene::setVertexAnim(bool enable, int type) // TODO
 
     }
     else {
-
+        vertexAnimType = 0;
     }
 }
 
@@ -227,7 +232,7 @@ void Scene::setToon(bool enable, int shades) // TODO
 
     }
     else {
-
+        toonShades = 0;
     }
 }
 
