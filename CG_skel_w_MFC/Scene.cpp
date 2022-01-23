@@ -36,14 +36,12 @@ void Scene::loadOBJModel(string fileName, string modelName) {
 }
 
 void Scene::draw() {
-    mat4 camera_inverse = InverseTransform(getActiveCamera()->getTransform());
-    
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     const float time = ((float)clock()) / CLOCKS_PER_SEC;
     shaderSetFloat("time", time);
     shaderSetVec3("viewPos", getPosition(getActiveCamera()->getTransform()));
     shaderSetMat4("projection", getActiveCamera()->projection);
-    shaderSetMat4("view", camera_inverse);
+    shaderSetMat4("view", getActiveCamera()->getTransform());
 
     for (int i = 0; i < lights.size() && i < 64; i++) {
         shaderSetLight(lights[i], i);
@@ -116,7 +114,7 @@ void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up) {
     upDirection = up;
 
     reset(self);
-    world = InverseTransform(mat4(u, v, n, t) * Translate(-eye)); // will be inverted again later!
+    world = mat4(u, v, n, t) * Translate(-eye); // will be inverted again later!
 }
 
 void Camera::UpdateLastParameters(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, const int type) {
@@ -131,32 +129,25 @@ void Camera::UpdateLastParameters(const float left, const float right, const flo
 
 mat4 Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember) {
     if (remember) UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_ORTHO);
-    mat4 m(0);
-    
-    m[0][0] = 2. / (right - left);
-    m[1][1] = 2. / (top - bottom);
-    m[2][2] = -2. / (zFar - zNear);
-    m[3][3] = 1;
-    m[0][3] = -(right + left) / (right - left);
-    m[1][3] = -(top + bottom) / (top - bottom);
-    m[2][3] = -(zFar + zNear) / (zFar - zNear);
-
-    return m;
+    return Scale(2.0 / (right - left), 2.0 / (top - bottom), 2.0 / (zNear - zFar))
+           * Translate(-0.5 * (right + left), -0.5 * (top + bottom), 0.5 * (zNear + zFar));
 }
 
 mat4 Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar, bool remember) {
     if (remember) UpdateLastParameters(left, right, bottom, top, zNear, zFar, PROJECTION_FRUSTUM);
-    mat4 m(0);
+    mat4 H = mat4();
+    H[2][0] = (left + right) / (2.0 * zNear);
+    H[2][1] = (top + bottom) / (2.0 * zNear);
 
-    m[0][0] = (2.0 * zNear) / (right - left);
-    m[1][1] = (2.0 * zNear) / (top - bottom);
-    m[0][2] = (right + left) / (right - left);
-    m[1][2] = (top + bottom) / (top - bottom);
-    m[2][2] = -(zFar + zNear) / (zFar - zNear);
-    m[3][2] = -1.0;
-    m[2][3] = -(2.0 * zFar * zNear) / (zFar - zNear);
+    const mat4 S = Scale(2.0 * zNear / (right - left), 2.0 * zNear / (top - bottom), 1);
 
-    return m;
+    mat4 N = mat4();
+    N[2][2] = (zNear + zFar) / (zNear - zFar);
+    N[3][2] = 2.0 * zNear * zFar / (zNear - zFar);
+    N[2][3] = -1;
+    N[3][3] = 0;
+
+    return transpose(N * S * H);
 }
 
 mat4 Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar, bool remember) {
