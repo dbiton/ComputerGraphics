@@ -560,7 +560,7 @@ Light* getLight(int type, Light* defaults = NULL) {
         if (dialog.DoModal() != IDOK) return NULL;
         Color c(dialog.getF11(), dialog.getF12(), dialog.getF13());
         vec3 v((dialog.getF21(), dialog.getF22(), dialog.getF23()));
-        return new Light(Light::PointLight(c, c, c, v, dialog.getF3()));
+        return new Light(Light::PointLight(c, c, c, v, dialog.getF3())); // TODO THIS SEEMS EXTREMELY WRONG STILL
     } break;
     case NEW_LIGHT_PARALLEL: {
         CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
@@ -573,7 +573,7 @@ Light* getLight(int type, Light* defaults = NULL) {
             return NULL;
         }
         Color c(dialog.getF11(), dialog.getF12(), dialog.getF13());
-        return new Light(Light::DirectionalLight(c,c,c,normalize(direction),dialog.getF3()));
+        return new Light(Light::DirectionalLight(c,c,c,normalize(direction),dialog.getF3())); // TODO SEE ABOVE
     } break;
     default: message(_T("Unknown light type!")); return NULL; // shouldn't happen!
     }
@@ -747,26 +747,14 @@ void bloomMenu(int id) {
 }
 
 void colorAnimMenu(int id) {
-    switch (id) {
-    case ADVANCED_ENABLE: {
-        CSingleFloatDialog dialog(_T("Color Animation Selector"), scene->getColorAnimType(), true);
-        if (dialog.DoModal() == IDOK) scene->setColorAnim(true, dialog.getValue()); // TODO restrict to within 3 values?
-    } break;
-    case ADVANCED_DISABLE: scene->setColorAnim(false); break;
-    default: message(_T("Unimplemented colorAnimMenu option!")); // shouldn't happen!
-    }
+    if (id == -1) scene->setColorAnim(false);
+    else scene->setColorAnim(true, id);
     display();
 }
 
 void vertexAnimMenu(int id) {
-    switch (id) {
-    case ADVANCED_ENABLE: {
-        CSingleFloatDialog dialog(_T("Vertex Animation Selector"), scene->getVertexAnimType(), true);
-        if (dialog.DoModal() == IDOK) scene->setVertexAnim(true, dialog.getValue()); // TODO restrict to within 3 values?
-    } break;
-    case ADVANCED_DISABLE: scene->setVertexAnim(false); break;
-    default: message(_T("Unimplemented vertexAnimMenu option!")); // shouldn't happen!
-    }
+    if (id == -1) scene->setVertexAnim(false);
+    else scene->setVertexAnim(true, id);
     display();
 }
 
@@ -821,11 +809,9 @@ void makeModelsSubMenu() {
     /*    */glutAddMenuEntry("Rainbow Material...", MATERIAL_FULLSATSPECTRUM);
     /*    */glutAddMenuEntry("Physrainbow Material...", MATERIAL_PHYSSPECTRUM);
     /**/glutSetMenu(menuModels);
-    /**/glutAddSubMenu("Fallback Texture Mapping...", menuFallbackUV); glutSetMenu(menuFallbackUV); // TODO remove whichever we don't use!
+    /**/glutAddSubMenu("Fallback Texture Mapping...", menuFallbackUV); glutSetMenu(menuFallbackUV);
     /*    */glutAddMenuEntry("Spherical", UV_SPHERE);
     /*    */glutAddMenuEntry("Planar", UV_PLANE);
-    /*    */glutAddMenuEntry("Cylindrical", UV_CYLINDER);
-    /*    */glutAddMenuEntry("Box", UV_BOX);
     /**/glutSetMenu(menuModels);
     /**/glutAddMenuEntry("Delete active model", -1);
     /**/for (int i = 0; i < scene->getModels()->size(); i++) {
@@ -987,12 +973,16 @@ void initMenu()
     /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
     /**/glutSetMenu(menuAdvanced);
     /**/glutAddSubMenu("Color Animation", menuColorAnim); glutSetMenu(menuColorAnim);
-    /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
-    /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
+    /*    */glutAddMenuEntry("None", -1);
+    /*    */glutAddMenuEntry("RGB", COLOR_ANIM_RGB);
+    /*    */glutAddMenuEntry("Stripes", COLOR_ANIM_STRIPES);
+    /*    */glutAddMenuEntry("Crazy Noise!", COLOR_ANIM_WOW);
     /**/glutSetMenu(menuAdvanced);
     /**/glutAddSubMenu("Vertex Animation", menuVertexAnim); glutSetMenu(menuVertexAnim);
-    /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
-    /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
+    /*    */glutAddMenuEntry("None", -1);
+    /*    */glutAddMenuEntry("1", VERTEX_ANIM_1);
+    /*    */glutAddMenuEntry("2", VERTEX_ANIM_2);
+    /*    */glutAddMenuEntry("3", VERTEX_ANIM_3);
     /**/glutSetMenu(menuAdvanced);
     /**/glutAddSubMenu("Toon Shading", menuToon); glutSetMenu(menuToon);
     /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);

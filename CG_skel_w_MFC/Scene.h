@@ -11,6 +11,18 @@ enum {
     LIGHT_PARALLEL
 };
 
+enum {
+    COLOR_ANIM_RGB = 1,
+    COLOR_ANIM_STRIPES = 2,
+    COLOR_ANIM_WOW = 3
+};
+
+enum { // TODO THESE ARE UNIMPLEMENTED!!!
+    VERTEX_ANIM_1 = 1,
+    VERTEX_ANIM_2 = 2,
+    VERTEX_ANIM_3 = 3
+};
+
 struct Light {
     Color ambient = Color(1, 0, 0);
     Color diffuse = Color(0, 1, 0);

@@ -54,9 +54,7 @@ private:
 	vec2 genPlaneUV(vec3 p);
 };
 
-enum { // TODO move this to the place that has the actual texture mapping code?
+enum {
 	UV_SPHERE,
-	UV_PLANE,
-	UV_CYLINDER,
-	UV_BOX
+	UV_PLANE
 };
