@@ -472,7 +472,7 @@ void textureMenu(int id) {
 }
 
 void fallbackUVMenu(int id) {
-    setFallbackTextureMapping(id);
+    MeshModel::setDefaultUV(id);
 }
 
 void camerasMenu(int id) {

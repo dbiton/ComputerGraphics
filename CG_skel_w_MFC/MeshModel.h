@@ -24,7 +24,7 @@ protected:
 
 	void processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces);
 
-	int default_uv = 0;
+	static int default_uv;
 public:
 	Material* material = Material::DefaultMaterial();
 	bool draw_normals_per_vert = false;
@@ -44,7 +44,8 @@ public:
 	vec3 getBoundingBoxMax() { return bounding_box_max; }
 	std::string getName() { return name; }
 
-	void setDefaultUV(int _default_uv);
+	static void setDefaultUV(int _default_uv);
+	static int getDefaultUV();
 
 	void Draw();
 	void Recenter();
@@ -59,6 +60,3 @@ enum { // TODO move this to the place that has the actual texture mapping code?
 	UV_CYLINDER,
 	UV_BOX
 };
-
-int getFallbackTextureMapping();
-void setFallbackTextureMapping(int type);
