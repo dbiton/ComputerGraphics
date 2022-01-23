@@ -83,14 +83,14 @@ class Scene {
     void AddModel(MeshModel* model);
 
     bool isBloom, isFog, isSupersample, isColorAnim, isVertexAnim, isToon;
-    int spreadBloom;
-    float threshBloom;
-    Color colorFog;
-    float minDistanceFog, maxDistanceFog;
-    int factorSupersample;
-    int colorAnimType;
-    int vertexAnimType;
-    int toonShades;
+    int spreadBloom = 10;
+    float threshBloom = 0.5;
+    Color colorFog = Color(1);
+    float minDistanceFog = 0, maxDistanceFog = 100;
+    int factorSupersample = 2;
+    int colorAnimType = 1;
+    int vertexAnimType = 1;
+    int toonShades = 5;
 
 public:
     int shading = 0;
