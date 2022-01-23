@@ -13,16 +13,6 @@ struct Entity
 
 // matrix getters/setters/manipulations
 
-inline void printTransform(mat4& mat) noexcept {
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			printf("%f ", mat[i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
-
 inline void setPosition(mat4& mat, const vec3& v) noexcept
 {
 	mat[0][3] = v.x;

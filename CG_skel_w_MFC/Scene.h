@@ -60,9 +60,9 @@ public:
 
     static Camera* DefaultCamera(vec3 boxMin, vec3 boxMax) {
         Camera* res = new Camera();
-        res->projection = res->Ortho(-1, 1, -1, 1, 1, 3);
+        res->projection = res->Perspective(45, 1, 0.1, 100);
         mat4 transform = res->getTransform();
-        setPosition(transform, boxMin + 2 * (boxMax - boxMin));
+        setPosition(transform, vec3(0, 0, 5));
         res->self = transform;
         return res;
     }
@@ -112,10 +112,7 @@ public:
 
     MeshModel* getActiveModel() noexcept { return models[activeModel]; }
     Light* getActiveLight() noexcept { return lights[activeLight]; }
-    Camera* getActiveCamera() noexcept { 
-        if (activeCamera == -1) return NULL;
-        return cameras[activeCamera]; 
-    }
+    Camera* getActiveCamera() noexcept { return cameras[activeCamera]; }
 
     std::vector<MeshModel*>* getModels() noexcept { return &models; }
     std::vector<Light*>* getLights() noexcept { return &lights; }
