@@ -11,6 +11,20 @@
 
 using namespace std;
 
+mat4 Scene::Projection() {
+    Camera* camera = getActiveCamera();
+    const float midHeight = (camera->lastTop + camera->lastBottom) / 2,
+        /*    */midWidth = (camera->lastLeft + camera->lastRight) / 2,
+        /*    */dh = (camera->lastTop - camera->lastBottom) / 2 * (height / firstHeight),
+        /*    */dw = (camera->lastLeft - camera->lastRight) / 2 * (width / firstWidth);
+    if (camera->lastType == PROJECTION_ORTHO) {
+        return camera->Ortho(midWidth + dw, midWidth - dw, midHeight + dh, midHeight - dh, camera->lastNear, camera->lastFar, false);
+    }
+    else {
+        return camera->Frustum(midWidth + dw, midWidth - dw, midHeight + dh, midHeight - dh, camera->lastNear, camera->lastFar, false);
+    }
+}
+
 void Scene::AddModel(MeshModel* model) {
     models.push_back(model);
     activeModel = models.size() - 1;
@@ -29,7 +43,12 @@ void Scene::AddModel(MeshModel* model) {
     draw();
 }
 
-Scene::Scene() { }
+Scene::Scene(int firstWidth, int firstHeight) : firstWidth(firstWidth), firstHeight(firstHeight), width(firstWidth), height(firstHeight) { }
+
+void Scene::UpdateDimensions(int newWidth, int newHeight) {
+    width = newWidth;
+    height = newHeight;
+}
 
 void Scene::loadOBJModel(string fileName, string modelName) {
     AddModel(new MeshModel(fileName, modelName));
@@ -40,7 +59,7 @@ void Scene::draw() {
     const float time = ((float)clock()) / CLOCKS_PER_SEC;
     shaderSetFloat("time", time);
     shaderSetVec3("viewPos", getPosition(getActiveCamera()->getTransform()));
-    shaderSetMat4("projection", getActiveCamera()->projection);
+    shaderSetMat4("projection", Projection());
     shaderSetMat4("view", getActiveCamera()->getTransform());
 
     for (int i = 0; i < lights.size() && i < 64; i++) {

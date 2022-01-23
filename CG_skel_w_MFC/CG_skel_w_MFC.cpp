@@ -124,6 +124,8 @@ void display(void)
 void reshape(int width, int height)
 {
     if (height < 1) height = 1; // if height is too small, OpenGL freaks out
+    glViewport(0, 0, width, height);
+    scene->UpdateDimensions(width, height);
 }
 
 inline void message(CString message) { AfxMessageBox(message); }
@@ -1003,7 +1005,8 @@ int my_main(int argc, char** argv)
     // Initialize window
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-    glutInitWindowSize(512, 512);
+    const int width = 512, height = 512;
+    glutInitWindowSize(width, height);
     glutInitContextVersion(3, 2);
     glutInitContextProfile(GLUT_CORE_PROFILE);
     glutCreateWindow("CG");
@@ -1014,7 +1017,7 @@ int my_main(int argc, char** argv)
 
     InitShader("vshader.glsl", "fshader.glsl");
 
-    scene = new Scene();
+    scene = new Scene(width, height);
 
     //----------------------------------------------------------------------------
     // Initialize Callbacks

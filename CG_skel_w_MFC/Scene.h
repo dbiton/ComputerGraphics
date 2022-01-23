@@ -93,6 +93,7 @@ class Scene {
     std::vector<Camera*> cameras;
 
     void AddModel(MeshModel* model);
+    mat4 Projection(); // corrects for nonuniform reshaping
 
     bool isBloom, isFog, isSupersample, isColorAnim, isVertexAnim, isToon;
     int spreadBloom = 10;
@@ -103,6 +104,7 @@ class Scene {
     int colorAnimType = 0;
     int vertexAnimType = 0;
     int toonShades = 0;
+    float firstWidth, firstHeight, width, height;
 
 public:
     int shading = 0;
@@ -116,7 +118,8 @@ public:
     bool drawCameras = false;
     bool drawLights = false;
 
-    Scene();
+    Scene(int firstWidth, int firstHeight);
+    void UpdateDimensions(int newWidth, int newHeight);
 
     void loadOBJModel(std::string fileName, std::string modelName);
     void draw();
