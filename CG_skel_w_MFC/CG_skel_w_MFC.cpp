@@ -29,6 +29,7 @@ enum {
 };
 
 enum {
+    MATERIAL_TEXTURE,
     MATERIAL_UNIFORM,
     MATERIAL_FULLSATSPECTRUM,
     MATERIAL_PHYSSPECTRUM
@@ -424,13 +425,18 @@ void newModelMenu(int id) {
     glutAddMenuEntry(newEntry, scene->activeModel);
 }
 
-void materialMenu(int id) {
+void textureMenu(int id) {
     if (scene->activeModel == -1) {
         message(_T("No active model selected!"));
         return;
     }
     const Material* material = scene->getActiveModel()->material;
     switch (id) {
+    case MATERIAL_TEXTURE: {
+        CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.*")); // no filter, texture can come in a variety of formats...
+        if (dlg.DoModal() == IDOK) scene->getActiveModel()->loadTexture(CT2CA(dlg.GetPathName()).m_psz);
+        else return;
+    } break;
     case MATERIAL_UNIFORM: {
         CUniformMaterialDialog dialog(_T("Uniform Material Parameters"),
             material->diffuse.x, material->diffuse.y, material->diffuse.z,
@@ -460,7 +466,7 @@ void materialMenu(int id) {
         scene->getActiveModel()->material = new PhysSpectrumMaterial(Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
             Color(dialog.getSpecularRed(), dialog.getSpecularGreen(), dialog.getSpecularBlue()));
     } break;
-    default: message(_T("Unimplemented materialMenu option!")); // shouldn't happen!
+    default: message(_T("Unimplemented textureMenu option!")); // shouldn't happen!
     }
     display();
 }
@@ -784,7 +790,7 @@ void makeModelsSubMenu() {
         glutAddSubMenu("Models", menuModels);
     }
     const int menuNewModel = glutCreateMenu(newModelMenu),
-              menuMaterial = glutCreateMenu(materialMenu);
+              menuTexture = glutCreateMenu(textureMenu);
 
     // intentional indents to visualize the structure of the menu
     glutSetMenu(menuModels);
@@ -795,10 +801,11 @@ void makeModelsSubMenu() {
     /*    */glutAddMenuEntry("Primitive: Prism", NEW_PRISM);
     /*    */glutAddMenuEntry("Primitive: Sphere", NEW_SPHERE);
     /**/glutSetMenu(menuModels);
-    /**/glutAddSubMenu("Set Material", menuMaterial); glutSetMenu(menuMaterial);
-    /*    */glutAddMenuEntry("Uniform...", MATERIAL_UNIFORM);
-    /*    */glutAddMenuEntry("Full Saturation Spectrum", MATERIAL_FULLSATSPECTRUM);
-    /*    */glutAddMenuEntry("Physical Spectrum", MATERIAL_PHYSSPECTRUM);
+    /**/glutAddSubMenu("Set Texture", menuTexture); glutSetMenu(menuTexture);
+    /*    */glutAddMenuEntry("From File...", MATERIAL_TEXTURE);
+    /*    */glutAddMenuEntry("Uniform Material...", MATERIAL_UNIFORM);
+    /*    */glutAddMenuEntry("Rainbow Material...", MATERIAL_FULLSATSPECTRUM);
+    /*    */glutAddMenuEntry("Physrainbow Material...", MATERIAL_PHYSSPECTRUM);
     /**/glutSetMenu(menuModels);
     /**/glutAddMenuEntry("Delete active model", -1);
     /**/for (int i = 0; i < scene->getModels()->size(); i++) {
