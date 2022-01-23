@@ -727,6 +727,42 @@ void bloomMenu(int id) {
     display();
 }
 
+void colorAnimMenu(int id) {
+    switch (id) {
+    case ADVANCED_ENABLE: {
+        CSingleFloatDialog dialog(_T("Color Animation Selector"), scene->getColorAnimType(), true);
+        if (dialog.DoModal() == IDOK) scene->setColorAnim(true, dialog.getValue()); // TODO restrict to within 3 values?
+    } break;
+    case ADVANCED_DISABLE: scene->setColorAnim(false); break;
+    default: message(_T("Unimplemented colorAnimMenu option!")); // shouldn't happen!
+    }
+    display();
+}
+
+void vertexAnimMenu(int id) {
+    switch (id) {
+    case ADVANCED_ENABLE: {
+        CSingleFloatDialog dialog(_T("Vertex Animation Selector"), scene->getVertexAnimType(), true);
+        if (dialog.DoModal() == IDOK) scene->setVertexAnim(true, dialog.getValue()); // TODO restrict to within 3 values?
+    } break;
+    case ADVANCED_DISABLE: scene->setVertexAnim(false); break;
+    default: message(_T("Unimplemented vertexAnimMenu option!")); // shouldn't happen!
+    }
+    display();
+}
+
+void toonMenu(int id) {
+    switch (id) {
+    case ADVANCED_ENABLE: {
+        CSingleFloatDialog dialog(_T("Toon Shading: Number of shades"), scene->getToonShades(), true);
+        if (dialog.DoModal() == IDOK) scene->setToon(true, dialog.getValue());
+    } break;
+    case ADVANCED_DISABLE: scene->setToon(false); break;
+    default: message(_T("Unimplemented toonMenu option!")); // shouldn't happen!
+    }
+    display();
+}
+
 void redisplay(int state)
 {
     glutPostRedisplay();
@@ -843,7 +879,7 @@ void initMenu()
     // create all the submenus first, then construct everything visually.
     // maybe this is more inefficient, but it's easier to work with
     int menuToggles, menuControl, menuReset, menuProjection, menuSensitivity,
-        menuShading, menuAdvanced, menuSupersampling, menuFog, menuBloom;
+        menuShading, menuAdvanced, menuSupersampling, menuFog, menuBloom, menuColorAnim, menuVertexAnim, menuToon;
 
     // intentional indents to visualize the structure of the menu
     menuMain = glutCreateMenu(mainMenu);
@@ -860,6 +896,9 @@ void initMenu()
     /*    */menuSupersampling = glutCreateMenu(supersamplingMenu);
     /*    */menuFog = glutCreateMenu(fogMenu);
     /*    */menuBloom = glutCreateMenu(bloomMenu);
+    /*    */menuColorAnim = glutCreateMenu(colorAnimMenu);
+    /*    */menuVertexAnim = glutCreateMenu(vertexAnimMenu);
+    /*    */menuToon = glutCreateMenu(toonMenu);
 
     glutSetMenu(menuMain);
     makeModelsSubMenu();
@@ -917,6 +956,18 @@ void initMenu()
     /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
     /**/glutSetMenu(menuAdvanced);
     /**/glutAddSubMenu("Bloom", menuBloom); glutSetMenu(menuBloom);
+    /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
+    /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
+    /**/glutSetMenu(menuAdvanced);
+    /**/glutAddSubMenu("Color Animation", menuColorAnim); glutSetMenu(menuColorAnim);
+    /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
+    /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
+    /**/glutSetMenu(menuAdvanced);
+    /**/glutAddSubMenu("Vertex Animation", menuVertexAnim); glutSetMenu(menuVertexAnim);
+    /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
+    /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
+    /**/glutSetMenu(menuAdvanced);
+    /**/glutAddSubMenu("Toon Shading", menuToon); glutSetMenu(menuToon);
     /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
     /*    */glutAddMenuEntry("Disable", ADVANCED_DISABLE);
     /**/glutSetMenu(menuAdvanced);

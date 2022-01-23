@@ -136,6 +136,7 @@ void MeshModel::Draw()
 
 void MeshModel::Recenter() {
     setPosition(self, -(bounding_box_min + bounding_box_max) / 2); // center it in its own axis system!
+    scaleBy(self, vec3(rescale)); // and rescale so it's small
 }
 
 void bindShaderFields() noexcept {
@@ -206,6 +207,8 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
     }
     bounding_box_min = vert_min;
     bounding_box_max = vert_max;
+    const vec3 box = bounding_box_max - bounding_box_min;
+    rescale = 1.0 / max(max(box.x, box.y), box.z);
     Recenter();
     const vec3 v000 = bounding_box_min,
         /*   */v100 = vec3(bounding_box_max.x, bounding_box_min.y, bounding_box_min.z),

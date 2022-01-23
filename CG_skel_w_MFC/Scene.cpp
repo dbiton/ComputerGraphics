@@ -18,9 +18,6 @@ void Scene::AddModel(MeshModel* model) {
         cameras.push_back(Camera::DefaultCamera(model->getBoundingBoxMin(), model->getBoundingBoxMax()));
         activeCamera = 0;
         cameras[0]->LookAt(getPosition(cameras[0]->getTransform()), vec4(), vec4(0, 0, 1, 0));
-        const vec3 box = model->getBoundingBoxMax() - model->getBoundingBoxMin();
-        const GLfloat scale = max(max(box.x, box.y), box.z);
-        scaleBy(cameras[0]->world, vec3(1.0/scale));
         shading = SHADE_PHONG;
     }
     if (activeLight == -1) {
@@ -45,12 +42,12 @@ void Scene::draw() {
     shaderSetVec3("viewPos", getPosition(getActiveCamera()->getTransform()));
     shaderSetMat4("projection", getActiveCamera()->projection);
     shaderSetMat4("view", getActiveCamera()->getTransform());
-    
+
     for (int i = 0; i < lights.size() && i < 64; i++) {
         shaderSetLight(lights[i], i);
     }
     shaderSetInt("numLights", lights.size());
-    
+
     for (const auto& model : models) {
         shaderSetMaterial(model->material);
         shaderSetMat4("model", model->getTransform());
@@ -105,7 +102,7 @@ void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up) {
     if (length(u) < FLT_EPSILON) u = cross(up, n + vec4(1, 0, 0, 0)); // fix for when too close to colinear
     u = normalize(u);
     const vec4 v = normalize(cross(n, u)),
-               t = vec4(0.0, 0.0, 0.0, 1.0);
+        /*   */t = vec4(0.0, 0.0, 0.0, 1.0);
     lookingAt = at;
     upDirection = up;
 
@@ -147,12 +144,11 @@ mat4 Camera::Frustum(const float left, const float right, const float bottom, co
 }
 
 mat4 Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar, bool remember) {
-    float fovy_rad = fovy * 180 / M_PI;
-    float left, right, bottom, top;
-    top = zNear * std::tan(fovy_rad / 2);
-    bottom = -top;
-    right = top / aspect;
-    left = -right;
+    const float fovy_rad = fovy * M_PI / 180,
+        /*    */top = zNear * std::tan(fovy_rad / 2),
+        /*    */bottom = -top,
+        /*    */right = top * aspect,
+        /*    */left = -right;
     return Camera::Frustum(left, right, bottom, top, zNear, zFar, remember);
 }
 
@@ -160,7 +156,7 @@ void Camera::getPerspectiveParameters(float& fovy, float& aspect) {
     // distance to the the line defined as (left, y, near)
     float distance_to_left = std::sqrt(lastLeft * lastLeft + lastNear * lastNear);
     fovy = 2 * std::atan2(lastTop, distance_to_left) / M_PI * 180;
-    aspect = (lastTop - lastBottom) / (lastRight - lastLeft);
+    aspect = (lastRight - lastLeft) / (lastTop - lastBottom);
 }
 
 void Scene::setFog(bool enable, const Color color, float min, float max)
@@ -199,6 +195,42 @@ void Scene::setBloom(bool enable, float thresh, int spread)
     }
 }
 
+void Scene::setColorAnim(bool enable, int type) // TODO
+{
+    isColorAnim = enable;
+    if (isColorAnim) {
+        colorAnimType = type;
+
+    }
+    else {
+
+    }
+}
+
+void Scene::setVertexAnim(bool enable, int type) // TODO
+{
+    isVertexAnim = enable;
+    if (isColorAnim) {
+        vertexAnimType = type;
+
+    }
+    else {
+
+    }
+}
+
+void Scene::setToon(bool enable, int shades) // TODO
+{
+    isToon = enable;
+    if (isColorAnim) {
+        toonShades = shades;
+
+    }
+    else {
+
+    }
+}
+
 float Scene::getThreshBloom() const
 {
     return threshBloom;
@@ -227,6 +259,18 @@ float Scene::getFogMinDistance() const
 float Scene::getFogMaxDistance() const
 {
     return maxDistanceFog;
+}
+
+int Scene::getColorAnimType() const {
+    return colorAnimType;
+}
+
+int Scene::getVertexAnimType() const {
+    return vertexAnimType;
+}
+
+int Scene::getToonShades() const {
+    return toonShades;
 }
 
 // TODO CODE FOR FIGURING OUT HOW OPENGL MATRIX TRANSFORMATION WORKS, DELETE LATER

@@ -16,7 +16,8 @@ protected:
 
 	size_t vao_size, vao_vNormals_size, vao_sNormals_size, vao_boundingBox_size;
 	GLuint vao, vao_vNormals, vao_sNormals, vao_boundingBox;
-
+	GLfloat rescale;
+	
 	MeshModel() noexcept;
 
 	void processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces);
