@@ -112,7 +112,10 @@ public:
 
     MeshModel* getActiveModel() noexcept { return models[activeModel]; }
     Light* getActiveLight() noexcept { return lights[activeLight]; }
-    Camera* getActiveCamera() noexcept { return cameras[activeCamera]; }
+    Camera* getActiveCamera() noexcept { 
+        if (activeCamera == -1) return NULL;
+        return cameras[activeCamera]; 
+    }
 
     std::vector<MeshModel*>* getModels() noexcept { return &models; }
     std::vector<Light*>* getLights() noexcept { return &lights; }

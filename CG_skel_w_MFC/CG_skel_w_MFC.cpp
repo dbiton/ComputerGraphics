@@ -771,6 +771,9 @@ void toonMenu(int id) {
 
 void redisplay(int state)
 {
+    if (scene->getActiveCamera()) {
+        printTransform(scene->getActiveCamera()->getTransform());
+    }
     glutPostRedisplay();
     glutTimerFunc(16, redisplay, 0);
 }
