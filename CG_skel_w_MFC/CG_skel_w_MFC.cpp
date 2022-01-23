@@ -727,6 +727,12 @@ void bloomMenu(int id) {
     display();
 }
 
+void redisplay(int state)
+{
+    glutPostRedisplay();
+    glutTimerFunc(16, redisplay, 0);
+}
+
 void makeModelsSubMenu() {
     // sadly pointwise deleting the models is more of a pain than just completely remaking the menu
     if (menuModels != -1) {
@@ -950,6 +956,7 @@ int my_main(int argc, char** argv)
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
     glutReshapeFunc(reshape);
+    redisplay(0);
     initMenu();
 
     glutMainLoop();
