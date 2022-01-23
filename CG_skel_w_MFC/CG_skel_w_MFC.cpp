@@ -433,7 +433,7 @@ void textureMenu(int id) {
     const Material* material = scene->getActiveModel()->material;
     switch (id) {
     case MATERIAL_TEXTURE: {
-        CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.*")); // no filter, texture can come in a variety of formats...
+        CFileDialog dlg(TRUE, _T(".jpg"), NULL, NULL, _T("*.jpg|*.*"));
         if (dlg.DoModal() == IDOK) scene->getActiveModel()->loadTexture(CT2CA(dlg.GetPathName()).m_psz);
         else return;
     } break;
