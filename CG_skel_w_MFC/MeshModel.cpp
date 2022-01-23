@@ -223,6 +223,7 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
         for (int i = 0; i < 3; i++) {
             v.position = verts[i];
             v.tex = (face.vt[i] == 0) ? vec2(0) : texs[face.vt[i] - 1]; // could get no texture, and we can't assume it's missing for all...
+            v.tex.y *= -1; // for some reason this needs to happen, otherwise the texture is all off
             v.normal = (face.vn[i] == 0) ? vec3(0) : normals[face.vn[i] - 1]; // could get no normal, same as above
             v.face_normal = fn_real;
             v.face_middle = fm;
