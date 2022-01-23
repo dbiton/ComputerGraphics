@@ -108,7 +108,7 @@ Scene* scene;
 
 int last_x, last_y;
 bool lb_down, rb_down, mb_down;
-int controlMode = CONTROL_CAMERA_IN_WORLD;
+int controlMode = CONTROL_MODEL_INTUITIVE;
 int menuMain, menuModels = -1, menuCameras = -1, menuLights = -1;
 float move_coe = 1, scale_coe = 1, rotation_coe = 1;
 
