@@ -33,9 +33,10 @@ public:
 	MeshModel(std::string fileName, std::string modelName);
 	~MeshModel();
 
+	bool hasTexture();
 	void loadTexture(std::string path);
 	void clearTexture();
-
+	
 	void loadFile(std::string fileName);
 	
 	vec3 getBoundingBoxMin() { return bounding_box_min; }

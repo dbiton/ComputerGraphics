@@ -63,6 +63,11 @@ MeshModel::MeshModel(string fileName, string modelName)
 
 MeshModel::~MeshModel() { }
 
+bool MeshModel::hasTexture()
+{
+    return texture != -1;
+}
+
 void MeshModel::loadTexture(std::string path)
 {
     clearTexture();

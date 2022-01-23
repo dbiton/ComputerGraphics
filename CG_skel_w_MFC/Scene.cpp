@@ -56,6 +56,8 @@ void Scene::draw() {
     for (const auto& model : models) {
         shaderSetMaterial(model->material);
         shaderSetMat4("model", model->getTransform());
+        shaderSetInt("hasTexture", model->hasTexture());
+
         model->Draw();
     }
     glFlush();
