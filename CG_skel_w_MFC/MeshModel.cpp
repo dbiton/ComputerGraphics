@@ -343,4 +343,4 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 
 Face::Face() : v{ 0 }, vn{ 0 }, vt{ 0 } { }
 
-Face::Face(int v0, int v1, int v2) : v{ v0, v1, v2 }, vn{ 0 }, vt{ 0 } { }
+Face::Face(int v0, int v1, int v2) : v{ v0, v1, v2 }, vn{ v0, v1, v2 }, vt{ 0 } { } // exclusively used by PrimMeshModel, for whom vertices and their normals are the same
