@@ -9,6 +9,8 @@ struct Material {
 
     float ambient_reflect, roughness, shininess;
 
+    bool marble = false;
+
 protected:
     virtual Material ComputeAt(const vec3 v, const vec3 min, const vec3 max) {
         return Material(diffuse, specular, emissive, ambient_reflect, roughness, shininess);

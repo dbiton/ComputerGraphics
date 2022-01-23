@@ -54,6 +54,7 @@ enum {
     TOGGLE_LIGHTS,
     TOGGLE_INACTIVES_DIMMING,
     TOGGLE_AXES,
+    TOGGLE_MARBLING,
     TOGGLE_BACKSHADOW
 };
 
@@ -162,6 +163,13 @@ void toggleInactivesDimming() noexcept {
 
 void toggleAxes() noexcept {
     scene->drawAxes = !scene->drawAxes;
+}
+
+void toggleMarbling() noexcept {
+    if (scene->activeModel != -1) {
+        Material* mat = scene->getActiveModel()->material;
+        if (mat != nullptr) mat->marble = !mat->marble;
+    }
 }
 
 mat4& controlled(int context, int control_mode) noexcept {
@@ -619,6 +627,7 @@ void togglesMenu(int id) {
     case TOGGLE_LIGHTS: toggleLights(); break;
     case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
     case TOGGLE_AXES: toggleAxes(); break;
+    case TOGGLE_MARBLING: toggleMarbling(); break;
     default: message(_T("Unimplemented togglesMenu option!")); // shouldn't happen!
     }
     display();
@@ -931,7 +940,7 @@ void initMenu()
     /**/glutAddMenuEntry("Light Indicators", TOGGLE_LIGHTS);
     /**/glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING);
     /**/glutAddMenuEntry("Axes", TOGGLE_AXES);
-    /**/glutAddMenuEntry("Backshadows", TOGGLE_BACKSHADOW);
+    /**/glutAddMenuEntry("Marble Effect", TOGGLE_MARBLING);
     glutSetMenu(menuMain);
     glutAddSubMenu("Control Mode", menuControl); glutSetMenu(menuControl);
     /**/glutAddMenuEntry("Model (self frame)", CONTROL_MODEL_IN_MODEL);

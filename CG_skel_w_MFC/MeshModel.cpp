@@ -158,6 +158,7 @@ int MeshModel::getDefaultUV()
 
 void MeshModel::Draw()
 {
+    shaderSetInt("marbleEffect", material->marble ? 0 : 1);
     const GLuint inColor = glGetUniformLocation(GetProgram(), "inColor");
     if (IsWireframeMode()) glUniform4f(inColor, 1, 1, 1, 1);
     else glUniform4f(inColor, 0, 0, 0, 0);
