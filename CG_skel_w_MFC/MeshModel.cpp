@@ -14,6 +14,8 @@
 
 using namespace std;
 
+static int fallbackTextureMap;
+
 Face faceFromStream(std::istream& aStream)
 {
     Face face;
@@ -203,10 +205,22 @@ GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) noexcept {
     return (length(p1 - p2) + length(p1 - p3) + length(p2 - p3)) / 3;
 }
 
+void fallbackMap(std::vector<vec2>& texs)
+{
+    switch (getFallbackTextureMapping()) { // TODO
+    case UV_BOX: break;
+    case UV_CYLINDER: break;
+    case UV_PLANE: break;
+    case UV_SPHERE: break;
+    default: break; // unimplemented!
+    }
+}
+
 // Within other applications we would definitely use an EBO to reduce memory usage and increase performance,
 // but since we ain't getting into geometry shaders, we have no use for EBO's (mostly) because we need face normals and middles...
-void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces)
+void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, std::vector<vec2>& texs, const std::vector<Face>& faces)
 {
+    if (texs.empty()) fallbackMap(texs);
     std::vector<Vertex> vertices, vertices_vNormals, vertices_sNormals, vertices_boundingBox;
     
     // fill in vbo's for drawing normals
@@ -347,6 +361,10 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
     glBufferData(GL_ARRAY_BUFFER, vao_boundingBox_size * sizeof(Vertex), &vertices_boundingBox[0], GL_STATIC_DRAW);
     bindShaderFields();
 }
+
+int getFallbackTextureMapping() { return fallbackTextureMap; }
+
+void setFallbackTextureMapping(int type) { fallbackTextureMap = type; }
 
 Face::Face() : v{ 0 }, vn{ 0 }, vt{ 0 } { }
 

@@ -471,6 +471,10 @@ void textureMenu(int id) {
     display();
 }
 
+void fallbackUVMenu(int id) {
+    setFallbackTextureMapping(id);
+}
+
 void camerasMenu(int id) {
     if (id == -1) {
         if (scene->activeCamera == -1) {
@@ -790,7 +794,8 @@ void makeModelsSubMenu() {
         glutAddSubMenu("Models", menuModels);
     }
     const int menuNewModel = glutCreateMenu(newModelMenu),
-              menuTexture = glutCreateMenu(textureMenu);
+              menuTexture = glutCreateMenu(textureMenu),
+              menuFallbackUV = glutCreateMenu(fallbackUVMenu);
 
     // intentional indents to visualize the structure of the menu
     glutSetMenu(menuModels);
@@ -806,6 +811,12 @@ void makeModelsSubMenu() {
     /*    */glutAddMenuEntry("Uniform Material...", MATERIAL_UNIFORM);
     /*    */glutAddMenuEntry("Rainbow Material...", MATERIAL_FULLSATSPECTRUM);
     /*    */glutAddMenuEntry("Physrainbow Material...", MATERIAL_PHYSSPECTRUM);
+    /**/glutSetMenu(menuModels);
+    /**/glutAddSubMenu("Fallback Texture Mapping...", menuFallbackUV); glutSetMenu(menuFallbackUV); // TODO remove whichever we don't use!
+    /*    */glutAddMenuEntry("Spherical", UV_SPHERE);
+    /*    */glutAddMenuEntry("Planar", UV_PLANE);
+    /*    */glutAddMenuEntry("Cylindrical", UV_CYLINDER);
+    /*    */glutAddMenuEntry("Box", UV_BOX);
     /**/glutSetMenu(menuModels);
     /**/glutAddMenuEntry("Delete active model", -1);
     /**/for (int i = 0; i < scene->getModels()->size(); i++) {

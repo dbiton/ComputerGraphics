@@ -22,7 +22,7 @@ protected:
 	
 	MeshModel() noexcept;
 
-	void processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, const std::vector<vec2>& texs, const std::vector<Face>& faces);
+	void processRawVerts(const std::vector<vec3>& positions, const std::vector<vec3>& normals, std::vector<vec2>& texs, const std::vector<Face>& faces);
 public:
 
 	Material* material = Material::DefaultMaterial();
@@ -46,3 +46,13 @@ public:
 	void Draw();
 	void Recenter();
 };
+
+enum { // TODO move this to the place that has the actual texture mapping code?
+	UV_SPHERE,
+	UV_PLANE,
+	UV_CYLINDER,
+	UV_BOX
+};
+
+int getFallbackTextureMapping();
+void setFallbackTextureMapping(int type);
