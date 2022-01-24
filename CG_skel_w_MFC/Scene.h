@@ -17,10 +17,9 @@ enum {
     COLOR_ANIM_WOW = 3
 };
 
-enum { // TODO THESE ARE UNIMPLEMENTED!!!
-    VERTEX_ANIM_1 = 1,
-    VERTEX_ANIM_2 = 2,
-    VERTEX_ANIM_3 = 3
+enum {
+    VERTEX_ANIM_SIMPLE = 1,
+    VERTEX_ANIM_WOW = 2
 };
 
 struct Light {

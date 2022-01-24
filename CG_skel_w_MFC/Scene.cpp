@@ -185,7 +185,7 @@ void Camera::getPerspectiveParameters(float& fovy, float& aspect) {
     aspect = (lastRight - lastLeft) / (lastTop - lastBottom);
 }
 
-void Scene::setFog(bool enable, const Color color, float min, float max)
+void Scene::setFog(bool enable, const Color color, float min, float max) // TODO
 {
     isFog = enable;
     if (isFog) {
@@ -198,7 +198,7 @@ void Scene::setFog(bool enable, const Color color, float min, float max)
     }
 }
 
-void Scene::setSupersampling(bool enable, int factor)
+void Scene::setSupersampling(bool enable, int factor) // TODO
 {
     isSupersample = enable;
     if (isSupersample) {
@@ -209,7 +209,7 @@ void Scene::setSupersampling(bool enable, int factor)
     }
 }
 
-void Scene::setBloom(bool enable, float thresh, int spread)
+void Scene::setBloom(bool enable, float thresh, int spread) // TODO
 {
     isBloom = enable;
     if (isBloom) {
@@ -221,40 +221,22 @@ void Scene::setBloom(bool enable, float thresh, int spread)
     }
 }
 
-void Scene::setColorAnim(bool enable, int type) // TODO
+void Scene::setColorAnim(bool enable, int type)
 {
     isColorAnim = enable;
-    if (isColorAnim) {
-        colorAnimType = type;
-
-    }
-    else {
-        colorAnimType = 0;
-    }
+    colorAnimType = enable ? type : 0;
 }
 
-void Scene::setVertexAnim(bool enable, int type) // TODO
+void Scene::setVertexAnim(bool enable, int type)
 {
     isVertexAnim = enable;
-    if (isColorAnim) {
-        vertexAnimType = type;
-
-    }
-    else {
-        vertexAnimType = 0;
-    }
+    vertexAnimType = enable ? type : 0;
 }
 
-void Scene::setToon(bool enable, int shades) // TODO
+void Scene::setToon(bool enable, int shades)
 {
     isToon = enable;
-    if (isColorAnim) {
-        toonShades = shades;
-
-    }
-    else {
-        toonShades = 0;
-    }
+    toonShades = enable ? shades : 0;
 }
 
 float Scene::getThreshBloom() const

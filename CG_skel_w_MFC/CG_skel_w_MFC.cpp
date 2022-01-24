@@ -982,9 +982,8 @@ void initMenu()
     /**/glutSetMenu(menuAdvanced);
     /**/glutAddSubMenu("Vertex Animation", menuVertexAnim); glutSetMenu(menuVertexAnim);
     /*    */glutAddMenuEntry("None", -1);
-    /*    */glutAddMenuEntry("1", VERTEX_ANIM_1);
-    /*    */glutAddMenuEntry("2", VERTEX_ANIM_2);
-    /*    */glutAddMenuEntry("3", VERTEX_ANIM_3);
+    /*    */glutAddMenuEntry("Simple", VERTEX_ANIM_SIMPLE);
+    /*    */glutAddMenuEntry("Too Much!", VERTEX_ANIM_WOW);
     /**/glutSetMenu(menuAdvanced);
     /**/glutAddSubMenu("Toon Shading", menuToon); glutSetMenu(menuToon);
     /*    */glutAddMenuEntry("Enable...", ADVANCED_ENABLE);
