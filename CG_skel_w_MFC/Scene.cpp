@@ -36,7 +36,7 @@ void Scene::AddModel(MeshModel* model) {
     }
     if (activeLight == -1) {
         lights.push_back(new AmbientLight(Color(1), 0.5));
-        lights.push_back(new PointLight(Color(1), 2, 1.1 * model->getBoundingBoxMax()));
+        lights.push_back(new PointLight(Color(1), 2, vec3(2)));
         activeLight = 1;
     }
     moveBy(model->world, getActiveCamera()->getLookingAt()); // spawn the model where the camera's looking
