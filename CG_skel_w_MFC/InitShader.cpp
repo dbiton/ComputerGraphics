@@ -141,18 +141,16 @@ void shaderSetMaterial(Material* material) {
 	shaderSetVec3("material.diffuse", material->diffuse);
 	shaderSetVec3("material.specular", material->specular);
 	shaderSetVec3("material.ambient", material->emissive);
+	shaderSetVec3("material.emissive", material->emissive);
 	shaderSetFloat("material.shininess", material->shininess);
 	shaderSetFloat("material.roughness", material->roughness);
-	shaderSetFloat("material.ambient_reflect", material->ambient_reflect);
 }
 
 void shaderSetLight(Light* light, int index)
 {
 	std::string l = "lights[" + std::to_string(index) + "].";
-	shaderSetVec3(l + "diffuse", light->diffuse);
-	shaderSetVec3(l + "specular", light->specular);
-	shaderSetVec3(l + "ambient", light->ambient);
-	shaderSetVec3(l + "position", light->position);
+	shaderSetVec3(l + "color", light->color);
 	shaderSetFloat(l + "brightness", light->brightness);
-	shaderSetInt(l+"isDirectional", light->isDirectional);
+	shaderSetInt(l+"type", light->type);
+	shaderSetVec3(l + "posOrDir", light->posOrDir);
 }

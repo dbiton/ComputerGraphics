@@ -35,8 +35,8 @@ void Scene::AddModel(MeshModel* model) {
         shading = SHADE_PHONG;
     }
     if (activeLight == -1) {
-        lights.push_back(new Light());
-        lights.push_back(new Light{ Color(1), Color(0.5), Color(0), 1.1 * model->getBoundingBoxMax(), 2, true });
+        lights.push_back(new AmbientLight(Color(1), 0.5));
+        lights.push_back(new PointLight(Color(1), 2, 1.1 * model->getBoundingBoxMax()));
         activeLight = 1;
     }
     moveBy(model->world, getActiveCamera()->getLookingAt()); // spawn the model where the camera's looking
@@ -65,20 +65,24 @@ void Scene::draw() {
     for (int i = 0; i < lights.size() && i < 64; i++) {
         shaderSetLight(lights[i], i);
     }
+
     shaderSetInt("numLights", lights.size());
+    shaderSetInt("shading", shading);
+    shaderSetInt("backshadows", drawBackshadow);
 
     shaderSetInt("toonEffect", toonShades);
     shaderSetInt("colorEffect", colorAnimType);
     shaderSetInt("animationEffect", vertexAnimType);
 
-
     for (const auto& model : models) {
         shaderSetMaterial(model->material);
         shaderSetMat4("model", model->getTransform());
+        shaderSetMat4("modelInverse", transpose(InverseTransform(model->getTransform())));
         shaderSetInt("hasTexture", model->hasTexture());
-
+        
         model->Draw();
     }
+
     glFlush();
     glutSwapBuffers();
 }
@@ -185,6 +189,43 @@ void Camera::getPerspectiveParameters(float& fovy, float& aspect) {
     aspect = (lastRight - lastLeft) / (lastTop - lastBottom);
 }
 
+void Light::setColor(Color _color) {
+    color = _color;
+}
+
+void Light::setBrightness(float _brightness) {
+    brightness = _brightness;
+}
+
+Color Light::getColor() const {
+    return color;
+}
+
+float Light::getBrightness() const {
+    return brightness;
+}
+
+int Light::getType() const {
+    return type;
+}
+
+std::string Light::getNameOfType() const {
+    switch (type) {
+    case LIGHT_AMBIENT: return "Ambient";
+    case LIGHT_POINT: return "Point";
+    case LIGHT_PARALLEL: return "Parallel";
+    default: return "UNKNOWN LIGHT TYPE";
+    }
+}
+
+void PointLight::setPosition(vec3 _position) {
+    posOrDir = _position;
+}
+
+void ParallelLight::setDirection(vec3 _direction) {
+    posOrDir = normalize(_direction);
+}
+
 void Scene::setFog(bool enable, const Color color, float min, float max) // TODO
 {
     isFog = enable;
@@ -224,13 +265,13 @@ void Scene::setBloom(bool enable, float thresh, int spread) // TODO
 void Scene::setColorAnim(bool enable, int type)
 {
     isColorAnim = enable;
-    colorAnimType = enable ? type : 0;
+    colorAnimType = enable ? type : COLOR_ANIM_NONE;
 }
 
 void Scene::setVertexAnim(bool enable, int type)
 {
     isVertexAnim = enable;
-    vertexAnimType = enable ? type : 0;
+    vertexAnimType = enable ? type : VERTEX_ANIM_NONE;
 }
 
 void Scene::setToon(bool enable, int shades)
@@ -279,20 +320,4 @@ int Scene::getVertexAnimType() const {
 
 int Scene::getToonShades() const {
     return toonShades;
-}
-
-Light Light::PointLight(Color ambient, Color diffuse, Color specular, vec3 position, float brightness)
-{
-    return Light{ ambient,  diffuse,  specular,  position,  brightness, false };
-}
-
-Light Light::DirectionalLight(Color ambient, Color diffuse, Color specular, vec3 position, float brightness)
-{
-    return Light{ ambient,  diffuse,  specular,  position,  brightness, true };
-}
-
-std::string Light::getNameOfType() const
-{
-    if (isDirectional) return "Directional";
-    else return "Point";
 }

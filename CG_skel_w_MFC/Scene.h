@@ -6,34 +6,69 @@
 #include "MeshModel.h"
 
 enum {
-    LIGHT_AMBIENT,
-    LIGHT_POINT,
-    LIGHT_PARALLEL
+    LIGHT_AMBIENT = 0,
+    LIGHT_POINT = 1,
+    LIGHT_PARALLEL = 2
 };
 
 enum {
+    COLOR_ANIM_NONE = 0,
     COLOR_ANIM_RGB = 1,
     COLOR_ANIM_STRIPES = 2,
     COLOR_ANIM_WOW = 3
 };
 
 enum {
+    VERTEX_ANIM_NONE = 0,
     VERTEX_ANIM_SIMPLE = 1,
     VERTEX_ANIM_WOW = 2
 };
 
+enum {
+    SHADE_FLAT = 0,
+    SHADE_GOURAUD = 1,
+    SHADE_PHONG = 2
+};
+
 struct Light {
-    Color ambient = Color(1, 0, 0);
-    Color diffuse = Color(0, 1, 0);
-    Color specular = Color(0, 0, 1);
-    vec3 position = vec3(1, 1, 1);
-    float brightness = 1;
-    bool isDirectional = false; // if this is true, position is actually the direction the light is coming from
+    Color color;
+    float brightness;
+    int type;
 
-    static Light PointLight(Color ambient, Color diffuse, Color specular, vec3 position, float brightness);
-    static Light DirectionalLight(Color ambient, Color diffuse, Color specular, vec3 position, float brightness);
+protected:
+    Light(vec3 posOrDir, Color color, float brightness, int type) : posOrDir(posOrDir), color(color), brightness(brightness), type(type) { }
 
+public:
+    vec3 posOrDir;
+
+    void setColor(Color _color);
+    void setBrightness(float _brightness);
+    Color getColor() const;
+    float getBrightness() const;
+    int getType() const;
     std::string getNameOfType() const;
+};
+
+class AmbientLight : public Light {
+public:
+    AmbientLight(Color color, float brightness)
+        : Light(vec3(0), color, brightness, LIGHT_AMBIENT) { }
+};
+
+class PointLight : public Light {
+public:
+    PointLight(Color color, float brightness, vec3 position)
+        : Light(position, color, brightness, LIGHT_POINT) { }
+    void setPosition(vec3 _position);
+    vec3 getPosition() const { return posOrDir; }
+};
+
+class ParallelLight : public Light {
+public:
+    ParallelLight(Color color, float brightness, vec3 direction)
+        : Light(direction, color, brightness, LIGHT_PARALLEL) { }
+    void setDirection(vec3 _direction);
+    vec3 getDirection() const { return posOrDir; }
 };
 
 enum {
@@ -79,13 +114,6 @@ public:
     }
 };
 
-enum {
-    SHADE_NONE,
-    SHADE_FLAT,
-    SHADE_GOURAUD,
-    SHADE_PHONG
-};
-
 class Scene {
     std::vector<MeshModel*> models;
     std::vector<Light*> lights;
@@ -116,6 +144,7 @@ public:
     bool drawAxes = false;
     bool drawCameras = false;
     bool drawLights = false;
+    bool drawBackshadow = false;
 
     Scene(int firstWidth, int firstHeight);
     void UpdateDimensions(int newWidth, int newHeight);

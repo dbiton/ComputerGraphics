@@ -31,18 +31,11 @@ enum {
 enum {
     MATERIAL_TEXTURE,
     MATERIAL_UNIFORM,
-    MATERIAL_FULLSATSPECTRUM,
-    MATERIAL_PHYSSPECTRUM
 };
 
 enum {
     NEW_CAMERA_DUPLICATE,
     NEW_CAMERA_AT_POS
-};
-
-enum {
-    NEW_LIGHT_POINT,
-    NEW_LIGHT_PARALLEL
 };
 
 enum {
@@ -174,6 +167,10 @@ void toggleMarbling() noexcept {
     }
 }
 
+void toggleBackshadow() noexcept {
+    scene->drawBackshadow = !scene->drawBackshadow;
+}
+
 mat4& controlled(int context, int control_mode) noexcept {
     switch (control_mode) {
     case CONTROL_CAMERA_IN_VIEW: return scene->getActiveCamera()->self;
@@ -232,6 +229,7 @@ void keyboard(unsigned char key, int x, int y) {
     case 'l': toggleLights(); break;
     case 'i': toggleInactivesDimming(); break;
     case 'x': toggleAxes(); break;
+    case 'k': toggleBackshadow(); break;
 
     case 'r': resetFrame(controlled(CONTROL_CONTEXT_NONE)); break;
 
@@ -278,7 +276,7 @@ void motion(int x, int y)
 {
     // calc difference in mouse movement
     const int dx = x - last_x,
-              dy = y - last_y;
+        dy = y - last_y;
     // update last x,y
     last_x = x;
     last_y = y;
@@ -452,29 +450,14 @@ void textureMenu(int id) {
             material->diffuse.x, material->diffuse.y, material->diffuse.z,
             material->specular.x, material->specular.y, material->specular.z,
             material->emissive.x, material->emissive.y, material->emissive.z,
-            material->ambient_reflect, material->roughness, material->shininess);
+            material->ambient.x, material->roughness, material->shininess);
         if (dialog.DoModal() != IDOK) return;
         delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new Material(Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
+        scene->getActiveModel()->material = new Material(Color(dialog.getAmbientReflect()),
+            Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
             Color(dialog.getSpecularRed(), dialog.getSpecularGreen(), dialog.getSpecularBlue()),
             Color(dialog.getEmissiveRed(), dialog.getEmissiveGreen(), dialog.getEmissiveBlue()),
-            dialog.getAmbientReflect(), dialog.getRoughness(), dialog.getShininess());
-    } break;
-    case MATERIAL_FULLSATSPECTRUM: {
-        CRainbowMaterialDialog dialog(_T("Full Saturation Spectrum Material Parameters"),
-            material->ambient_reflect, material->roughness, material->shininess);
-        if (dialog.DoModal() != IDOK) return;
-        delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new FullSatSpectrumMaterial(dialog.getAmbientReflect(), dialog.getRoughness(), dialog.getShininess());
-    } break;
-    case MATERIAL_PHYSSPECTRUM: {
-        CPhysSpectrumMaterialDialog dialog(_T("Physical Spectrum Material Parameters"),
-            material->diffuse.x, material->diffuse.y, material->diffuse.z,
-            material->specular.x, material->specular.y, material->specular.z);
-        if (dialog.DoModal() != IDOK) return;
-        delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new PhysSpectrumMaterial(Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
-            Color(dialog.getSpecularRed(), dialog.getSpecularGreen(), dialog.getSpecularBlue()));
+            dialog.getRoughness(), dialog.getShininess());
     } break;
     default: message(_T("Unimplemented textureMenu option!")); // shouldn't happen!
     }
@@ -548,23 +531,28 @@ Light* getLight(int type, Light* defaults = NULL) {
     float red = 0, green = 0, blue = 0, brightness = 0;
     vec3 vec(1, 0, 0);
     if (defaults != NULL) {
-        red = defaults->diffuse.x;
-        green = defaults->diffuse.y;
-        blue = defaults->diffuse.z;
-        brightness = defaults->brightness;
-        vec = defaults->position;
+        red = defaults->getColor().x;
+        green = defaults->getColor().y;
+        blue = defaults->getColor().z;
+        brightness = defaults->getBrightness();
+        if (type == LIGHT_POINT) vec = ((PointLight*)defaults)->getPosition();
+        else if (type == LIGHT_PARALLEL) vec = ((ParallelLight*)defaults)->getDirection();
     }
     switch (type) {
-    case NEW_LIGHT_POINT: {
-        CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
-            "Origin X:", vec.x, "Origin Y:", vec.y, "Origin Z:", vec.z,
-            "Brightness:", brightness);
+    case LIGHT_AMBIENT: {
+        CAmbientLightDialog dialog(_T("Ambient Light Parameters"), red, green, blue, brightness);
         if (dialog.DoModal() != IDOK) return NULL;
-        Color c(dialog.getF11(), dialog.getF12(), dialog.getF13());
-        vec3 v((dialog.getF21(), dialog.getF22(), dialog.getF23()));
-        return new Light(Light::PointLight(c, c, c, v, dialog.getF3())); // TODO THIS SEEMS EXTREMELY WRONG STILL
+        return new AmbientLight(Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()), dialog.getBrightness());
     } break;
-    case NEW_LIGHT_PARALLEL: {
+    case LIGHT_POINT: {
+        CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
+            /*                      */"Origin X:", vec.x, "Origin Y:", vec.y, "Origin Z:", vec.z,
+            /*                      */"Brightness:", brightness);
+        if (dialog.DoModal() != IDOK) return NULL;
+        return new PointLight(Color(dialog.getF11(), dialog.getF12(), dialog.getF13()), dialog.getF3(),
+            /*              */vec3(dialog.getF21(), dialog.getF22(), dialog.getF23()));
+    } break;
+    case LIGHT_PARALLEL: {
         CFloatsDialog_2x3plus1 dialog(_T("Point Light Parameters"), "Red:", red, "Green:", green, "Blue:", blue,
             "Direction X:", vec.x, "Direction Y:", vec.y, "Direction Z:", vec.z,
             "Brightness:", brightness);
@@ -574,8 +562,7 @@ Light* getLight(int type, Light* defaults = NULL) {
             message(_T("Can't use zero vectors as direction!"));
             return NULL;
         }
-        Color c(dialog.getF11(), dialog.getF12(), dialog.getF13());
-        return new Light(Light::DirectionalLight(c,c,c,normalize(direction),dialog.getF3())); // TODO SEE ABOVE
+        return new ParallelLight(Color(dialog.getF11(), dialog.getF12(), dialog.getF13()), dialog.getF3(), normalize(direction));
     } break;
     default: message(_T("Unknown light type!")); return NULL; // shouldn't happen!
     }
@@ -629,6 +616,7 @@ void togglesMenu(int id) {
     case TOGGLE_LIGHTS: toggleLights(); break;
     case TOGGLE_INACTIVES_DIMMING: toggleInactivesDimming(); break;
     case TOGGLE_AXES: toggleAxes(); break;
+    case TOGGLE_BACKSHADOW: toggleBackshadow(); break;
     case TOGGLE_MARBLING: toggleMarbling(); break;
     default: message(_T("Unimplemented togglesMenu option!")); // shouldn't happen!
     }
@@ -793,8 +781,8 @@ void makeModelsSubMenu() {
         glutAddSubMenu("Models", menuModels);
     }
     const int menuNewModel = glutCreateMenu(newModelMenu),
-              menuTexture = glutCreateMenu(textureMenu),
-              menuFallbackUV = glutCreateMenu(fallbackUVMenu);
+        menuTexture = glutCreateMenu(textureMenu),
+        menuFallbackUV = glutCreateMenu(fallbackUVMenu);
 
     // intentional indents to visualize the structure of the menu
     glutSetMenu(menuModels);
@@ -808,8 +796,6 @@ void makeModelsSubMenu() {
     /**/glutAddSubMenu("Set Texture", menuTexture); glutSetMenu(menuTexture);
     /*    */glutAddMenuEntry("From File...", MATERIAL_TEXTURE);
     /*    */glutAddMenuEntry("Uniform Material...", MATERIAL_UNIFORM);
-    /*    */glutAddMenuEntry("Rainbow Material...", MATERIAL_FULLSATSPECTRUM);
-    /*    */glutAddMenuEntry("Physrainbow Material...", MATERIAL_PHYSSPECTRUM);
     /**/glutSetMenu(menuModels);
     /**/glutAddSubMenu("Fallback Texture Mapping...", menuFallbackUV); glutSetMenu(menuFallbackUV);
     /*    */glutAddMenuEntry("Spherical", UV_SPHERE);
@@ -820,7 +806,7 @@ void makeModelsSubMenu() {
         /**/char newEntry[50];
         /**/sprintf(newEntry, "(%d) %s", i, (*scene->getModels())[i]->getName().c_str());
         /**/glutAddMenuEntry(newEntry, i);
-        }
+    }
     glutSetMenu(menuMain);
 }
 
@@ -850,7 +836,7 @@ void makeCamerasSubMenu() {
         /**/char newEntry[50];
         /**/sprintf(newEntry, "(%d) Camera", i);
         /**/glutAddMenuEntry(newEntry, i);
-        }
+    }
     glutSetMenu(menuMain);
 }
 
@@ -868,24 +854,26 @@ void makeLightsSubMenu() {
         glutAddSubMenu("Lights", menuLights);
     }
     const int menuNewLight = glutCreateMenu(newLightMenu),
-              menuChangeLight = glutCreateMenu(changeLightMenu);
+        menuChangeLight = glutCreateMenu(changeLightMenu);
 
     // intentional indents to visualize the structure of the menu
     glutSetMenu(menuLights);
     /**/glutAddSubMenu("New...", menuNewLight); glutSetMenu(menuNewLight);
-    /*    */glutAddMenuEntry("Point...", NEW_LIGHT_POINT);
-    /*    */glutAddMenuEntry("Parallel...", NEW_LIGHT_PARALLEL);
+    /*    */glutAddMenuEntry("Ambient...", LIGHT_AMBIENT);
+    /*    */glutAddMenuEntry("Point...", LIGHT_POINT);
+    /*    */glutAddMenuEntry("Parallel...", LIGHT_PARALLEL);
     /**/glutSetMenu(menuLights);
     /**/glutAddSubMenu("Change active light", menuChangeLight); glutSetMenu(menuChangeLight);
-    /*    */glutAddMenuEntry("Point...", NEW_LIGHT_POINT);
-    /*    */glutAddMenuEntry("Parallel...", NEW_LIGHT_PARALLEL);
+    /*    */glutAddMenuEntry("Ambient...", LIGHT_AMBIENT);
+    /*    */glutAddMenuEntry("Point...", LIGHT_POINT);
+    /*    */glutAddMenuEntry("Parallel...", LIGHT_PARALLEL);
     /**/glutSetMenu(menuLights);
     /**/glutAddMenuEntry("Delete active light", -1);
     /**/for (int i = 0; i < scene->getLights()->size(); i++) {
         /**/char newEntry[50];
         /**/sprintf(newEntry, "(%d) %s", i, (*scene->getLights())[i]->getNameOfType().c_str());
         /**/glutAddMenuEntry(newEntry, i);
-        }
+    }
     glutSetMenu(menuMain);
 }
 
@@ -928,6 +916,7 @@ void initMenu()
     /**/glutAddMenuEntry("Light Indicators", TOGGLE_LIGHTS);
     /**/glutAddMenuEntry("Inactives Dimming", TOGGLE_INACTIVES_DIMMING);
     /**/glutAddMenuEntry("Axes", TOGGLE_AXES);
+    /**/glutAddMenuEntry("Backshadows", TOGGLE_BACKSHADOW);
     /**/glutAddMenuEntry("Marble Effect", TOGGLE_MARBLING);
     glutSetMenu(menuMain);
     glutAddSubMenu("Control Mode", menuControl); glutSetMenu(menuControl);
@@ -956,7 +945,6 @@ void initMenu()
     /**/glutAddMenuEntry("Rotation", SENSITIVITY_ROTATION);
     glutSetMenu(menuMain);
     glutAddSubMenu("Shading", menuShading); glutSetMenu(menuShading);
-    /**/glutAddMenuEntry("None", SHADE_NONE);
     /**/glutAddMenuEntry("Flat", SHADE_FLAT);
     /**/glutAddMenuEntry("Gouraud", SHADE_GOURAUD);
     /**/glutAddMenuEntry("Phong", SHADE_PHONG);
