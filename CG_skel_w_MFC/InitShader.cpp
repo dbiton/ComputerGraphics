@@ -100,7 +100,7 @@ InitShader(const char* vShaderFile, const char* fShaderFile)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glPolygonMode(GL_FRONT_AND_BACK, (isWireframeMode = false) ? GL_LINE : GL_FILL);
-	glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+	glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
 
     /* use program object */
     glUseProgram(program);
@@ -140,7 +140,7 @@ void shaderSetInt(std::string name, int v)
 void shaderSetMaterial(Material* material) {
 	shaderSetVec3("material.diffuse", material->diffuse);
 	shaderSetVec3("material.specular", material->specular);
-	shaderSetVec3("material.ambient", material->emissive);
+	shaderSetVec3("material.ambient", material->ambient);
 	shaderSetVec3("material.emissive", material->emissive);
 	shaderSetFloat("material.shininess", material->shininess);
 	shaderSetFloat("material.roughness", material->roughness);
