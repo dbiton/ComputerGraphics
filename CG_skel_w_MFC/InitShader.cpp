@@ -100,7 +100,9 @@ InitShader(const char* vShaderFile, const char* fShaderFile)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glPolygonMode(GL_FRONT_AND_BACK, (isWireframeMode = false) ? GL_LINE : GL_FILL);
-	glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+	glClearColor(0.4f, 0.4f, 0.4f, 0.0f);
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CW);
 
     /* use program object */
     glUseProgram(program);

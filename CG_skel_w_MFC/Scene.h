@@ -122,7 +122,7 @@ class Scene {
     void AddModel(MeshModel* model);
     mat4 Projection(); // corrects for nonuniform reshaping
 
-    bool isBloom, isFog, isSupersample, isColorAnim, isVertexAnim, isToon;
+    bool isBloom = false, isFog = false, isSupersample = false, isColorAnim = false, isVertexAnim = false, isToon = false;
     int spreadBloom = 10;
     float threshBloom = 0.5;
     Color colorFog = Color(1);
@@ -131,6 +131,8 @@ class Scene {
     int colorAnimType = 0;
     int vertexAnimType = 0;
     int toonShades = 0;
+    float toonBorderThickness = 0;
+    Color toonBorderColor;
     float firstWidth, firstHeight, width, height;
 
 public:
@@ -176,7 +178,7 @@ public:
     void setBloom(bool enable, float thresh = 0.f, int spread = 0);
     void setColorAnim(bool enable, int type = 0);
     void setVertexAnim(bool enable, int type = 0);
-    void setToon(bool enable, int shades = 0);
+    void setToon(bool enable, int shades = 0, float borderThickness = 0.0f, Color borderColor = 0);
 
     float getThreshBloom() const;
     int getSpreadBloom() const;
@@ -190,4 +192,6 @@ public:
     int getColorAnimType() const;
     int getVertexAnimType() const;
     int getToonShades() const;
+    float getToonBorderThickness() const;
+    Color getToonBorderColor() const;
 };

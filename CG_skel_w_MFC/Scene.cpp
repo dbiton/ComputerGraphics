@@ -70,6 +70,7 @@ void Scene::draw() {
     shaderSetInt("shading", shading);
     shaderSetInt("backshadows", drawBackshadow);
 
+    shaderSetFloat("toonThickness", toonBorderThickness);
     shaderSetInt("toonEffect", toonShades);
     shaderSetInt("colorEffect", colorAnimType);
     shaderSetInt("animationEffect", vertexAnimType);
@@ -79,10 +80,17 @@ void Scene::draw() {
         shaderSetMat4("model", model->getTransform());
         shaderSetMat4("modelInverse", transpose(InverseTransform(model->getTransform())));
         shaderSetInt("hasTexture", model->hasTexture());
-        
+        if (!IsWireframeMode() && isToon) { // first tell the model to draw its silhouette
+            shaderSetVec3("toonBorderColor", toonBorderColor); // piggyback time!
+            shaderSetInt("toonSilhouette", 1);
+            glCullFace(GL_FRONT);
+            model->DrawSilhouette();
+            glCullFace(GL_BACK);
+        }
+        shaderSetInt("toonSilhouette", 0);
         model->Draw();
     }
-
+    
     glFlush();
     glutSwapBuffers();
 }
@@ -274,10 +282,19 @@ void Scene::setVertexAnim(bool enable, int type)
     vertexAnimType = enable ? type : VERTEX_ANIM_NONE;
 }
 
-void Scene::setToon(bool enable, int shades)
+void Scene::setToon(bool enable, int shades, float borderThickness, Color borderColor)
 {
     isToon = enable;
-    toonShades = enable ? shades : 0;
+    if (enable) {
+        toonShades = shades;
+        toonBorderThickness = borderThickness;
+        toonBorderColor = borderColor;
+    }
+    else {
+        toonShades = 0;
+        toonBorderThickness = 0;
+        toonBorderColor = 0;
+    }
 }
 
 float Scene::getThreshBloom() const
@@ -320,4 +337,12 @@ int Scene::getVertexAnimType() const {
 
 int Scene::getToonShades() const {
     return toonShades;
+}
+
+Color Scene::getToonBorderColor() const {
+    return toonBorderColor;
+}
+
+float Scene::getToonBorderThickness() const {
+    return toonBorderThickness;
 }

@@ -447,13 +447,15 @@ void textureMenu(int id) {
     } break;
     case MATERIAL_UNIFORM: {
         CUniformMaterialDialog dialog(_T("Uniform Material Parameters"),
+            material->ambient.x, material->ambient.y, material->ambient.z,
             material->diffuse.x, material->diffuse.y, material->diffuse.z,
             material->specular.x, material->specular.y, material->specular.z,
             material->emissive.x, material->emissive.y, material->emissive.z,
-            material->ambient.x, material->roughness, material->shininess);
+            material->roughness, material->shininess);
         if (dialog.DoModal() != IDOK) return;
         delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new Material(Color(dialog.getAmbientReflect()),
+        scene->getActiveModel()->material = new Material(
+            Color(dialog.getAmbientRed(), dialog.getAmbientGreen(), dialog.getAmbientBlue()),
             Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
             Color(dialog.getSpecularRed(), dialog.getSpecularGreen(), dialog.getSpecularBlue()),
             Color(dialog.getEmissiveRed(), dialog.getEmissiveGreen(), dialog.getEmissiveBlue()),
@@ -751,8 +753,9 @@ void vertexAnimMenu(int id) {
 void toonMenu(int id) {
     switch (id) {
     case ADVANCED_ENABLE: {
-        CSingleFloatDialog dialog(_T("Toon Shading: Number of shades"), scene->getToonShades(), true);
-        if (dialog.DoModal() == IDOK) scene->setToon(true, dialog.getValue());
+        const Color color = scene->getToonBorderColor();
+        CToonDialog dialog(_T("Toon Shading Parameters"), color.x, color.y, color.x, scene->getToonShades(), scene->getToonBorderThickness());
+        if (dialog.DoModal() == IDOK) scene->setToon(true, dialog.getShades(), dialog.getThickness(), Color(dialog.getRed(), dialog.getGreen(), dialog.getBlue()));
     } break;
     case ADVANCED_DISABLE: scene->setToon(false); break;
     default: message(_T("Unimplemented toonMenu option!")); // shouldn't happen!

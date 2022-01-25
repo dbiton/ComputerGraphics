@@ -156,6 +156,14 @@ int MeshModel::getDefaultUV()
     return default_uv;
 }
 
+void MeshModel::DrawSilhouette()
+{
+    if (IsWireframeMode()) return; // not yet!
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, vao_size);
+}
+
 void MeshModel::Draw()
 {
     shaderSetInt("marbleEffect", material->marble ? 0 : 1);
@@ -220,10 +228,26 @@ void bindShaderFields() noexcept {
     loc = glGetAttribLocation(GetProgram(), "vTex");
     glEnableVertexAttribArray(loc);
     glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, tex));
+    loc = glGetAttribLocation(GetProgram(), "aNormal");
+    glEnableVertexAttribArray(loc);
+    glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, avg_normal));
 }
 
 GLfloat averageLength(vec3 p1, vec3 p2, vec3 p3) noexcept {
     return (length(p1 - p2) + length(p1 - p3) + length(p2 - p3)) / 3;
+}
+
+std::vector<vec3> getAverageNormals(const std::vector<vec3>& normals, const std::vector<Face>& faces) {
+    std::map<int, NormalSum> normalSums;
+    for (const auto& face : faces) {
+        for (int i = 0; i < 3; i++) {
+            normalSums[face.v[i] - 1].count++;
+            normalSums[face.v[i] - 1].sum += normals[face.vn[i] - 1];
+        }
+    }
+    std::vector<vec3> res;
+    for (const auto& normalSum : normalSums) res.push_back(normalSum.second.sum / normalSum.second.count);
+    return res;
 }
 
 // Within other applications we would definitely use an EBO to reduce memory usage and increase performance,
@@ -232,6 +256,9 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
 {
     std::vector<Vertex> vertices, vertices_vNormals, vertices_sNormals, vertices_boundingBox;
     
+    // first pass over all vertices to give em an "average normal", for toon shading
+    std::vector<vec3> averageNormals = getAverageNormals(normals, faces);
+
     bool has_uv = false;
 
     // fill in vbo's for drawing normals
@@ -260,6 +287,7 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
             v.normal = (face.vn[i] == 0) ? vec3(0) : normals[face.vn[i] - 1]; // could get no normal, same as above
             v.face_normal = fn_real;
             v.face_middle = fm;
+            v.avg_normal = averageNormals[face.v[i] - 1];
             vertices.push_back(v);
             vertices_vNormals.push_back(v);
             v.position += (face.vn[i] == 0) ? vec3(0) : normalize(v.normal) * normalsLength * vn_len;
@@ -355,7 +383,7 @@ void MeshModel::processRawVerts(const std::vector<vec3>& positions, const std::v
     vao_sNormals_size = vertices_sNormals.size();
     vao_boundingBox_size = vertices_boundingBox.size();
 
-    GLuint vbo, vbo_vNormals, vbo_sNormals, vbo_boundingBox;
+    GLuint vbo, vbo_silhouette, vbo_vNormals, vbo_sNormals, vbo_boundingBox;
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
     glBindVertexArray(vao);

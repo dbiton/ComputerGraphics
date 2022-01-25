@@ -48,6 +48,7 @@ public:
 	static int getDefaultUV();
 
 	void Draw();
+	void DrawSilhouette();
 	void Recenter();
 private:
 	vec2 genSphereUV(vec3 p);
