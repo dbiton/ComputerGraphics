@@ -80,6 +80,7 @@ void Scene::draw() {
         shaderSetMat4("model", model->getTransform());
         shaderSetMat4("modelInverse", transpose(InverseTransform(model->getTransform())));
         shaderSetInt("hasTexture", model->hasTexture());
+        shaderSetInt("hasNormalMap", model->hasNormalMap());
         if (!IsWireframeMode() && isToon) { // first tell the model to draw its silhouette
             shaderSetVec3("toonBorderColor", toonBorderColor); // piggyback time!
             shaderSetInt("toonSilhouette", 1);

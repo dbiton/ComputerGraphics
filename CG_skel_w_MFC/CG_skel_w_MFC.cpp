@@ -376,6 +376,12 @@ void modelsMenu(int id) {
             scene->activeModel = scene->getModels()->size() - 1;
         makeModelsSubMenu();
     }
+    else if (id == -2) {
+        // load normal map
+        CFileDialog dlg(TRUE, _T(".jpg"), NULL, NULL, _T("*.jpg|*.*"));
+        if (dlg.DoModal() == IDOK) scene->getActiveModel()->loadNormalMap(CT2CA(dlg.GetPathName()).m_psz);
+        else return;
+    }
     else scene->activeModel = id;
     display();
 }
@@ -800,6 +806,7 @@ void makeModelsSubMenu() {
     /*    */glutAddMenuEntry("From File...", MATERIAL_TEXTURE);
     /*    */glutAddMenuEntry("Uniform Material...", MATERIAL_UNIFORM);
     /**/glutSetMenu(menuModels);
+        glutAddMenuEntry("Set Normal Map", -2);
     /**/glutAddSubMenu("Fallback Texture Mapping...", menuFallbackUV); glutSetMenu(menuFallbackUV);
     /*    */glutAddMenuEntry("Spherical", UV_SPHERE);
     /*    */glutAddMenuEntry("Planar", UV_PLANE);

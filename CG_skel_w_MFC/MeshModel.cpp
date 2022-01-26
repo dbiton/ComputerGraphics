@@ -74,7 +74,10 @@ void MeshModel::loadTexture(std::string path)
 {
     clearTexture();
 
-    glGenTextures(1, &texture);
+    texture = glGetUniformLocation(GetProgram(), "textureData");
+    glUseProgram(GetProgram());
+    glUniform1i(texture, 0);
+    
     glBindTexture(GL_TEXTURE_2D, texture);
     // set the texture wrapping/filtering options (on the currently bound texture object)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -97,11 +100,58 @@ void MeshModel::loadTexture(std::string path)
     stbi_image_free(data);
 }
 
+
 void MeshModel::clearTexture()
 {
     if (texture != -1) {
         glDeleteTextures(1, &texture);
     }
+}
+
+
+
+void MeshModel::clearNormalMap()
+{
+    if (normal_map != -1) {
+        glDeleteTextures(1, &normal_map);
+    }
+}
+
+bool MeshModel::hasNormalMap()
+{
+    return normal_map != -1;
+}
+
+
+void MeshModel::loadNormalMap(std::string path)
+{
+    clearNormalMap();
+
+    normal_map = glGetUniformLocation(GetProgram(), "normalMap");
+    glUseProgram(GetProgram());
+    glUniform1i(normal_map, 1);
+
+    glBindTexture(GL_TEXTURE_2D, normal_map);
+
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
 }
 
 void MeshModel::loadFile(string fileName)
@@ -173,6 +223,10 @@ void MeshModel::Draw()
     glActiveTexture(GL_TEXTURE0);
     if (texture != -1) {
         glBindTexture(GL_TEXTURE_2D, texture);
+    }
+    glActiveTexture(GL_TEXTURE0 + 1);
+    if (normal_map != -1) {
+        glBindTexture(GL_TEXTURE_2D, normal_map);
     }
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, vao_size);

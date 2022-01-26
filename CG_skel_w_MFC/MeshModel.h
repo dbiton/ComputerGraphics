@@ -17,7 +17,7 @@ protected:
 
 	size_t vao_size, vao_vNormals_size, vao_sNormals_size, vao_boundingBox_size;
 	GLuint vao, vao_vNormals, vao_sNormals, vao_boundingBox;
-	GLuint texture = -1;
+	GLuint texture = -1, normal_map = -1;
 	GLfloat rescale;
 	
 	MeshModel() noexcept;
@@ -38,6 +38,11 @@ public:
 	void loadTexture(std::string path);
 	void clearTexture();
 	
+	bool hasNormalMap();
+	void loadNormalMap(std::string path);
+	void clearNormalMap();
+
+
 	void loadFile(std::string fileName);
 	
 	vec3 getBoundingBoxMin() { return bounding_box_min; }
