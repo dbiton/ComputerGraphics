@@ -37,11 +37,11 @@ public:
 	bool hasTexture();
 	void loadTexture(std::string path);
 	void clearTexture();
+	void discardTexture();
 	
 	bool hasNormalMap();
 	void loadNormalMap(std::string path);
 	void clearNormalMap();
-
 
 	void loadFile(std::string fileName);
 	

@@ -108,7 +108,10 @@ void MeshModel::clearTexture()
     }
 }
 
-
+void MeshModel::discardTexture()
+{
+    texture = -1;
+}
 
 void MeshModel::clearNormalMap()
 {

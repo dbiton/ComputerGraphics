@@ -87,7 +87,13 @@ enum {
     MAIN_FOCUS,
 };
 
-
+enum {
+    MODEL_DELETE_ACTIVE = -1,
+    MODEL_ADD_TEXTURE = -2,
+    MODEL_DISCARD_TEXTURE = -3,
+    MODEL_SET_MATERIAL = -4,
+    MODEL_SET_NORMAL_MAP = -5
+};
 
 enum { // used for intuitive mode
     CONTROL_CONTEXT_NONE, // for resetting
@@ -366,23 +372,50 @@ void mainMenu(int id)
 }
 
 void modelsMenu(int id) {
-    if (id == -1) {
-        if (scene->activeModel == -1) {
-            message(_T("No active model selected!"));
-            return;
-        }
+    if (id < 0 && scene->activeModel == -1) {
+        message(_T("No active model selected!"));
+        return;
+    }
+    switch (id) {
+    case MODEL_DELETE_ACTIVE: {
         scene->getModels()->erase(scene->getModels()->begin() + scene->activeModel);
         if (scene->activeModel >= scene->getModels()->size())
             scene->activeModel = scene->getModels()->size() - 1;
         makeModelsSubMenu();
-    }
-    else if (id == -2) {
+    } break;
+    case MODEL_ADD_TEXTURE: {
+        CFileDialog dlg(TRUE, _T(".jpg"), NULL, NULL, _T("*.jpg|*.*"));
+        if (dlg.DoModal() == IDOK) scene->getActiveModel()->loadTexture(CT2CA(dlg.GetPathName()).m_psz);
+        else return; // no need to redisplay...
+    } break;
+    case MODEL_DISCARD_TEXTURE: {
+        scene->getActiveModel()->discardTexture();
+    } break;
+    case MODEL_SET_MATERIAL: {
+        const Material* material = scene->getActiveModel()->material;
+        CUniformMaterialDialog dialog(_T("Uniform Material Parameters"),
+            material->ambient.x, material->ambient.y, material->ambient.z,
+            material->diffuse.x, material->diffuse.y, material->diffuse.z,
+            material->specular.x, material->specular.y, material->specular.z,
+            material->emissive.x, material->emissive.y, material->emissive.z,
+            material->roughness, material->shininess);
+        if (dialog.DoModal() != IDOK) return;
+        delete scene->getActiveModel()->material;
+        scene->getActiveModel()->material = new Material(
+            Color(dialog.getAmbientRed(), dialog.getAmbientGreen(), dialog.getAmbientBlue()),
+            Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
+            Color(dialog.getSpecularRed(), dialog.getSpecularGreen(), dialog.getSpecularBlue()),
+            Color(dialog.getEmissiveRed(), dialog.getEmissiveGreen(), dialog.getEmissiveBlue()),
+            dialog.getRoughness(), dialog.getShininess());
+    } break;
+    case MODEL_SET_NORMAL_MAP: {
         // load normal map
         CFileDialog dlg(TRUE, _T(".jpg"), NULL, NULL, _T("*.jpg|*.*"));
         if (dlg.DoModal() == IDOK) scene->getActiveModel()->loadNormalMap(CT2CA(dlg.GetPathName()).m_psz);
         else return;
+    } break;
+    default: scene->activeModel = id; break;
     }
-    else scene->activeModel = id;
     display();
 }
 
@@ -437,39 +470,6 @@ void newModelMenu(int id) {
     sprintf(newEntry, "(%d) %s", scene->activeModel, scene->getActiveModel()->getName().c_str());
     glutSetMenu(menuModels);
     glutAddMenuEntry(newEntry, scene->activeModel);
-}
-
-void textureMenu(int id) {
-    if (scene->activeModel == -1) {
-        message(_T("No active model selected!"));
-        return;
-    }
-    const Material* material = scene->getActiveModel()->material;
-    switch (id) {
-    case MATERIAL_TEXTURE: {
-        CFileDialog dlg(TRUE, _T(".jpg"), NULL, NULL, _T("*.jpg|*.*"));
-        if (dlg.DoModal() == IDOK) scene->getActiveModel()->loadTexture(CT2CA(dlg.GetPathName()).m_psz);
-        else return;
-    } break;
-    case MATERIAL_UNIFORM: {
-        CUniformMaterialDialog dialog(_T("Uniform Material Parameters"),
-            material->ambient.x, material->ambient.y, material->ambient.z,
-            material->diffuse.x, material->diffuse.y, material->diffuse.z,
-            material->specular.x, material->specular.y, material->specular.z,
-            material->emissive.x, material->emissive.y, material->emissive.z,
-            material->roughness, material->shininess);
-        if (dialog.DoModal() != IDOK) return;
-        delete scene->getActiveModel()->material;
-        scene->getActiveModel()->material = new Material(
-            Color(dialog.getAmbientRed(), dialog.getAmbientGreen(), dialog.getAmbientBlue()),
-            Color(dialog.getDiffuseRed(), dialog.getDiffuseGreen(), dialog.getDiffuseBlue()),
-            Color(dialog.getSpecularRed(), dialog.getSpecularGreen(), dialog.getSpecularBlue()),
-            Color(dialog.getEmissiveRed(), dialog.getEmissiveGreen(), dialog.getEmissiveBlue()),
-            dialog.getRoughness(), dialog.getShininess());
-    } break;
-    default: message(_T("Unimplemented textureMenu option!")); // shouldn't happen!
-    }
-    display();
 }
 
 void fallbackUVMenu(int id) {
@@ -790,7 +790,6 @@ void makeModelsSubMenu() {
         glutAddSubMenu("Models", menuModels);
     }
     const int menuNewModel = glutCreateMenu(newModelMenu),
-        menuTexture = glutCreateMenu(textureMenu),
         menuFallbackUV = glutCreateMenu(fallbackUVMenu);
 
     // intentional indents to visualize the structure of the menu
@@ -802,16 +801,16 @@ void makeModelsSubMenu() {
     /*    */glutAddMenuEntry("Primitive: Prism", NEW_PRISM);
     /*    */glutAddMenuEntry("Primitive: Sphere", NEW_SPHERE);
     /**/glutSetMenu(menuModels);
-    /**/glutAddSubMenu("Set Texture", menuTexture); glutSetMenu(menuTexture);
-    /*    */glutAddMenuEntry("From File...", MATERIAL_TEXTURE);
-    /*    */glutAddMenuEntry("Uniform Material...", MATERIAL_UNIFORM);
-    /**/glutSetMenu(menuModels);
         glutAddMenuEntry("Set Normal Map", -2);
     /**/glutAddSubMenu("Fallback Texture Mapping...", menuFallbackUV); glutSetMenu(menuFallbackUV);
     /*    */glutAddMenuEntry("Spherical", UV_SPHERE);
     /*    */glutAddMenuEntry("Planar", UV_PLANE);
     /**/glutSetMenu(menuModels);
-    /**/glutAddMenuEntry("Delete active model", -1);
+    /**/glutAddMenuEntry("Add Texture", MODEL_ADD_TEXTURE);
+    /**/glutAddMenuEntry("Discard Texture", MODEL_DISCARD_TEXTURE);
+    /**/glutAddMenuEntry("Set Material", MODEL_SET_MATERIAL);
+    /**/glutAddMenuEntry("Set Normal Map", MODEL_SET_NORMAL_MAP);
+    /**/glutAddMenuEntry("Delete active model", MODEL_DELETE_ACTIVE);
     /**/for (int i = 0; i < scene->getModels()->size(); i++) {
         /**/char newEntry[50];
         /**/sprintf(newEntry, "(%d) %s", i, (*scene->getModels())[i]->getName().c_str());
